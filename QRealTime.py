@@ -209,4 +209,3 @@ class QRealTime:
     def download(self,checked=False):
         if checked==True:
             self.dlg.getCurrentService().collectData(self.getLayer())
-        

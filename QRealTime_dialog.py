@@ -61,9 +61,6 @@ class QRealTimeDialog(QtGui.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
         service='aggregate'
-        container = QWidget()
-        container.resize(QSize(310,260))
-        self.tabServices.addTab(container,"")
         container = self.tabServices.widget(0)
         serviceClass = globals()[service]
         serviceClass(container)
@@ -84,6 +81,7 @@ class aggregate (QTableWidget):
     def __init__(self,parent):
         super(aggregate, self).__init__(parent)
         self.parent = parent
+#        self.iface=caller.parent.iface
         self.resize(QSize(310,260))
         self.setColumnCount(2)
         self.setColumnWidth(0, 152)
@@ -180,6 +178,7 @@ class aggregate (QTableWidget):
     def collectData(self,layer):
         if not layer :
             return
+        self.updateFields(layer)
         XFormKey=layer.name()
         response, remoteTable = self.getTable(XFormKey)
         if response.status_code == 200:
@@ -192,22 +191,21 @@ class aggregate (QTableWidget):
                                                 self.tr("Form is invalid"),
                                                 level=QgsMessageBar.CRITICAL, duration=6)
     
-    
-    
-    def updateLayer(self,layer,dataDict):
-        #print "UPDATING N.",len(dataDict),'FEATURES'
-        self.processingLayer = layer
-
-        uuid_found = None
+    def updateFields(self,layer):
+        flag=True
         for field in layer.pendingFields():
             if field.name() == 'ODKUUID':
-                uuid_found = True
-        if not uuid_found:
+                flag=False
+        if flag:
             uuidField = QgsField("ODKUUID", QVariant.String)
             uuidField.setLength(50)
             layer.dataProvider().addAttributes([uuidField])
             layer.updateFields()
 
+    
+    def updateLayer(self,layer,dataDict):
+        #print "UPDATING N.",len(dataDict),'FEATURES'
+        self.processingLayer = layer
         QgisFieldsList = [field.name() for field in layer.pendingFields()]
         #layer.beginEditCommand("ODK syncronize")
         layer.startEditing()
