@@ -51,7 +51,7 @@ def getProxiesConf():
     else:
         return None
 class QRealTimeDialog(QtGui.QDialog, FORM_CLASS):
-    def __init__(self, parent=None):
+    def __init__(self, caller,parent=None):
         """Constructor."""
         super(QRealTimeDialog, self).__init__(parent)
         # Set up the user interface from Designer.
@@ -63,7 +63,7 @@ class QRealTimeDialog(QtGui.QDialog, FORM_CLASS):
         service='aggregate'
         container = self.tabServices.widget(0)
         serviceClass = globals()[service]
-        serviceClass(container)
+        serviceClass(container,caller)
         self.tabServices.setTabText(0, service)
     
     def getCurrentService(self):
@@ -78,10 +78,10 @@ class aggregate (QTableWidget):
         ["password", '']
         ]
     
-    def __init__(self,parent):
+    def __init__(self,parent,caller):
         super(aggregate, self).__init__(parent)
         self.parent = parent
-#        self.iface=caller.parent.iface
+        self.iface=caller.iface
         self.resize(QSize(310,260))
         self.setColumnCount(2)
         self.setColumnWidth(0, 152)

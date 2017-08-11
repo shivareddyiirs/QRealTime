@@ -132,7 +132,7 @@ class QRealTime:
         """
 
         # Create the dialog (after translation) and keep reference
-        self.dlg = QRealTimeDialog()
+        self.dlg = QRealTimeDialog(self)
 
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
