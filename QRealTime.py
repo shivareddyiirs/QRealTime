@@ -177,6 +177,14 @@ class QRealTime:
             "01", 
             QgsMapLayer.VectorLayer,
             True)
+        self.makeOnline=QAction(self.tr(u'Make Online'),self.ODKMenu)
+        self.makeOnline.triggered.connect(self.sendForm)
+        self.iface.legendInterface().addLegendLayerAction(
+            self.makeOnline,
+            '',
+            '01',
+            QgsMapLayer.VectorLayer,
+            True)
 
 
     def unload(self):
@@ -188,6 +196,7 @@ class QRealTime:
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
         self.iface.legendInterface().removeLegendLayerAction(self.sync)
+        self.iface.legendInterface().removeLegendLayerAction(self.makeOnline)
         del self.toolbar
 
 
@@ -205,7 +214,11 @@ class QRealTime:
             
     def getLayer(self):
         return self.iface.legendInterface().currentLayer()
-            
+        
+    def sendForm(self):
+#        create Xform from the layer
+#        send xform using self.dlg.getCurrentService().sendForm(self.getLayer(),xform)
+        pass
     def download(self,checked=False):
         if checked==True:
             self.dlg.getCurrentService().collectData(self.getLayer())
