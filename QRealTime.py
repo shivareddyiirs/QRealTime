@@ -20,16 +20,34 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
+from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
 from PyQt4.QtGui import QMenu, QAction, QIcon, QFileDialog
 
+# import for XML reading writing
+from pyxform.builder import create_survey_element_from_dict
 # Import the code for the dialog
 from QRealTime_dialog import QRealTimeDialog, aggregate
 import os.path
 from qgis.core import QgsMapLayer
+import warnings
+import unicodedata
+import re
 
+def slugify(s):
+    if type(s) is unicode:
+        slug = unicodedata.normalize('NFKD', s)
+    elif type(s) is str:
+        slug = s
+    else:
+        raise AttributeError("Can't slugify string")
+    slug = slug.encode('ascii', 'ignore').lower()
+    slug = re.sub(r'[^a-z0-9]+', '-', slug).strip('-')
+    slug=re.sub(r'--+',r'-',slug)
+    return slug
+    
 class QRealTime:
     """QGIS Plugin Implementation."""
+
 
     def __init__(self, iface):
         """Constructor.
@@ -216,9 +234,61 @@ class QRealTime:
         return self.iface.legendInterface().currentLayer()
         
     def sendForm(self):
-#        create Xform from the layer
-#        send xform using self.dlg.getCurrentService().sendForm(self.getLayer(),xform)
-        pass
+#        get the fields model like name , widget type, options etc.
+        layer=self.getLayer()
+        fieldDict= self.getFieldsModel(layer)
+        surveyDict= {"name":slugify(layer.name()),"title":layer.name(),"instance_name": 'uuid()',"submission_url": '',
+        "default_language":'default','id_string':slugify(layer.name()),'type':'survey','children':fieldDict }
+        survey=create_survey_element_from_dict(surveyDict)
+        xml=survey.to_xml(validate=None, warnings=warnings)
+        os.chdir(os.path.expanduser('~'))
+        with open('Xform.xml','w') as xForm:
+            xForm.write(xml)
+        self.dlg.getCurrentService().sendForm(layer,'Xform.xml')
     def download(self,checked=False):
         if checked==True:
             self.dlg.getCurrentService().collectData(self.getLayer())
+            
+    def getFieldsModel(self,currentLayer):
+        currentFormConfig = currentLayer.editFormConfig()
+        fieldsModel = []
+        i=0
+        for field in currentLayer.pendingFields():
+            fieldDef = {}
+            fieldDef['name'] = field.name()
+            fieldDef['map'] = field.name()
+            fieldDef['label'] = field.comment() or field.name()
+            fieldDef['hint'] = ''
+            fieldDef['type'] = self.QVariantToODKtype(field.type())
+            fieldDef['fieldEnabled'] = True
+            fieldDef['bind'] = {}
+            fieldDef['fieldDefault'] = ''
+            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
+            if fieldDef['fieldWidget'] == 'Hidden':
+                fieldDef['fieldEnabled'] = None
+            else:
+                fieldDef['fieldEnabled'] = True
+            if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','FileName'):
+                if fieldDef['fieldWidget'] == 'ValueMap':
+                    config = {v: k for k, v in currentFormConfig.widgetConfig(i).iteritems()}
+                else:
+                    config = currentFormConfig.widgetConfig(i)
+                fieldDef['choices'] = config
+            else:
+                fieldDef['choices'] = {}
+            if fieldDef['name'] == 'ODKUUID':
+                fieldDef["bind"] = {"readonly": "true()", "calculate": "concat('uuid:', uuid())"}
+            fieldsModel.append(fieldDef)
+            i+=1
+        return fieldsModel
+    def QVariantToODKtype(self,q_type):
+        if  q_type == QVariant.String:
+            return 'text'
+        elif q_type == QVariant.Date:
+            return 'datetime'
+        elif q_type in [2,3,4,32,33,35,36]:
+            return 'integer'
+        elif q_type in [6,38]:
+            return 'decimal'
+        else:
+            raise AttributeError("Can't cast QVariant to ODKType: " + q_type)

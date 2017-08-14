@@ -25,7 +25,7 @@ import os
 
 from PyQt4 import QtGui, uic
 from PyQt4.QtGui import  QWidget,QTableWidget,QTableWidgetItem
-from PyQt4.QtCore import Qt, QSettings, QSize, QSettings
+from PyQt4.QtCore import Qt, QSettings, QSize
 from qgis.core import QgsFeature, QgsGeometry, QgsField, QgsPoint, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 import xml.etree.ElementTree as ET
 import requests
@@ -173,6 +173,14 @@ class aggregate (QTableWidget):
         files = open(xForm,'r')
         files = {'form_def_file':files }
         response = requests.request(method, url,files = files, proxies = getProxiesConf() )
+        if response.status_code ==200 or response.status_code== 201:
+            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
+                                                self.tr("Form is sent"),
+                                                level=QgsMessageBar.SUCCESS, duration=6)
+        else:
+            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
+                                                self.tr("Form not Sent"+str(response.status_code)),
+                                                level=QgsMessageBar.CRITICAL, duration=6)
         return response
         
     def collectData(self,layer):
@@ -187,7 +195,7 @@ class aggregate (QTableWidget):
                 print 'table have some data'
                 self.updateLayer(layer,remoteTable)
         else:
-            self.iface.messageBar().pushMessage(self.tr("QGISODK plugin"),
+            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
                                                 self.tr("Form is invalid"),
                                                 level=QgsMessageBar.CRITICAL, duration=6)
     
@@ -231,7 +239,7 @@ class aggregate (QTableWidget):
                 newQgisFeatures.append(qgisFeature)
                 
         if fieldError:
-            self.iface.messageBar().pushMessage(self.tr("QGISODK plugin"), self.tr("Can't find '%s' field") % fieldError, level=QgsMessageBar.WARNING, duration=6)
+            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"), self.tr("Can't find '%s' field") % fieldError, level=QgsMessageBar.WARNING, duration=6)
         
         layer.addFeatures(newQgisFeatures)
         self.processingLayer = None
@@ -342,7 +350,7 @@ class aggregate (QTableWidget):
                 try:
                     response = requests.get(URI, stream=True)
                 except:
-                    sys.exit()
+                    print 'unable to donwload using the link'
                 localAttachmentPath = os.path.abspath(os.path.join(downloadDir,fileName))
                 if response.status_code == 200:
                     print "downloading", URI
