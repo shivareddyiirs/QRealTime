@@ -73,9 +73,10 @@ class aggregate (QTableWidget):
     parameters = [
         ["id","aggregate"],
         ["url",''],
-        ["lastID",''],
         ["user", ''],
-        ["password", '']
+        ["password", ''],
+        ["lastID",''],
+        ['sync_time','']
         ]
     
     def __init__(self,parent,caller):
@@ -243,6 +244,7 @@ class aggregate (QTableWidget):
         
         layer.addFeatures(newQgisFeatures)
         self.processingLayer = None
+        
     def getUUIDList(self,lyr):
         uuidList = []
         if lyr:
@@ -337,6 +339,7 @@ class aggregate (QTableWidget):
             return response, table
         except:
             print 'not able to fetch'
+            return response,table
         
         
         
