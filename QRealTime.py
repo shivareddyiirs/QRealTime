@@ -203,27 +203,42 @@ class QRealTime:
         self.ODKMenu = QMenu('QRealTime')
         self.sync= QAction(self.tr(u'sync'),self.ODKMenu)
         self.sync.setCheckable(True)
-        self.sync.toggled.connect(self.download)
+        self.sync.setChecked(False)
+        self.sync.triggered.connect(self.download)
+        self.sync.setChecked(False)
         self.iface.legendInterface().addLegendLayerAction(
-            self.sync,
-            "",
-            "01", 
-            QgsMapLayer.VectorLayer,
-            True)
+                self.sync,
+                'QRealTime',
+                "01", 
+                QgsMapLayer.VectorLayer,
+                True)
+#        def addAction():
+#            self.sync.setChecked(False)
+#            self.sync.setCheckable(True)
+#            self.sync.triggered.connect(self.download)
+#            self.sync.setChecked(False)
+#            self.iface.legendInterface().addLegendLayerActionForLayer(
+#            self.sync, self.getLayer())
+#        self.iface.currentLayerChanged.connect(addAction)
         self.makeOnline=QAction(self.tr(u'Make Online'),self.ODKMenu)
         self.makeOnline.triggered.connect(self.sendForm)
         self.iface.legendInterface().addLegendLayerAction(
             self.makeOnline,
-            '',
+            'QRealTime',
             '01',
             QgsMapLayer.VectorLayer,
             True)
         service=self.dlg.getCurrentService()
-        layer=self.getLayer()
-        self.time=int(service.getValue('sync_time'))
+        
+        try:
+            self.time=1
+            self.time=int(service.getValue('sync_time'))
+        except:
+            pass
         self.timer=QTimer()
         def timeEvent():
-            service.collectData(layer)
+            print 'calling collect data'
+            service.collectData(self.layer)
         self.timer.timeout.connect(timeEvent)
 
 
@@ -269,6 +284,7 @@ class QRealTime:
         self.dlg.getCurrentService().sendForm(layer,'Xform.xml')
     def download(self,checked=False):
         if checked==True:
+            self.layer= self.getLayer()
             self.timer.start(1000*self.time)
         elif checked==False:
             self.timer.stop()
@@ -276,12 +292,14 @@ class QRealTime:
         currentFormConfig = currentLayer.editFormConfig()
         fieldsModel = []
         g_type= currentLayer.geometryType()
+        fieldDef={'name':'GEOMETRY','type':'geopoint','bind':{'required':'true()'}}
         if g_type==0:
-            fieldDef={'name':'GEOMETRY','type':'geopoint','label':'Add your location','bind':{'required':'true()'}}
-            fieldsModel.append(fieldDef)
+            fieldDef['label']='add point location'
+        elif g_type==1:
+            fieldDef['label']='Draw Line'
         else:
-            fieldDef={'name':'geometry','type':'geotrace','label':'Draw geometry','bind':{'required':'true()'}}
-            fieldsModel.append(fieldDef)
+            fieldDef['label']='Draw Area'
+        fieldsModel.append(fieldDef)
         i=0
         for field in currentLayer.pendingFields():
             fieldDef = {}
@@ -310,9 +328,3 @@ class QRealTime:
             fieldsModel.append(fieldDef)
             i+=1
         return fieldsModel
-
-    def geometryTypeToODKtype(g_type):
-        if g_type==0:
-            return 'geopoint'
-        else :
-            return 'geotrace'

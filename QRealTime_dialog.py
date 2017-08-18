@@ -25,7 +25,7 @@ import os
 
 from PyQt4 import QtGui, uic
 from PyQt4.QtGui import  QWidget,QTableWidget,QTableWidgetItem
-from PyQt4.QtCore import Qt, QSettings, QSize
+from PyQt4.QtCore import Qt, QSettings, QSize,QVariant
 from qgis.core import QgsFeature, QgsGeometry, QgsField, QgsPoint, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 import xml.etree.ElementTree as ET
 import requests
