@@ -154,6 +154,8 @@ class aggregate (QTableWidget):
         response= requests.request(method,url)
         root=ET.fromstring(response.content)
         keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
+        print 'formlist is ', keylist
+        print xForm_id in keylist
         return xForm_id in keylist, response
             
     def sendForm(self, xForm_id,xForm):
@@ -163,9 +165,11 @@ class aggregate (QTableWidget):
         if response.status_code != requests.codes.ok:
             return response
         if form_key:
+            print 'setting method to put'
             method = 'POST'
             url = self.getValue('url')+'//formUpload'
         else:
+            print 'setting method to GET'
             method = 'POST'
             url = self.getValue('url')+'//formUpload'
 #        method = 'POST'

@@ -281,7 +281,7 @@ class QRealTime:
         os.chdir(os.path.expanduser('~'))
         with open('Xform.xml','w') as xForm:
             xForm.write(xml)
-        self.dlg.getCurrentService().sendForm(layer,'Xform.xml')
+        self.dlg.getCurrentService().sendForm(slugify(layer.name()),'Xform.xml')
     def download(self,checked=False):
         if checked==True:
             self.layer= self.getLayer()
