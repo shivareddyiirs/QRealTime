@@ -93,7 +93,7 @@ class QRealTime:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&QGIS_Real_Time')
+        self.menu = self.tr(u'&QRealTime')
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'QRealTime')
         self.toolbar.setObjectName(u'QRealTime')
@@ -196,7 +196,7 @@ class QRealTime:
         icon_path = ':/plugins/QRealTime/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u'QRealTimeSetting'),
+            text=self.tr(u'QRealTime Setting'),
             callback=self.run,
             parent=self.iface.mainWindow())
         icon = QIcon(icon_path)
@@ -232,7 +232,7 @@ class QRealTime:
         
         try:
             self.time=1
-            self.time=int(service.getValue('sync_time'))
+            self.time=int(service.getValue('sync time'))
         except:
             pass
         self.timer=QTimer()
@@ -246,7 +246,7 @@ class QRealTime:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'QGIS_Real_Time'),
+                self.tr(u'QRealTime'),
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar

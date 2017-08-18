@@ -76,7 +76,7 @@ class aggregate (QTableWidget):
         ["user", ''],
         ["password", ''],
         ["lastID",''],
-        ['sync_time','']
+        ['sync time','']
         ]
     
     def __init__(self,parent,caller):
