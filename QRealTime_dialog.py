@@ -156,7 +156,7 @@ class aggregate (QTableWidget):
         keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
         return xForm_id in keylist, response
             
-    def sendForm(self, xForm_id,xForm):
+    def sendForm(self,xForm_id,xForm):
         
 #        step1 - verify if form exists:
         form_key, response = self.getFormList(xForm_id)

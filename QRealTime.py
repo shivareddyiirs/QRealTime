@@ -273,6 +273,7 @@ class QRealTime:
     def sendForm(self):
 #        get the fields model like name , widget type, options etc.
         layer=self.getLayer()
+        self.dlg.getCurrentService().updateFields(layer)
         fieldDict= self.getFieldsModel(layer)
         surveyDict= {"name":slugify(layer.name()),"title":layer.name(),"instance_name": 'uuid()',"submission_url": '',
         "default_language":'default','id_string':slugify(layer.name()),'type':'survey','children':fieldDict }
@@ -281,7 +282,7 @@ class QRealTime:
         os.chdir(os.path.expanduser('~'))
         with open('Xform.xml','w') as xForm:
             xForm.write(xml)
-        self.dlg.getCurrentService().sendForm(layer,'Xform.xml')
+        self.dlg.getCurrentService().sendForm(slugify(layer.name()),'Xform.xml')
     def download(self,checked=False):
         if checked==True:
             self.layer= self.getLayer()
