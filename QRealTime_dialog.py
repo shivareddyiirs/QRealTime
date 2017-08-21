@@ -164,12 +164,13 @@ class aggregate (QTableWidget):
         form_key, response = self.getFormList(xForm_id)
         if response.status_code != requests.codes.ok:
             return response
+        message =''
         if form_key:
-            print 'setting method to put'
+            message= 'Form Updated'
             method = 'POST'
             url = self.getValue('url')+'//formUpload'
         else:
-            print 'setting method to GET'
+            message= 'Created new form'
             method = 'POST'
             url = self.getValue('url')+'//formUpload'
 #        method = 'POST'
@@ -178,13 +179,17 @@ class aggregate (QTableWidget):
         files = open(xForm,'r')
         files = {'form_def_file':files }
         response = requests.request(method, url,files = files, proxies = getProxiesConf() )
-        if response.status_code ==200 or response.status_code== 201:
+        if response.status_code== 201:
             self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
-                                                self.tr("Form is sent"),
+                                                self.tr('Layer is online('+message+'), Colelct data from App'),
                                                 level=QgsMessageBar.SUCCESS, duration=6)
+        elif response.status_code == 409:
+            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
+                                                self.tr("Form exist and can not be updated"),
+                                                level=QgsMessageBar.CRITICAL, duration=6)
         else:
             self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
-                                                self.tr("Form not Sent"+str(response.status_code)),
+                                                self.tr("Form is not sent "),
                                                 level=QgsMessageBar.CRITICAL, duration=6)
         return response
         
