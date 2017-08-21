@@ -78,7 +78,7 @@ class aggregate (QTableWidget):
         ["lastID",''],
         ['sync time','']
         ]
-    
+        
     def __init__(self,parent,caller):
         super(aggregate, self).__init__(parent)
         self.parent = parent
@@ -148,20 +148,20 @@ class aggregate (QTableWidget):
 #    def getExportExtension(self):
 #        return 'xml'
         
-    def getFormList(self,xForm_id):
+    def getFormList(self):
         method='GET'
         url=self.getValue('url')+'//formList'
         response= requests.request(method,url)
         root=ET.fromstring(response.content)
         keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
-        print 'formlist is ', keylist
-        print xForm_id in keylist
-        return xForm_id in keylist, response
+        return keylist,response
+    
             
     def sendForm(self,xForm_id,xForm):
         
 #        step1 - verify if form exists:
-        form_key, response = self.getFormList(xForm_id)
+        formList, response = self.getFormList()
+        from_key=xForm_id in formList
         if response.status_code != requests.codes.ok:
             return response
         message =''
@@ -331,6 +331,7 @@ class aggregate (QTableWidget):
             for id in instance_ids :
                 if id:
                     url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version=null and @uiVersion=null]/{}[@key={}]'.format(XFormKey,XFormKey,id)
+                    print url
                     response=requests.request(method,url)
                     if not response.status_code == 200:
                         return response,table
@@ -345,6 +346,7 @@ class aggregate (QTableWidget):
                                 dict[key]=self.cleanURI(mediaDict['downloadUrl'],XFormKey,value)
                     table.append(dict)
             self.getValue('lastID',lastReturnedURI)
+            print table
             return response, table
         except:
             print 'not able to fetch'

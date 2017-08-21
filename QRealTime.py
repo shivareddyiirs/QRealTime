@@ -27,6 +27,7 @@ from PyQt4.QtGui import QMenu, QAction, QIcon, QFileDialog
 from pyxform.builder import create_survey_element_from_dict
 # Import the code for the dialog
 from QRealTime_dialog import QRealTimeDialog, aggregate
+from QRealTime_dialog_import import importData
 import os.path
 from qgis.core import QgsMapLayer
 import warnings
@@ -35,6 +36,7 @@ import re
 import json
 from qgis.PyQt.QtCore import QTimer
 import datetime
+import requests
 
 def slugify(s):
     if type(s) is unicode:
@@ -235,7 +237,7 @@ class QRealTime:
             QgsMapLayer.VectorLayer,
             True)
         service=self.dlg.getCurrentService()
-        
+        self.importData= importData()
         try:
             self.time=1
             self.time=int(service.getValue('sync time'))
@@ -272,8 +274,29 @@ class QRealTime:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             self.dlg.getCurrentService().setup()
+            
     def importData(self):
-        pass
+        service=self.dlg.getCurrentService()
+        forms,response= service.getFormList()
+        if response.status_code==200:
+            self.importData.comboBox.addItems(forms)
+            self.importData.show()
+            result=self.importData.exec_()
+            if result:
+                selectedForm= self.importData.comboBox.currentText()
+                url=service.getValue('url')+'/formXml?formId='+selectedForm
+                response= requests.request('GET',url)
+                os.chdir(os.path.expanduser('~'))
+                if response.status_code==200:
+                    with open('importForm.xml','w') as importForm:
+                        importForm.write(response.content)
+#                    from xml create layer todo
+                response, table= service.getTable(selectedForm)
+                if response.status_code==200:
+#                    add code to create new empty layer
+                    pass
+#                    service.updateLayer(layer,table)
+                        
             
     def getLayer(self):
         return self.iface.legendInterface().currentLayer()
@@ -293,12 +316,14 @@ class QRealTime:
         with open('Xform.xml','w') as xForm:
             xForm.write(xml)
         self.dlg.getCurrentService().sendForm(slugify(layer.name()),'Xform.xml')
+        
     def download(self,checked=False):
         if checked==True:
             self.layer= self.getLayer()
             self.timer.start(1000*self.time)
         elif checked==False:
             self.timer.stop()
+            
     def getFieldsModel(self,currentLayer):
         currentFormConfig = currentLayer.editFormConfig()
         fieldsModel = []
