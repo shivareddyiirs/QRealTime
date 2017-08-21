@@ -200,6 +200,11 @@ class QRealTime:
             text=self.tr(u'QRealTime Setting'),
             callback=self.run,
             parent=self.iface.mainWindow())
+        self.add_action(
+            icon_path,
+            text=self.tr(u'QRealTime import'),
+            callback=self.importData,
+            parent=self.iface.mainWindow())
         icon = QIcon(icon_path)
         self.ODKMenu = QMenu('QRealTime')
         self.sync= QAction(self.tr(u'sync'),self.ODKMenu)
@@ -267,6 +272,8 @@ class QRealTime:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             self.dlg.getCurrentService().setup()
+    def importData(self):
+        pass
             
     def getLayer(self):
         return self.iface.legendInterface().currentLayer()
