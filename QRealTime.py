@@ -34,6 +34,7 @@ import unicodedata
 import re
 import json
 from qgis.PyQt.QtCore import QTimer
+import datetime
 
 def slugify(s):
     if type(s) is unicode:
@@ -272,10 +273,12 @@ class QRealTime:
         
     def sendForm(self):
 #        get the fields model like name , widget type, options etc.
+        version= str(datetime.datetime.now())
+        print 'version is', version
         layer=self.getLayer()
         self.dlg.getCurrentService().updateFields(layer)
         fieldDict= self.getFieldsModel(layer)
-        surveyDict= {"name":slugify(layer.name()),"title":layer.name(),"instance_name": 'uuid()',"submission_url": '',
+        surveyDict= {"name":slugify(layer.name()),"title":layer.name(),'VERSION':version,"instance_name": 'uuid()',"submission_url": '',
         "default_language":'default','id_string':slugify(layer.name()),'type':'survey','children':fieldDict }
         survey=create_survey_element_from_dict(surveyDict)
         xml=survey.to_xml(validate=None, warnings=warnings)
