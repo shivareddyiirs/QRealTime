@@ -273,6 +273,7 @@ class QRealTime:
     def sendForm(self):
 #        get the fields model like name , widget type, options etc.
         layer=self.getLayer()
+        self.dlg.getCurrentService().updateFields(layer)
         fieldDict= self.getFieldsModel(layer)
         surveyDict= {"name":slugify(layer.name()),"title":layer.name(),"instance_name": 'uuid()',"submission_url": '',
         "default_language":'default','id_string':slugify(layer.name()),'type':'survey','children':fieldDict }
@@ -313,11 +314,9 @@ class QRealTime:
             if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','FileName'):
                 if fieldDef['fieldWidget'] == 'ValueMap':
                     fieldDef['type']='select one'
-                    config = {v: k for k, v in currentFormConfig.widgetConfig(i).iteritems()}
                 elif fieldDef['fieldWidget'] == 'Photo':
                     fieldDef['type']='image'
-                else:
-                    config = currentFormConfig.widgetConfig(i)
+                config = {v: k for k, v in currentFormConfig.widgetConfig(i).iteritems()}
                 choicesList=[{'name':name,'label':label} for name,label in config.iteritems()]
                 fieldDef["choices"] = choicesList
 #                fieldDef['choices'] = config

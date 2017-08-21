@@ -158,7 +158,7 @@ class aggregate (QTableWidget):
         print xForm_id in keylist
         return xForm_id in keylist, response
             
-    def sendForm(self, xForm_id,xForm):
+    def sendForm(self,xForm_id,xForm):
         
 #        step1 - verify if form exists:
         form_key, response = self.getFormList(xForm_id)
