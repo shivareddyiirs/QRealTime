@@ -161,7 +161,7 @@ class aggregate (QTableWidget):
         
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
-        from_key=xForm_id in formList
+        form_key=xForm_id in formList
         if response.status_code != requests.codes.ok:
             return response
         message =''
