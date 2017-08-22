@@ -193,12 +193,14 @@ class aggregate (QTableWidget):
                                                 level=QgsMessageBar.CRITICAL, duration=6)
         return response
         
-    def collectData(self,layer):
+    def collectData(self,layer,xFormKey,importData=False):
         if not layer :
             return
         self.updateFields(layer)
-        XFormKey=layer.name()
-        response, remoteTable = self.getTable(XFormKey)
+        if importData:
+            response, remoteTable = self.getTable(xFormKey,"")
+        else:
+            response, remoteTable = self.getTable(xFormKey,self.getValue('lastID'))
         if response.status_code == 200:
             print 'before Update Layer'
             if remoteTable:
@@ -209,13 +211,13 @@ class aggregate (QTableWidget):
                                                 self.tr("Form is invalid"),
                                                 level=QgsMessageBar.CRITICAL, duration=6)
     
-    def updateFields(self,layer):
+    def updateFields(self,layer,text='ODKUUID',q_type=QVariant.String):
         flag=True
         for field in layer.pendingFields():
-            if field.name() == 'ODKUUID':
+            if field.name() == text:
                 flag=False
         if flag:
-            uuidField = QgsField("ODKUUID", QVariant.String)
+            uuidField = QgsField(text, q_type)
             uuidField.setLength(50)
             layer.dataProvider().addAttributes([uuidField])
             layer.updateFields()
@@ -300,7 +302,7 @@ class aggregate (QTableWidget):
 
         
                                                 
-    def getTable(self,XFormKey):
+    def getTable(self,XFormKey,lastID):
         url=self.getValue('url')+'/view/submissionList?formId='+XFormKey
         method='GET'
         table=[]
@@ -315,9 +317,6 @@ class aggregate (QTableWidget):
             ns1='{http://www.opendatakit.org/cursor}'
             lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
             print 'server lastID is',lastReturnedURI
-        
-            lastID= self.getValue('lastID')
-            print 'lastID is',lastID
             if lastID ==lastReturnedURI:
                 print 'No Download returning'
                 return response,table
