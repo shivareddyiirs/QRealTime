@@ -209,14 +209,15 @@ class QRealTime:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/QRealTime/icon.png'
+        icon_path = os.path.join(self.plugin_dir,'icon.png')
         self.add_action(
             icon_path,
             text=self.tr(u'QRealTime Setting'),
             callback=self.run,
             parent=self.iface.mainWindow())
         self.ODKMenu = QMenu('QRealTime')
-        self.sync= QAction(self.tr(u'sync'),self.ODKMenu)
+        icon = QIcon(icon_path)
+        self.sync= QAction(icon,self.tr(u'sync'),self.ODKMenu)
         self.sync.setCheckable(True)
         self.sync.setChecked(False)
         self.sync.triggered.connect(self.download)
@@ -228,7 +229,7 @@ class QRealTime:
                 QgsMapLayer.VectorLayer,
                 True)
 
-        self.Import = QAction(self.tr(u'import'),self.ODKMenu)
+        self.Import = QAction(icon,self.tr(u'import'),self.ODKMenu)
         self.Import.triggered.connect(self.importData)
         self.iface.legendInterface().addLegendLayerAction(
                 self.Import,
@@ -236,7 +237,7 @@ class QRealTime:
                 '01',
                 QgsMapLayer.VectorLayer,
                 True)
-        self.makeOnline=QAction(self.tr(u'Make Online'),self.ODKMenu)
+        self.makeOnline=QAction(icon,self.tr(u'Make Online'),self.ODKMenu)
         self.makeOnline.triggered.connect(self.sendForm)
         self.iface.legendInterface().addLegendLayerAction(
             self.makeOnline,
@@ -353,8 +354,10 @@ class QRealTime:
             fieldDef['label']='add point location'
         elif g_type==1:
             fieldDef['label']='Draw Line'
+            fieldDef['type']='geotrace'
         else:
             fieldDef['label']='Draw Area'
+            fieldDef['type']='geotrace'
         fieldsModel.append(fieldDef)
         i=0
         for field in currentLayer.pendingFields():
