@@ -22,11 +22,10 @@
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
 from PyQt4.QtGui import QMenu, QAction, QIcon, QFileDialog
-
 # import for XML reading writing
 from pyxform.builder import create_survey_element_from_dict
 # Import the code for the dialog
-from QRealTime_dialog import QRealTimeDialog, aggregate
+from QRealTime_dialog import QRealTimeDialog
 from QRealTime_dialog_import import importData
 import os.path
 from qgis.core import QgsMapLayer
@@ -37,6 +36,7 @@ import json
 from qgis.PyQt.QtCore import QTimer
 import datetime
 import requests
+import xml.etree.ElementTree as ET
 
 def slugify(s):
     if type(s) is unicode:
@@ -62,6 +62,19 @@ def QVariantToODKtype(q_type):
         else:
             raise AttributeError("Can't cast QVariant to ODKType: " + q_type)
 
+def qtype(odktype):
+    if odktype == 'binary':
+        return QVariant.String
+    elif odktype=='string':
+        return QVariant.String
+    elif odktype[:3] == 'sel' :
+        return QVariant.String
+    elif odktype[:3] == 'int':
+        return QVariant.Int
+    elif odktype[:3]=='dat':
+        return QVariant.Date
+    else:
+        return QVariant.String
     
 class QRealTime:
     """QGIS Plugin Implementation."""
@@ -202,12 +215,6 @@ class QRealTime:
             text=self.tr(u'QRealTime Setting'),
             callback=self.run,
             parent=self.iface.mainWindow())
-        self.add_action(
-            icon_path,
-            text=self.tr(u'QRealTime import'),
-            callback=self.importData,
-            parent=self.iface.mainWindow())
-        icon = QIcon(icon_path)
         self.ODKMenu = QMenu('QRealTime')
         self.sync= QAction(self.tr(u'sync'),self.ODKMenu)
         self.sync.setCheckable(True)
@@ -220,14 +227,15 @@ class QRealTime:
                 "01", 
                 QgsMapLayer.VectorLayer,
                 True)
-#        def addAction():
-#            self.sync.setChecked(False)
-#            self.sync.setCheckable(True)
-#            self.sync.triggered.connect(self.download)
-#            self.sync.setChecked(False)
-#            self.iface.legendInterface().addLegendLayerActionForLayer(
-#            self.sync, self.getLayer())
-#        self.iface.currentLayerChanged.connect(addAction)
+
+        self.Import = QAction(self.tr(u'import'),self.ODKMenu)
+        self.Import.triggered.connect(self.importData)
+        self.iface.legendInterface().addLegendLayerAction(
+                self.Import,
+                'QRealTime',
+                '01',
+                QgsMapLayer.VectorLayer,
+                True)
         self.makeOnline=QAction(self.tr(u'Make Online'),self.ODKMenu)
         self.makeOnline.triggered.connect(self.sendForm)
         self.iface.legendInterface().addLegendLayerAction(
@@ -246,7 +254,7 @@ class QRealTime:
         self.timer=QTimer()
         def timeEvent():
             print 'calling collect data'
-            service.collectData(self.layer)
+            service.collectData(self.getLayer(),self.getLayer().name())
         self.timer.timeout.connect(timeEvent)
 
 
@@ -277,6 +285,7 @@ class QRealTime:
             
     def importData(self):
         service=self.dlg.getCurrentService()
+        layer=self.getLayer()
         forms,response= service.getFormList()
         if response.status_code==200:
             self.importData.comboBox.addItems(forms)
@@ -286,18 +295,29 @@ class QRealTime:
                 selectedForm= self.importData.comboBox.currentText()
                 url=service.getValue('url')+'/formXml?formId='+selectedForm
                 response= requests.request('GET',url)
-                os.chdir(os.path.expanduser('~'))
                 if response.status_code==200:
-                    with open('importForm.xml','w') as importForm:
-                        importForm.write(response.content)
-#                    from xml create layer todo
-                response, table= service.getTable(selectedForm)
-                if response.status_code==200:
-#                    add code to create new empty layer
-                    pass
-#                    service.updateLayer(layer,table)
+                    # with open('importForm.xml','w') as importForm:
+                    #     importForm.write(response.content)
+                    formKey= self.updateLayer(layer,response.content)
+                    layer.setLayerName(formKey)
+                service.collectData(layer,formKey,True)
+
+                
                         
-            
+    def updateLayer(self,layer,xml):
+        ns='{http://www.w3.org/2002/xforms}'
+        root= ET.fromstring(xml)
+        key= root[0][1][0][0].attrib['id']
+        for bind in root[0][1].findall(ns+'bind'):
+            attrib=bind.attrib
+            fieldName= attrib['nodeset'].split('/')[-1]
+            fieldType=attrib['type']
+            qgstype = qtype(attrib['type'])
+            if fieldType!='GEOMETRY':
+                self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype)
+        return key
+
+
     def getLayer(self):
         return self.iface.legendInterface().currentLayer()
         
