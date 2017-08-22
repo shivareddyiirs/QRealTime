@@ -313,7 +313,7 @@ class QRealTime:
             fieldName= attrib['nodeset'].split('/')[-1]
             fieldType=attrib['type']
             qgstype = qtype(attrib['type'])
-            if fieldType!='GEOMETRY':
+            if fieldName!='GEOMETRY':
                 self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype)
         return key
 
