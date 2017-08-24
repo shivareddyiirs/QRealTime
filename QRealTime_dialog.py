@@ -26,10 +26,10 @@ import os
 from PyQt4 import QtGui, uic
 from PyQt4.QtGui import  QWidget,QTableWidget,QTableWidgetItem
 from PyQt4.QtCore import Qt, QSettings, QSize,QVariant
-from qgis.core import QgsFeature, QgsGeometry, QgsField, QgsPoint, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 import xml.etree.ElementTree as ET
 import requests
 from qgis.gui import QgsMessageBar
+from qgis.core import QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'QRealTime_dialog_services.ui'))
@@ -229,6 +229,9 @@ class aggregate (QTableWidget):
         QgisFieldsList = [field.name() for field in layer.pendingFields()]
         #layer.beginEditCommand("ODK syncronize")
         layer.startEditing()
+        type=layer.geometryType()
+        geo=['POINT','LINE','POLYGON']
+        layerGeo=geo[type]
         
         uuidList = self.getUUIDList(self.processingLayer)
 
@@ -238,7 +241,11 @@ class aggregate (QTableWidget):
             if not odkFeature['ODKUUID'] in uuidList:
                 qgisFeature = QgsFeature()
                 wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
+                print wktGeom
+                if wktGeom[:3] != layerGeo[:3]:
+                    continue
                 qgisGeom = QgsGeometry.fromWkt(wktGeom)
+                print 'geom is',qgisGeom
                 qgisFeature.setGeometry(qgisGeom)
                 qgisFeature.initAttributes(len(QgisFieldsList))
                 for fieldName, fieldValue in odkFeature.iteritems():
@@ -270,13 +277,19 @@ class aggregate (QTableWidget):
 
     def guessWKTGeomType(self,geom):
         coordinates = geom.split(';')
+#        print 'coordinates are ', coordinates
         firstCoordinate = coordinates[0].strip().split(" ")
+#        print 'first Coordinate is ',  firstCoordinate
         if len(firstCoordinate) < 2:
             return "invalid", None
         coordinatesList = []
         for coordinate in coordinates:
             decodeCoord = coordinate.strip().split(" ")
-            coordinatesList.append([decodeCoord[0],decodeCoord[1]])
+#            print 'decordedCoord is', decodeCoord
+            try:
+                coordinatesList.append([decodeCoord[0],decodeCoord[1]])
+            except:
+                pass
         if len(coordinates) == 1:
             
             reprojectedPoint = self.transformToLayerSRS(QgsPoint(float(coordinatesList[0][1]),float(coordinatesList[0][0])))
@@ -287,8 +300,8 @@ class aggregate (QTableWidget):
                 reprojectedPoint = self.transformToLayerSRS(QgsPoint(float(coordinate[1]), float(coordinate[0])))
                 coordinateString += "%s %s," % (reprojectedPoint.x(), reprojectedPoint.y())
             coordinateString = coordinateString[:-1]
-        if coordinates[-1] == '' and coordinatesList[0][0] == coordinatesList[-2][0] and coordinatesList[0][1] == coordinatesList[-2][1]:
-            return "POLYGON(%s)" % coordinateString #geoshape #geotrace
+        if  coordinatesList[0][0] == coordinatesList[-1][0] and coordinatesList[0][1] == coordinatesList[-1][1]:
+            return "POLYGON((%s))" % coordinateString #geoshape #geotrace
         else:
             return "LINESTRING(%s)" % coordinateString
             

@@ -217,7 +217,7 @@ class QRealTime:
             parent=self.iface.mainWindow())
         self.ODKMenu = QMenu('QRealTime')
         icon = QIcon(icon_path)
-        self.sync= QAction(icon,self.tr(u'sync'),self.ODKMenu)
+        self.sync= QAction(self.tr(u'sync'),self.ODKMenu)
         self.sync.setCheckable(True)
         self.sync.setChecked(False)
         self.sync.triggered.connect(self.download)
