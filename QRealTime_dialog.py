@@ -151,7 +151,7 @@ class aggregate (QTableWidget):
     def getFormList(self):
         method='GET'
         url=self.getValue('url')+'//formList'
-        response= requests.request(method,url)
+        response= requests.request(method,url,verify=False)
         root=ET.fromstring(response.content)
         keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
         return keylist,response
@@ -178,7 +178,7 @@ class aggregate (QTableWidget):
         #step1 - upload form: POST if new PATCH if exixtent
         files = open(xForm,'r')
         files = {'form_def_file':files }
-        response = requests.request(method, url,files = files, proxies = getProxiesConf() )
+        response = requests.request(method, url,files = files, proxies = getProxiesConf(),verify=False )
         if response.status_code== 201:
             self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
                                                 self.tr('Layer is online('+message+'), Colelct data from App'),
