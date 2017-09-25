@@ -364,7 +364,7 @@ class QRealTime:
             fieldDef = {}
             fieldDef['name'] = field.name()
             fieldDef['map'] = field.name()
-            fieldDef['label'] = field.comment() or field.name()
+            fieldDef['label'] = field.alias() or field.name()
             fieldDef['hint'] = ''
             fieldDef['type'] = QVariantToODKtype(field.type())
             fieldDef['bind'] = {}

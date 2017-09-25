@@ -181,7 +181,7 @@ class aggregate (QTableWidget):
         response = requests.request(method, url,files = files, proxies = getProxiesConf(),verify=False )
         if response.status_code== 201:
             self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
-                                                self.tr('Layer is online('+message+'), Colelct data from App'),
+                                                self.tr('Layer is online('+message+'), Collect data from App'),
                                                 level=QgsMessageBar.SUCCESS, duration=6)
         elif response.status_code == 409:
             self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
