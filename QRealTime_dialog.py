@@ -29,7 +29,7 @@ from PyQt4.QtCore import Qt, QSettings, QSize,QVariant
 import xml.etree.ElementTree as ET
 import requests
 from qgis.gui import QgsMessageBar
-from qgis.core import QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform
+from qgis.core import QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'QRealTime_dialog_services.ui'))
@@ -228,7 +228,7 @@ class aggregate (QTableWidget):
         self.processingLayer = layer
         QgisFieldsList = [field.name() for field in layer.pendingFields()]
         #layer.beginEditCommand("ODK syncronize")
-        layer.startEditing()
+#        layer.startEditing()
         type=layer.geometryType()
         geo=['POINT','LINE','POLYGON']
         layerGeo=geo[type]
@@ -260,7 +260,8 @@ class aggregate (QTableWidget):
         if fieldError:
             self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"), self.tr("Can't find '%s' field") % fieldError, level=QgsMessageBar.WARNING, duration=6)
         
-        layer.addFeatures(newQgisFeatures)
+        with edit(layer):
+            layer.addFeatures(newQgisFeatures)
         self.processingLayer = None
         
     def getUUIDList(self,lyr):
