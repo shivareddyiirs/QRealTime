@@ -295,7 +295,7 @@ class QRealTime:
             if result:
                 selectedForm= self.importData.comboBox.currentText()
                 url=service.getValue('url')+'/formXml?formId='+selectedForm
-                response= requests.request('GET',url)
+                response= requests.request('GET',url,verify=False)
                 if response.status_code==200:
                     # with open('importForm.xml','w') as importForm:
                     #     importForm.write(response.content)

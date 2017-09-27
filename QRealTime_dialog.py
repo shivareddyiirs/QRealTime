@@ -319,7 +319,7 @@ class aggregate (QTableWidget):
         url=self.getValue('url')+'/view/submissionList?formId='+XFormKey
         method='GET'
         table=[]
-        response = requests.request(method,url,proxies=getProxiesConf())
+        response = requests.request(method,url,proxies=getProxiesConf(),verify=False)
         if not response.status_code == 200:
                 return response, table
         try:
