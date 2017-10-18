@@ -246,12 +246,13 @@ class QRealTime:
             QgsMapLayer.VectorLayer,
             True)
         service=self.dlg.getCurrentService()
+        self.service=service
         self.importData= importData()
         try:
             self.time=1
             self.time=int(service.getValue('sync time'))
         except:
-            pass
+            print 'can not read time'
         self.timer=QTimer()
         def timeEvent():
             print 'calling collect data'
@@ -341,6 +342,8 @@ class QRealTime:
     def download(self,checked=False):
         if checked==True:
             self.layer= self.getLayer()
+            self.time=int(self.service.getValue('sync time'))
+            print 'starting timer every'+ str(self.time)+'second'
             self.timer.start(1000*self.time)
         elif checked==False:
             self.timer.stop()
