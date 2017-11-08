@@ -28,7 +28,7 @@ repository=https://github.com/shivareddyiirs/QRealTime
 # Tags are comma separated with spaces allowed
 tags=
 
-homepage=
+homepage=https://shivareddyiirs.github.io/QRealTime/
 category=Plugins
 icon=icon.png
 # experimental flag
