@@ -1,4 +1,4 @@
-<h1> Welcome to QReal Time plugin</h1>
+<h1> Welcome to QRealTime plugin</h1>
 QRealTime Plugin allows you to:
 <UL>
 <LI > Import data from ODK aggregate server </LI>
