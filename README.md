@@ -14,7 +14,7 @@ From the main menu choose Plugins --> QRealTime --> QRealTime Setting
 <br>
 Enter ODK aggregat url (required), other fields are optional, sync time is also reuired in case of data sync.
 <br>
-If you don't have ODK Aggregate server access or want to install your own aggregate server, then visit <a href="http://docs.opendatakit.org/aggregate-guide/" /a>
+If you don't have ODK Aggregate server access or want to install your own aggregate server,  <a href="http://docs.opendatakit.org/aggregate-guide/"> then visit </a>
 <br>
 <br>
 ![image](https://user-images.githubusercontent.com/9129316/32544265-ff06041e-c49d-11e7-82a0-24e655052395.png)
