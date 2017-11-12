@@ -252,10 +252,10 @@ class QRealTime:
             self.time=1
             self.time=int(service.getValue('sync time'))
         except:
-            print 'can not read time'
+            print ('can not read time')
         self.timer=QTimer()
         def timeEvent():
-            print 'calling collect data'
+            print ('calling collect data')
             service.collectData(self.getLayer(),self.getLayer().name())
         self.timer.timeout.connect(timeEvent)
 
@@ -326,7 +326,7 @@ class QRealTime:
     def sendForm(self):
 #        get the fields model like name , widget type, options etc.
         version= str(datetime.datetime.now())
-        print 'version is', version
+        print ('version is', version)
         layer=self.getLayer()
         self.dlg.getCurrentService().updateFields(layer)
         fieldDict= self.getFieldsModel(layer)
@@ -343,7 +343,7 @@ class QRealTime:
         if checked==True:
             self.layer= self.getLayer()
             self.time=int(self.service.getValue('sync time'))
-            print 'starting timer every'+ str(self.time)+'second'
+            print ('starting timer every'+ str(self.time)+'second')
             self.timer.start(1000*self.time)
         elif checked==False:
             self.timer.stop()

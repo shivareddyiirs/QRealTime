@@ -202,9 +202,9 @@ class aggregate (QTableWidget):
         else:
             response, remoteTable = self.getTable(xFormKey,self.getValue('lastID'))
         if response.status_code == 200:
-            print 'before Update Layer'
+            print ('before Update Layer')
             if remoteTable:
-                print 'table have some data'
+                print ('table have some data')
                 self.updateLayer(layer,remoteTable)
         else:
             self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
@@ -241,11 +241,11 @@ class aggregate (QTableWidget):
             if not odkFeature['ODKUUID'] in uuidList:
                 qgisFeature = QgsFeature()
                 wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
-                print wktGeom
+                print (wktGeom)
                 if wktGeom[:3] != layerGeo[:3]:
                     continue
                 qgisGeom = QgsGeometry.fromWkt(wktGeom)
-                print 'geom is',qgisGeom
+                print ('geom is',qgisGeom)
                 qgisFeature.setGeometry(qgisGeom)
                 qgisFeature.initAttributes(len(QgisFieldsList))
                 for fieldName, fieldValue in odkFeature.iteritems():
@@ -278,9 +278,9 @@ class aggregate (QTableWidget):
 
     def guessWKTGeomType(self,geom):
         coordinates = geom.split(';')
-#        print 'coordinates are ', coordinates
+#        print ('coordinates are ', coordinates)
         firstCoordinate = coordinates[0].strip().split(" ")
-#        print 'first Coordinate is ',  firstCoordinate
+#        print ('first Coordinate is ',  firstCoordinate)
         if len(firstCoordinate) < 2:
             return "invalid", None
         coordinatesList = []
@@ -327,24 +327,24 @@ class aggregate (QTableWidget):
             root = ET.fromstring(response.content)
             ns='{http://opendatakit.org/submissions}'
             instance_ids=[child.text for child in root[0].findall(ns+'id')]
-            print 'instance ids before filter', instance_ids
+            print ('instance ids before filter', instance_ids)
             ns1='{http://www.opendatakit.org/cursor}'
             lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
-            print 'server lastID is',lastReturnedURI
+            print ('server lastID is',lastReturnedURI)
             if lastID ==lastReturnedURI:
-                print 'No Download returning'
+                print ('No Download returning')
                 return response,table
             lastindex=0
             try:
                 lastindex= instance_ids.index(lastID)
             except:
-                print 'first Download'
+                print ('first Download')
             instance_ids=instance_ids[lastindex:]
-            print  'downloading',instance_ids
+            print  ('downloading',instance_ids)
             for id in instance_ids :
                 if id:
                     url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version=null and @uiVersion=null]/{}[@key={}]'.format(XFormKey,XFormKey,id)
-                    print url
+                    print (url)
                     response=requests.request(method,url,verify=False)
                     if not response.status_code == 200:
                         return response,table
@@ -359,10 +359,10 @@ class aggregate (QTableWidget):
                                 dict[key]=self.cleanURI(mediaDict['downloadUrl'],XFormKey,value)
                     table.append(dict)
             self.getValue('lastID',lastReturnedURI)
-            print table
+            print (table)
             return response, table
         except:
-            print 'not able to fetch'
+            print ('not able to fetch')
             return response,table
         
         
@@ -377,22 +377,22 @@ class aggregate (QTableWidget):
                 try:
                     response = requests.get(URI, stream=True,verify=False)
                 except:
-                    print 'unable to donwload using the link'
+                    print ('unable to donwload using the link')
                 localAttachmentPath = os.path.abspath(os.path.join(downloadDir,fileName))
                 if response.status_code == 200:
-                    print "downloading", URI
+                    print ("downloading", URI)
                     with open(localAttachmentPath, 'wb') as f:
                         for chunk in response:
                             f.write(chunk)
                         localURI = localAttachmentPath
-                    print 'loaded image'
-                    print localURI
+                    print ('loaded image')
+                    print (localURI)
                     return localURI
                     
                 else:
-                    print 'error downloading remote file: ',response.reason
+                    print ('error downloading remote file: ',response.reason)
                     return 'error downloading remote file: ',response.reason
             else:
-                print 'Not downloaded anything'
+                print ('Not downloaded anything')
                 return URI
 
