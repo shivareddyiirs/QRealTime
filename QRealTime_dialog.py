@@ -21,15 +21,19 @@
  ***************************************************************************/
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import os
-
-from PyQt4 import QtGui, uic
-from PyQt4.QtGui import  QWidget,QTableWidget,QTableWidgetItem
-from PyQt4.QtCore import Qt, QSettings, QSize,QVariant
+from PyQt5 import QtGui, uic
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QTableWidget,QTableWidgetItem
+from PyQt5.QtCore import Qt, QSettings, QSize,QVariant
 import xml.etree.ElementTree as ET
 import requests
 from qgis.gui import QgsMessageBar
 from qgis.core import QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit
+import six
+from six.moves import range
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'QRealTime_dialog_services.ui'))
@@ -50,7 +54,7 @@ def getProxiesConf():
         return proxyDict
     else:
         return None
-class QRealTimeDialog(QtGui.QDialog, FORM_CLASS):
+class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, caller,parent=None):
         """Constructor."""
         super(QRealTimeDialog, self).__init__(parent)
@@ -245,10 +249,10 @@ class aggregate (QTableWidget):
                 if wktGeom[:3] != layerGeo[:3]:
                     continue
                 qgisGeom = QgsGeometry.fromWkt(wktGeom)
-                print ('geom is',qgisGeom)
+                print(('geom is',qgisGeom))
                 qgisFeature.setGeometry(qgisGeom)
                 qgisFeature.initAttributes(len(QgisFieldsList))
-                for fieldName, fieldValue in odkFeature.iteritems():
+                for fieldName, fieldValue in six.iteritems(odkFeature):
                     if fieldName != 'GEOMETRY':
                         try:
                             qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
@@ -327,10 +331,10 @@ class aggregate (QTableWidget):
             root = ET.fromstring(response.content)
             ns='{http://opendatakit.org/submissions}'
             instance_ids=[child.text for child in root[0].findall(ns+'id')]
-            print ('instance ids before filter', instance_ids)
+            print(('instance ids before filter', instance_ids))
             ns1='{http://www.opendatakit.org/cursor}'
             lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
-            print ('server lastID is',lastReturnedURI)
+            print(('server lastID is',lastReturnedURI))
             if lastID ==lastReturnedURI:
                 print ('No Download returning')
                 return response,table
@@ -340,7 +344,7 @@ class aggregate (QTableWidget):
             except:
                 print ('first Download')
             instance_ids=instance_ids[lastindex:]
-            print  ('downloading',instance_ids)
+            print(('downloading',instance_ids))
             for id in instance_ids :
                 if id:
                     url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version=null and @uiVersion=null]/{}[@key={}]'.format(XFormKey,XFormKey,id)
@@ -354,7 +358,7 @@ class aggregate (QTableWidget):
                     mediaFile=root1.findall(ns+'mediaFile')
                     if len(mediaFile)>0:
                         mediaDict={child.tag.replace(ns,''):child.text for child in mediaFile[0]}
-                        for key,value in dict.iteritems():
+                        for key,value in six.iteritems(dict):
                             if value==mediaDict['filename']:
                                 dict[key]=self.cleanURI(mediaDict['downloadUrl'],XFormKey,value)
                     table.append(dict)
@@ -370,7 +374,7 @@ class aggregate (QTableWidget):
     def cleanURI(self,URI,layerName,fileName):
             
             attachements = {}
-            if isinstance(URI, basestring) and (URI[0:7] == 'http://' or URI[0:8] == 'https://'):
+            if isinstance(URI, six.string_types) and (URI[0:7] == 'http://' or URI[0:8] == 'https://'):
                 downloadDir = os.path.join(os.path.expanduser('~'),'attachments_%s' % layerName)
                 if not os.path.exists(downloadDir):
                     os.makedirs(downloadDir)
@@ -380,7 +384,7 @@ class aggregate (QTableWidget):
                     print ('unable to donwload using the link')
                 localAttachmentPath = os.path.abspath(os.path.join(downloadDir,fileName))
                 if response.status_code == 200:
-                    print ("downloading", URI)
+                    print(("downloading", URI))
                     with open(localAttachmentPath, 'wb') as f:
                         for chunk in response:
                             f.write(chunk)
@@ -390,7 +394,7 @@ class aggregate (QTableWidget):
                     return localURI
                     
                 else:
-                    print ('error downloading remote file: ',response.reason)
+                    print(('error downloading remote file: ',response.reason))
                     return 'error downloading remote file: ',response.reason
             else:
                 print ('Not downloaded anything')

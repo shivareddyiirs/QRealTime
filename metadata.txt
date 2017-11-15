@@ -16,8 +16,8 @@ email=kotishiva@gmail.com
 
 about=This software is desigend and developed in IIRS for online data collection. Form designing to data compilation is automated in a way that everything can be done from GIS
 
-tracker=https://github.com/shivareddyiirs/QRealTime
-repository=https://github.com/shivareddyiirs/QRealTime
+tracker=https:///github.com//shivareddyiirs//QRealTime
+repository=https:///github.com//shivareddyiirs//QRealTime
 # End of mandatory metadata
 
 # Recommended items:
@@ -28,7 +28,7 @@ repository=https://github.com/shivareddyiirs/QRealTime
 # Tags are comma separated with spaces allowed
 tags=
 
-homepage=https://shivareddyiirs.github.io/QRealTime/
+homepage=https:///shivareddyiirs.github.io//QRealTime//
 category=Plugins
 icon=icon.png
 # experimental flag
