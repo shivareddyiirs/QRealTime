@@ -248,7 +248,7 @@ class QRealTime:
             True)
         service=self.dlg.getCurrentService()
         self.service=service
-        self.importData= importData
+        self.importData= importData()
         try:
             self.time=1
             self.time=int(service.getValue('sync time'))
@@ -257,7 +257,9 @@ class QRealTime:
         self.timer=QTimer()
         def timeEvent():
             print ('calling collect data')
-            service.collectData(self.getLayer(),self.getLayer().name())
+            layer=self.getLayer()
+            print(layer)
+            service.collectData(layer,layer.name())
         self.timer.timeout.connect(timeEvent)
 
 
@@ -303,7 +305,7 @@ class QRealTime:
                     # with open('importForm.xml','w') as importForm:
                     #     importForm.write(response.content)
                     formKey= self.updateLayer(layer,response.content)
-                    layer.setLayerName(formKey)
+                    layer.setName(formKey)
                 service.collectData(layer,formKey,True)
 
                 
@@ -328,7 +330,7 @@ class QRealTime:
     def sendForm(self):
 #        get the fields model like name , widget type, options etc.
         version= str(datetime.datetime.now())
-        print(('version is', version))
+        print('version is', version)
         layer=self.getLayer()
         self.dlg.getCurrentService().updateFields(layer)
         fieldDict= self.getFieldsModel(layer)
@@ -345,7 +347,7 @@ class QRealTime:
         if checked==True:
             self.layer= self.getLayer()
             self.time=int(self.service.getValue('sync time'))
-            print(('starting timer every'+ str(self.time)+'second'))
+            print('starting timer every'+ str(self.time)+'second')
             self.timer.start(1000*self.time)
         elif checked==False:
             self.timer.stop()

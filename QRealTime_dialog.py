@@ -31,7 +31,7 @@ from PyQt5.QtCore import Qt, QSettings, QSize,QVariant
 import xml.etree.ElementTree as ET
 import requests
 from qgis.gui import QgsMessageBar
-from qgis.core import QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit
+from qgis.core import QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit,QgsPointXY
 import six
 from six.moves import range
 
@@ -198,8 +198,9 @@ class aggregate (QTableWidget):
         return response
         
     def collectData(self,layer,xFormKey,importData=False):
-        if not layer :
-            return
+#        if layer :
+#            print("layer is not present or not valid")
+#            return
         self.updateFields(layer)
         if importData:
             response, remoteTable = self.getTable(xFormKey,"")
@@ -315,7 +316,10 @@ class aggregate (QTableWidget):
         crsDest = self.processingLayer.crs () # get layer crs
         crsSrc = QgsCoordinateReferenceSystem(4326)  # WGS 84
         xform = QgsCoordinateTransform(crsSrc, crsDest)
-        return xform.transform(pPoint)
+        try:
+            return QgsPoint(xform.transform(pPoint))
+        except :
+            return QgsPoint(xform.transform(QgsPointXY(pPoint)))
 
 
         
@@ -394,7 +398,7 @@ class aggregate (QTableWidget):
                     return localURI
                     
                 else:
-                    print(('error downloading remote file: ',response.reason))
+                    print('error downloading remote file: ',response.reason)
                     return 'error downloading remote file: ',response.reason
             else:
                 print ('Not downloaded anything')
