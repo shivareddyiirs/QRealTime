@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import QMenu,QAction, QFileDialog
 # import for XML reading writing
 # Import the code for the dialog
 from .QRealTime_dialog import QRealTimeDialog
-from QRealTime_dialog_import import importData
+from .QRealTime_dialog_import import importData
 import os.path
 from qgis.core import QgsMapLayer
 import warnings
