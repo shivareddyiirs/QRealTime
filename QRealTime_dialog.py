@@ -250,7 +250,7 @@ class aggregate (QTableWidget):
                 if wktGeom[:3] != layerGeo[:3]:
                     continue
                 qgisGeom = QgsGeometry.fromWkt(wktGeom)
-                print(('geom is',qgisGeom))
+                print('geom is',qgisGeom)
                 qgisFeature.setGeometry(qgisGeom)
                 qgisFeature.initAttributes(len(QgisFieldsList))
                 for fieldName, fieldValue in six.iteritems(odkFeature):

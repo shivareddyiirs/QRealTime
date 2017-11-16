@@ -20,8 +20,6 @@
  *                                                                         *
  ***************************************************************************/
 """
-from __future__ import absolute_import
-from __future__ import print_function
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMenu,QAction, QFileDialog
@@ -311,15 +309,19 @@ class QRealTime:
                 
                         
     def updateLayer(self,layer,xml):
-        ns='{http:///www.w3.org//2002//xforms}'
+        ns='{http://www.w3.org/2002/xforms}'
         root= ET.fromstring(xml)
         key= root[0][1][0][0].attrib['id']
+        print('key captured',key)
+        print (root[0][1].findall(ns+'bind'))
         for bind in root[0][1].findall(ns+'bind'):
             attrib=bind.attrib
             fieldName= attrib['nodeset'].split('/')[-1]
             fieldType=attrib['type']
             qgstype = qtype(attrib['type'])
+            print ('first attribute',fieldName)
             if fieldType[:3]!='geo':
+                print('creating new field:',fieldName)
                 self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype)
         return key
 
