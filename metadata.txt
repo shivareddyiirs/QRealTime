@@ -10,7 +10,7 @@
 name=QRealTime
 qgisMinimumVersion=3.0
 description=This plugin connects you to Aggregate Server and do autoupdation of data to and from aggregate
-version=1.0
+version=2.0
 author=Shiva Reddy Koti, Prabhakar Alok Verma
 email=kotishiva@gmail.com
 
