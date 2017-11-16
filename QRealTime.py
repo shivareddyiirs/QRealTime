@@ -39,18 +39,6 @@ import requests
 import xml.etree.ElementTree as ET
 from .pyxform.builder import create_survey_element_from_dict
 import six
-
-def slugify(s):
-    if type(s) is six.text_type:
-        slug = unicodedata.normalize('NFKD', s)
-    elif type(s) is str:
-        slug = s
-    else:
-        raise AttributeError("Can't slugify string")
-    slug = slug.encode('ascii', 'ignore').lower()
-    slug = re.sub(r'[^a-z0-9]+', '-', slug).strip('-')
-    slug=re.sub(r'--+',r'-',slug)
-    return slug
     
 def QVariantToODKtype(q_type):
         if  q_type == QVariant.String:
@@ -336,14 +324,14 @@ class QRealTime:
         layer=self.getLayer()
         self.dlg.getCurrentService().updateFields(layer)
         fieldDict= self.getFieldsModel(layer)
-        surveyDict= {"name":slugify(layer.name()),"title":layer.name(),'VERSION':version,"instance_name": 'uuid()',"submission_url": '',
-        "default_language":'default','id_string':slugify(layer.name()),'type':'survey','children':fieldDict }
+        surveyDict= {"name":layer.name(),"title":layer.name(),'VERSION':version,"instance_name": 'uuid()',"submission_url": '',
+        "default_language":'default','id_string':layer.name(),'type':'survey','children':fieldDict }
         survey=create_survey_element_from_dict(surveyDict)
         xml=survey.to_xml(validate=None, warnings=warnings)
         os.chdir(os.path.expanduser('~'))
         with open('Xform.xml','w') as xForm:
             xForm.write(xml)
-        self.dlg.getCurrentService().sendForm(slugify(layer.name()),'Xform.xml')
+        self.dlg.getCurrentService().sendForm(layer.name(),'Xform.xml')
         
     def download(self,checked=False):
         if checked==True:
@@ -377,13 +365,15 @@ class QRealTime:
             fieldDef['hint'] = ''
             fieldDef['type'] = QVariantToODKtype(field.type())
             fieldDef['bind'] = {}
-            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
+#            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
+            widget =currentLayer.editorWidgetSetup(i)
+            fieldDef['fieldWidget']=widget.type()
             if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','FileName'):
                 if fieldDef['fieldWidget'] == 'ValueMap':
                     fieldDef['type']='select one'
                 elif fieldDef['fieldWidget'] == 'Photo':
                     fieldDef['type']='image'
-                config = {v: k for k, v in six.iteritems(currentFormConfig.widgetConfig(i))}
+                config = {v: k for k, v in six.iteritems(widget.config()['map'])}
                 choicesList=[{'name':name,'label':label} for name,label in six.iteritems(config)]
                 fieldDef["choices"] = choicesList
 #                fieldDef['choices'] = config
