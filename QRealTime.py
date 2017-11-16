@@ -37,7 +37,7 @@ from qgis.PyQt.QtCore import QTimer
 import datetime
 import requests
 import xml.etree.ElementTree as ET
-from pyxform.builder import create_survey_element_from_dict
+from .pyxform.builder import create_survey_element_from_dict
 import six
 
 def slugify(s):
