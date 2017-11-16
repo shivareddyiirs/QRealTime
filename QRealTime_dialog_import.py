@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from PyQt5 import QtGui,QtWidgets, uic
 import os
 from qgis.core import *
