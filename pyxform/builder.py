@@ -1,16 +1,16 @@
 import copy
-import file_utils
 import os
-import utils
 
-from errors import PyXFormError
-from section import RepeatingSection, GroupedSection
-from survey import Survey
-from question import Question, InputQuestion, TriggerQuestion, \
-    UploadQuestion, MultipleChoiceQuestion, OsmUploadQuestion
-from question_type_dictionary import QUESTION_TYPE_DICT
-from xls2json import SurveyReader
-from utils import unicode
+from pyxform import file_utils, utils
+from pyxform.errors import PyXFormError
+from pyxform.question import (InputQuestion, MultipleChoiceQuestion,
+                              OsmUploadQuestion, Question, RangeQuestion,
+                              TriggerQuestion, UploadQuestion)
+from pyxform.question_type_dictionary import QUESTION_TYPE_DICT
+from pyxform.section import GroupedSection, RepeatingSection
+from pyxform.survey import Survey
+from pyxform.utils import unicode
+from pyxform.xls2json import SurveyReader
 
 
 def copy_json_dict(json_dict):
@@ -46,6 +46,7 @@ class SurveyElementBuilder(object):
         u"select1": MultipleChoiceQuestion,
         u"upload": UploadQuestion,
         u"osm": OsmUploadQuestion,
+        u'range': RangeQuestion,
         }
 
     SECTION_CLASSES = {
@@ -77,7 +78,6 @@ class SurveyElementBuilder(object):
         call it because it corresponds directly with a json object)
         to a survey object
         """
-        print 'dictionary is', d
         if u"add_none_option" in d:
             self._add_none_option = d[u"add_none_option"]
         if d[u"type"] in self.SECTION_CLASSES:

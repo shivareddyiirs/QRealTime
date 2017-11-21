@@ -1,16 +1,23 @@
 """
 A Python script to convert excel files into JSON.
 """
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 import json
 import re
 import sys
 import codecs
 import os
-import constants, aliases
-from errors import PyXFormError
-from xls2json_backends import xls_to_dict, csv_to_dict
-from utils import is_valid_xml_tag, unicode, basestring
+from pyxform import constants, aliases
+from pyxform.errors import PyXFormError
+from pyxform.xls2json_backends import xls_to_dict, csv_to_dict
+from pyxform.utils import is_valid_xml_tag, unicode, basestring
+
+SMART_QUOTES = {
+    '\u2018': "'",
+    '\u2019': "'",
+    '\u201c': '"',
+    '\u201d': '"',
+}
 
 
 def print_pyobj_to_json(pyobj, path=None):
@@ -64,6 +71,17 @@ def list_to_nested_dict(lst):
         return {lst[0]: list_to_nested_dict(lst[1:])}
     else:
         return lst[0]
+
+
+def replace_smart_quotes_in_dict(_d):
+    for key, value in _d.items():
+        _changed = False
+        for smart_quote, dumb_quote in SMART_QUOTES.items():
+            if smart_quote in value:
+                value = value.replace(smart_quote, dumb_quote)
+                _changed = True
+        if _changed:
+            _d[key] = value
 
 
 def dealias_and_group_headers(dict_array, header_aliases, use_double_colons,
@@ -139,6 +157,7 @@ def clean_text_values(dict_array):
     Note that the keys don't get cleaned, which could be an issue.
     """
     for row in dict_array:
+        replace_smart_quotes_in_dict(row)
         for key, value in row.items():
             if isinstance(value, basestring):
                 row[key] = re.sub(r"( )+", " ", value.strip())
@@ -238,6 +257,62 @@ def add_flat_annotations(prompt_list, parent_relevant='', name_prefix=''):
                 #    prompt['name'] = name_prefix + prompt['name']
 
 
+def process_range_question_type(row):
+    """Returns a new row that includes the Range parameters start, end and
+    step.
+
+    Raises PyXFormError when invalid range parameters are used.
+    """
+    def _parameters(parameters):
+        parts = parameters.split(';')
+        if len(parts) == 1:
+            parts = parameters.split(',')
+        if len(parts) == 1:
+            parts = parameters.split()
+
+        return parts
+
+    new_dict = row.copy()
+    parameters = _parameters(new_dict.get('parameters', ''))
+    parameters_map = {'start': 'start', 'end': 'end', 'step': 'step'}
+    defaults = {'start': '1', 'end': '10', 'step': '1'}
+    params = {}
+
+    for param in parameters:
+        if '=' not in param:
+            raise PyXFormError("Expecting parameters to be in the form of "
+                               "'start=X end=X step=X'.")
+        k, v = param.split('=')[:2]
+        key = parameters_map.get(k.lower().strip())
+        if key:
+            params[key] = v.strip()
+        else:
+            raise PyXFormError(
+                "Range has the parameters 'start', 'end' and"
+                " 'step': '%s' is an invalid parameter." % k)
+
+    # set defaults
+    for key in parameters_map.values():
+        if key not in params:
+            params[key] = defaults[key]
+
+    try:
+        has_float = any(
+            [float(x) and '.' in str(x) for x in params.values()])
+    except ValueError:
+        raise PyXFormError("Range parameters 'start', "
+                           "'end' or 'step' must all be numbers.")
+    else:
+        # is integer by default, convert to decimal if it has any float values
+        if has_float:
+            new_dict['bind'] = new_dict.get('bind', {})
+            new_dict['bind'].update({'type': 'decimal'})
+
+    new_dict['parameters'] = params
+
+    return new_dict
+
+
 def workbook_to_json(
         workbook_dict, form_name=None,
         default_language=u"default", warnings=None):
@@ -263,8 +338,9 @@ def workbook_to_json(
     if warnings is None:
         warnings = []
     is_valid = False
-    for row in workbook_dict.get('survey', []):
-        is_valid = 'type' in row
+    workbook_dict = {x.lower(): y for x,y in workbook_dict.items()}
+    for row in workbook_dict.get(constants.SURVEY, []):
+        is_valid = 'type' in [z.lower() for z in row]
         if is_valid:
             break
     if not is_valid:
@@ -292,6 +368,7 @@ def workbook_to_json(
         workbook_dict.get(constants.SETTINGS, []),
         aliases.settings_header, use_double_colons)
     settings = settings_sheet[0] if len(settings_sheet) > 0 else {}
+    replace_smart_quotes_in_dict(settings)
 
     default_language = settings.get(
         constants.DEFAULT_LANGUAGE, default_language)
@@ -337,6 +414,9 @@ def workbook_to_json(
         use_double_colons, default_language)
 
     choices_sheet = workbook_dict.get(constants.CHOICES, [])
+    for choice_item in choices_sheet:
+        replace_smart_quotes_in_dict(choice_item)
+
     choices_sheet = dealias_and_group_headers(
         choices_sheet, aliases.list_header, use_double_colons,
         default_language)
@@ -400,7 +480,9 @@ def workbook_to_json(
         use_double_colons, default_language)
     survey_sheet = dealias_types(survey_sheet)
 
-    osm_sheet = workbook_dict.get(constants.OSM, [])
+    osm_sheet = dealias_and_group_headers(workbook_dict.get(constants.OSM, []),
+                                              aliases.list_header,
+                                              True)
     osm_tags = group_dictionaries_by_key(osm_sheet, constants.LIST_NAME)
     # #################################
 
@@ -431,6 +513,9 @@ def workbook_to_json(
     osm_regexp = re.compile(
         r"(?P<osm_command>(" + '|'.join(aliases.osm.keys()) +
         ')) (?P<list_name>\S+)')
+
+    # Rows from the survey sheet that should be nested in meta
+    survey_meta = []
 
     for row in survey_sheet:
         row_number += 1
@@ -464,6 +549,18 @@ def workbook_to_json(
             raise PyXFormError(
                 row_format_string % row_number +
                 " Question with no type.\n" + str(row))
+
+        # Pull out questions that will go in meta block
+        if question_type == 'audit':
+            # Force audit name to always be "audit" to follow XForms spec
+            if 'name' in row and row['name'] not in [None, '', 'audit']:
+                raise PyXFormError(row_format_string % row_number +
+                    " Audits must always be named 'audit.'" +
+                    " The name column should be left blank.")
+
+            row['name'] = 'audit'
+            survey_meta.append(row)
+            continue
 
         if question_type == 'calculate':
             calculation = row.get('bind', {}).get('calculate')
@@ -788,6 +885,12 @@ def workbook_to_json(
 
             continue
 
+        # range question_type
+        if question_type == 'range':
+            new_dict = process_range_question_type(row)
+            parent_children_array.append(new_dict)
+            continue
+
         # TODO: Consider adding some question_type validation here.
 
         # Put the row in the json dict as is:
@@ -800,7 +903,7 @@ def workbook_to_json(
         # print "Generating flattened instance..."
         add_flat_annotations(stack[0][1])
 
-    meta_children = []
+    meta_children = [] + survey_meta
 
     if aliases.yes_no.get(settings.get("omit_instanceID")):
         if settings.get("public_key"):
@@ -911,8 +1014,10 @@ def organize_by_values(dict_list, key):
 class SpreadsheetReader(object):
     def __init__(self, path_or_file):
         path = path_or_file
-        if type(path_or_file) is file:
+        try:
             path = path.name
+        except AttributeError:
+            pass
         self._dict = parse_file_to_workbook_dict(path)
         self._path = path
         self._id = unicode(get_filename(path))

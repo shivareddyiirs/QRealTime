@@ -1,15 +1,15 @@
 """
 XLS-to-dict and csv-to-dict are essentially backends for xls2json.
 """
-#import xlrd
-#from xlrd import XLRDError
-#import unicodecsv as csv
+import xlrd
+from xlrd import XLRDError
+import unicodecsv as csv
 from io import BytesIO
-import constants
+from pyxform import constants
 import re
 import datetime
-from errors import PyXFormError
-from utils import unicode, basestring, unichr
+from pyxform.errors import PyXFormError
+from pyxform.utils import unicode, basestring, unichr
 from functools import reduce
 from collections import OrderedDict
 

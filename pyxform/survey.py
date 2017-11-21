@@ -1,19 +1,19 @@
-import tempfile
-from section import Section
-from question import Question
-from utils import node, unicode, basestring, PatchedText
-from collections import defaultdict
 import codecs
-from datetime import datetime
-import re
-#from odk_validate import check_xform
-from survey_element import SurveyElement
-from errors import PyXFormError
-import constants
-from instance import SurveyInstance
 import os
+import re
+import tempfile
 import xml.etree.ElementTree as ETree
+from collections import defaultdict
+from datetime import datetime
 
+from pyxform import constants
+from pyxform.errors import PyXFormError
+from pyxform.instance import SurveyInstance
+from pyxform.odk_validate import check_xform
+from pyxform.question import Question
+from pyxform.section import Section
+from pyxform.survey_element import SurveyElement
+from pyxform.utils import PatchedText, basestring, node, unicode
 
 nsmap = {
     u"xmlns": u"http://www.w3.org/2002/xforms",
@@ -57,34 +57,7 @@ class Survey(Section):
             u"namespaces": unicode,
         }
     )
-    '''
-    FIELDS.update(
-        {
-            u"_xpath": dict,
-            u"_created": datetime.now,  # This can't be dumped to json
-            u"title": unicode,
-            u"id_string": unicode,
-            u"sms_keyword": unicode,
-            u"sms_separator": unicode,
-            u"sms_allow_media": bool,
-            u"sms_date_format": unicode,
-            u"sms_datetime_format": unicode,
-            u"sms_response": unicode,
-            u"file_name": unicode,
-            u"default_language": unicode,
-            u"_translations": dict,
-            u"submission_url": unicode,
-            u"public_key": unicode,
-            u"instance_xmlns": unicode,
-            u"version": unicode,
-            u"choices": dict,
-            u"style": unicode,
-            u"attribute": dict,
-            u"namespaces": unicode,
-        }
-    )
-    '''
-    
+
     def validate(self):
         if self.id_string in [None, 'None']:
             raise PyXFormError('Survey cannot have an empty id_string')
@@ -186,12 +159,16 @@ class Survey(Section):
             itemset = i.get('itemset')
             if itemset and \
                     (itemset.endswith('.csv') or itemset.endswith('.xml')):
-                file_id, file_extension = os.path.splitext(itemset)
+                file_id, ext = os.path.splitext(itemset)
+                uri = 'jr://%s/%s' % (
+                    'file' if ext == '.xml' else "file-%s" % ext[1:],
+                    itemset)
                 yield node(
                     "instance",
-                    node("root", node("item", node("name"), node("label"))),
+                    node("root",
+                         node("item", node("name", "_"), node("label", "_"))),
                     id=file_id,
-                    src="jr://file-%s/%s" % (file_extension[1:], itemset)
+                    src=uri
                 )
 
     def xml_model(self):
@@ -284,8 +261,8 @@ class Survey(Section):
                                 else:
                                     self._add_to_nested_dict(
                                         self._translations,
-                                        [mediatypeorlanguage, itext_id, 'long'],
-                                        value)
+                                        [mediatypeorlanguage, itext_id,
+                                         'long'], value)
                     elif choicePropertyName == 'label':
                         self._add_to_nested_dict(
                             self._translations,
@@ -405,7 +382,8 @@ class Survey(Section):
                         value, output_inserted = \
                             self.insert_output_values(media_value)
                         itext_nodes.append(
-                            node("value", value, toParseString=output_inserted))
+                            node("value", value, toParseString=output_inserted)
+                        )
                         continue
 
                     if media_type == "long":
@@ -414,13 +392,15 @@ class Survey(Section):
                         # I'm ignoring long types for now because I don't know
                         # how they are supposed to work.
                         itext_nodes.append(
-                            node("value", value, toParseString=output_inserted))
+                            node("value", value, toParseString=output_inserted)
+                        )
                     elif media_type == "image":
                         value, output_inserted = \
                             self.insert_output_values(media_value)
                         itext_nodes.append(
                             node("value", "jr://images/" + value,
-                                 form=media_type, toParseString=output_inserted)
+                                 form=media_type,
+                                 toParseString=output_inserted)
                         )
                     else:
                         value, output_inserted = \
@@ -438,6 +418,9 @@ class Survey(Section):
     def date_stamp(self):
         return self._created.strftime("%Y_%m_%d")
 
+    def _to_ugly_xml(self):
+        return '<?xml version="1.0"?>' + self.xml().toxml()
+
     def _to_pretty_xml(self):
         """
         I want the to_xml method to by default validate the xml we are
@@ -448,9 +431,9 @@ class Survey(Section):
         # TODO: check out pyxml
         # http://ronrothman.com/public/leftbraned/xml-dom-minidom-toprettyxml-and-silly-whitespace/
         xml_with_linebreaks = self.xml().toprettyxml(indent='  ')
-        text_re = re.compile('>\n\s+([^<>\s].*?)\n\s+</', re.DOTALL)
+        text_re = re.compile('(>)\n\s*(\s[^<>\s].*?)\n\s*(\s</)', re.DOTALL)
         output_re = re.compile('\n.*(<output.*>)\n(  )*')
-        pretty_xml = text_re.sub('>\g<1></', xml_with_linebreaks)
+        pretty_xml = text_re.sub(lambda m: ''.join(m.group(1, 2, 3)), xml_with_linebreaks)
         inline_output = output_re.sub('\g<1>', pretty_xml)
         inline_output = re.compile('<label>\s*\n*\s*\n*\s*</label>')\
             .sub('<label></label>', inline_output)
@@ -532,7 +515,7 @@ class Survey(Section):
             return result, not result == xml_text
         return text, False
 
-    def print_xform_to_file(self, path=None, validate=True, warnings=None):
+    def print_xform_to_file(self, path=None, validate=True, pretty_print=True, warnings=None):
         """
         Print the xForm to a file and optionally validate it as well by
         throwing exceptions and adding warnings to the warnings array.
@@ -541,12 +524,20 @@ class Survey(Section):
             warnings = []
         if not path:
             path = self._print_name + ".xml"
-        with codecs.open(path, mode="w", encoding="utf-8") as fp:
-            fp.write(self._to_pretty_xml())
+        try:
+            with codecs.open(path, mode="w", encoding="utf-8") as fp:
+                if pretty_print:
+                    fp.write(self._to_pretty_xml())
+                else:
+                    fp.write(self._to_ugly_xml())
+        except Exception as e:
+            if os.path.exists(path):
+                os.unlink(path)
+            raise e
         if validate:
             warnings.extend(check_xform(path))
 
-    def to_xml(self, validate=True, warnings=None):
+    def to_xml(self, validate=True, pretty_print=True, warnings=None):
         # On Windows, NamedTemporaryFile must be opened exclusively.
         # So it must be explicitly created, opened, closed, and removed.
         tmp = tempfile.NamedTemporaryFile(delete=False)
@@ -554,10 +545,15 @@ class Survey(Section):
         try:
             # this will throw an exception if the xml is not valid
             self.print_xform_to_file(tmp.name, validate=validate,
+                                     pretty_print=pretty_print,
                                      warnings=warnings)
         finally:
-            os.remove(tmp.name)
-        return self._to_pretty_xml()
+            if os.path.exists(tmp.name):
+                os.remove(tmp.name)
+        if pretty_print:
+            return self._to_pretty_xml()
+        else:
+            return self._to_ugly_xml()
 
     def instantiate(self):
         """

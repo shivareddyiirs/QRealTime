@@ -1,30 +1,30 @@
 from __future__ import print_function
 
+import argparse
+import json
+import os
+
+from pyxform import builder, xls2json
+from pyxform.utils import has_external_choices, sheet_to_csv
 """
 xls2xform converts properly formatted Excel documents into XForms for
 use with ODK Collect.
 """
-import builder #,xls2json
-import json
-import argparse
-#from pyxform.utils import  has_external_choices ,sheet_to_csv
-import os
 
 
-def xls2xform_convert(xlsform_path, xform_path, validate=True):
+def xls2xform_convert(xlsform_path, xform_path, validate=True, pretty_print=True):
     warnings = []
 
-    #json_survey = xls2json.parse_file_to_json(xlsform_path, warnings=warnings)
-    with open(xlsform_path) as f:
-        json_survey = f.readlines()
-    survey = builder.create_survey_element_from_json(json_survey)
+    json_survey = xls2json.parse_file_to_json(xlsform_path, warnings=warnings)
+    survey = builder.create_survey_element_from_dict(json_survey)
     # Setting validate to false will cause the form not to be processed by
     # ODK Validate.
     # This may be desirable since ODK Validate requires launching a subprocess
     # that runs some java code.
-    survey.print_xform_to_file(xform_path, validate=validate, warnings=warnings)
+    survey.print_xform_to_file(
+        xform_path, validate=validate,
+        pretty_print=pretty_print, warnings=warnings)
     output_dir = os.path.split(xform_path)[0]
-    '''
     if has_external_choices(json_survey):
         itemsets_csv = os.path.join(output_dir, "itemsets.csv")
         choices_exported = sheet_to_csv(xlsform_path, itemsets_csv,
@@ -34,7 +34,6 @@ def xls2xform_convert(xlsform_path, xform_path, validate=True):
                             "external choices sheet is missing.")
         else:
             print('External choices csv is located at:', itemsets_csv)
-    '''
     return warnings
 
 
@@ -46,9 +45,7 @@ def _create_parser():
     parser.add_argument(
         "path_to_XLSForm",
         help="Path to the Excel XSLX file with the XLSForm definition.")
-    parser.add_argument(
-        "output_path",
-        help="Path to save the output to.")
+    parser.add_argument("output_path", help="Path to save the output to.")
     parser.add_argument(
         "--json",
         action="store_true",
@@ -58,6 +55,11 @@ def _create_parser():
         action="store_false",
         default=True,
         help="Skip default running of ODK Validate on the output XForm XML.")
+    parser.add_argument(
+        "--no_pretty_print",
+        action="store_false",
+        default=True,
+        help="Print XML forms with collapsed whitespace instead of pretty-printed.")
     return parser
 
 
@@ -72,7 +74,7 @@ def main_cli():
 
         try:
             response['warnings'] = xls2xform_convert(
-                args.path_to_XLSForm, args.output_path, args.skip_validate)
+                args.path_to_XLSForm, args.output_path, args.skip_validate, args.no_pretty_print)
 
             response['code'] = 100
             response['message'] = "Ok!"
@@ -88,8 +90,8 @@ def main_cli():
 
         print(json.dumps(response))
     else:
-        warnings = xls2xform_convert(
-            args.path_to_XLSForm, args.output_path, args.skip_validate)
+        warnings = xls2xform_convert(args.path_to_XLSForm, args.output_path,
+                                     args.skip_validate, args.no_pretty_print)
         if len(warnings) > 0:
             print("Warnings:")
         for w in warnings:

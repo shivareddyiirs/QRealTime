@@ -20,13 +20,13 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
-from PyQt4.QtGui import QMenu, QAction, QIcon, QFileDialog
+from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMenu,QAction, QFileDialog
 # import for XML reading writing
-from pyxform.builder import create_survey_element_from_dict
 # Import the code for the dialog
-from QRealTime_dialog import QRealTimeDialog
-from QRealTime_dialog_import import importData
+from .QRealTime_dialog import QRealTimeDialog
+from .QRealTime_dialog_import import importData
 import os.path
 from qgis.core import QgsMapLayer
 import warnings
@@ -37,18 +37,8 @@ from qgis.PyQt.QtCore import QTimer
 import datetime
 import requests
 import xml.etree.ElementTree as ET
-
-def slugify(s):
-    if type(s) is unicode:
-        slug = unicodedata.normalize('NFKD', s)
-    elif type(s) is str:
-        slug = s
-    else:
-        raise AttributeError("Can't slugify string")
-    slug = slug.encode('ascii', 'ignore').lower()
-    slug = re.sub(r'[^a-z0-9]+', '-', slug).strip('-')
-    slug=re.sub(r'--+',r'-',slug)
-    return slug
+from .pyxform.builder import create_survey_element_from_dict
+import six
     
 def QVariantToODKtype(q_type):
         if  q_type == QVariant.String:
@@ -93,7 +83,7 @@ class QRealTime:
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
-        locale = QSettings().value('locale/userLocale')[0:2]
+        locale = QSettings().value('locale//userLocale')[0:2]
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
@@ -222,27 +212,24 @@ class QRealTime:
         self.sync.setChecked(False)
         self.sync.triggered.connect(self.download)
         self.sync.setChecked(False)
-        self.iface.legendInterface().addLegendLayerAction(
+        self.iface.addCustomActionForLayerType(
                 self.sync,
                 'QRealTime',
-                "01", 
                 QgsMapLayer.VectorLayer,
                 True)
 
         self.Import = QAction(icon,self.tr(u'import'),self.ODKMenu)
         self.Import.triggered.connect(self.importData)
-        self.iface.legendInterface().addLegendLayerAction(
+        self.iface.addCustomActionForLayerType(
                 self.Import,
                 'QRealTime',
-                '01',
                 QgsMapLayer.VectorLayer,
                 True)
         self.makeOnline=QAction(icon,self.tr(u'Make Online'),self.ODKMenu)
         self.makeOnline.triggered.connect(self.sendForm)
-        self.iface.legendInterface().addLegendLayerAction(
+        self.iface.addCustomActionForLayerType(
             self.makeOnline,
             'QRealTime',
-            '01',
             QgsMapLayer.VectorLayer,
             True)
         service=self.dlg.getCurrentService()
@@ -256,7 +243,9 @@ class QRealTime:
         self.timer=QTimer()
         def timeEvent():
             print ('calling collect data')
-            service.collectData(self.getLayer(),self.getLayer().name())
+            layer=self.getLayer()
+            print(layer)
+            service.collectData(layer,layer.name())
         self.timer.timeout.connect(timeEvent)
 
 
@@ -268,8 +257,9 @@ class QRealTime:
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
-        self.iface.legendInterface().removeLegendLayerAction(self.sync)
-        self.iface.legendInterface().removeLegendLayerAction(self.makeOnline)
+        self.iface.removeCustomActionForLayerType(self.sync)
+        self.iface.removeCustomActionForLayerType(self.makeOnline)
+        self.iface.removeCustomActionForLayerType(self.Import)
         del self.toolbar
 
 
@@ -295,13 +285,13 @@ class QRealTime:
             result=self.importData.exec_()
             if result:
                 selectedForm= self.importData.comboBox.currentText()
-                url=service.getValue('url')+'/formXml?formId='+selectedForm
+                url=service.getValue('url')+'//formXml?formId='+selectedForm
                 response= requests.request('GET',url,verify=False)
                 if response.status_code==200:
                     # with open('importForm.xml','w') as importForm:
                     #     importForm.write(response.content)
                     formKey= self.updateLayer(layer,response.content)
-                    layer.setLayerName(formKey)
+                    layer.setName(formKey)
                 service.collectData(layer,formKey,True)
 
                 
@@ -310,40 +300,44 @@ class QRealTime:
         ns='{http://www.w3.org/2002/xforms}'
         root= ET.fromstring(xml)
         key= root[0][1][0][0].attrib['id']
+        print('key captured',key)
+        print (root[0][1].findall(ns+'bind'))
         for bind in root[0][1].findall(ns+'bind'):
             attrib=bind.attrib
             fieldName= attrib['nodeset'].split('/')[-1]
             fieldType=attrib['type']
             qgstype = qtype(attrib['type'])
+            print ('first attribute',fieldName)
             if fieldType[:3]!='geo':
+                print('creating new field:',fieldName)
                 self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype)
         return key
 
 
     def getLayer(self):
-        return self.iface.legendInterface().currentLayer()
+        return self.iface.activeLayer()
         
     def sendForm(self):
 #        get the fields model like name , widget type, options etc.
         version= str(datetime.datetime.now())
-        print ('version is', version)
+        print('version is', version)
         layer=self.getLayer()
         self.dlg.getCurrentService().updateFields(layer)
         fieldDict= self.getFieldsModel(layer)
-        surveyDict= {"name":slugify(layer.name()),"title":layer.name(),'VERSION':version,"instance_name": 'uuid()',"submission_url": '',
-        "default_language":'default','id_string':slugify(layer.name()),'type':'survey','children':fieldDict }
+        surveyDict= {"name":layer.name(),"title":layer.name(),'VERSION':version,"instance_name": 'uuid()',"submission_url": '',
+        "default_language":'default','id_string':layer.name(),'type':'survey','children':fieldDict }
         survey=create_survey_element_from_dict(surveyDict)
         xml=survey.to_xml(validate=None, warnings=warnings)
         os.chdir(os.path.expanduser('~'))
         with open('Xform.xml','w') as xForm:
             xForm.write(xml)
-        self.dlg.getCurrentService().sendForm(slugify(layer.name()),'Xform.xml')
+        self.dlg.getCurrentService().sendForm(layer.name(),'Xform.xml')
         
     def download(self,checked=False):
         if checked==True:
             self.layer= self.getLayer()
             self.time=int(self.service.getValue('sync time'))
-            print ('starting timer every'+ str(self.time)+'second')
+            print('starting timer every'+ str(self.time)+'second')
             self.timer.start(1000*self.time)
         elif checked==False:
             self.timer.stop()
@@ -371,14 +365,16 @@ class QRealTime:
             fieldDef['hint'] = ''
             fieldDef['type'] = QVariantToODKtype(field.type())
             fieldDef['bind'] = {}
-            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
+#            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
+            widget =currentLayer.editorWidgetSetup(i)
+            fieldDef['fieldWidget']=widget.type()
             if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','FileName'):
                 if fieldDef['fieldWidget'] == 'ValueMap':
                     fieldDef['type']='select one'
                 elif fieldDef['fieldWidget'] == 'Photo':
                     fieldDef['type']='image'
-                config = {v: k for k, v in currentFormConfig.widgetConfig(i).iteritems()}
-                choicesList=[{'name':name,'label':label} for name,label in config.iteritems()]
+                config = {v: k for k, v in six.iteritems(widget.config()['map'])}
+                choicesList=[{'name':name,'label':label} for name,label in six.iteritems(config)]
                 fieldDef["choices"] = choicesList
 #                fieldDef['choices'] = config
             else:

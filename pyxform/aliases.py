@@ -1,4 +1,4 @@
-import constants
+from pyxform import constants
 
 # Aliases:
 # Ideally aliases should resolve to elements in the json form schema
@@ -73,6 +73,7 @@ survey_header = {
     u"constraint message": u"bind::jr:constraintMsg",
     u"constraint_message": u"bind::jr:constraintMsg",
     u"calculation": u"bind::calculate",
+    u"calculate": u"bind::calculate",
     u"command": constants.TYPE,
     u"tag": constants.NAME,
     u"value": constants.NAME,
@@ -90,7 +91,8 @@ survey_header = {
     u"requiredMsg": u"bind::jr:requiredMsg",
     u"required_message": u"bind::jr:requiredMsg",
     u"required message": u"bind::jr:requiredMsg",
-    u"body": u"control"
+    u"body": u"control",
+    u"parameters": u"parameters",
 }
 list_header = {
     u"caption": constants.LABEL,

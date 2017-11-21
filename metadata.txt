@@ -8,16 +8,17 @@
 
 [general]
 name=QRealTime
-qgisMinimumVersion=2.0
+qgisMinimumVersion=2.99
+qgisMaximumVersion=3.99
 description=This plugin connects you to Aggregate Server and do autoupdation of data to and from aggregate
-version=1.0
+version=2.0
 author=Shiva Reddy Koti, Prabhakar Alok Verma
 email=kotishiva@gmail.com
 
 about=This software is desigend and developed in IIRS for online data collection. Form designing to data compilation is automated in a way that everything can be done from GIS
 
-tracker=https://github.com/shivareddyiirs/QRealTime
-repository=https://github.com/shivareddyiirs/QRealTime
+tracker=https://github.com/shivareddyiirs/QRealTime/tree/QGIS3
+repository=https://github.com/shivareddyiirs/QRealTime/tree/QGIS3
 # End of mandatory metadata
 
 # Recommended items:

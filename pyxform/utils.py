@@ -3,8 +3,8 @@ import re
 import codecs
 import json
 import copy
-#import unicodecsv as csv
-#import xlrd
+import unicodecsv as csv
+import xlrd
 
 try:
     unicode("str")
@@ -15,7 +15,7 @@ except NameError:
 else:
     unicode = unicode
     basestring = basestring
-    unichr = unichr
+    unichr = chr
 
 SEP = "_"
 
@@ -133,7 +133,7 @@ def flatten(li):
         for it in subli:
             yield it
 
-'''
+
 def sheet_to_csv(workbook_path, csv_path, sheet_name):
     wb = xlrd.open_workbook(workbook_path)
     try:
@@ -149,7 +149,7 @@ def sheet_to_csv(workbook_path, csv_path, sheet_name):
             writer.writerow(
                 [v for v, m in zip(sheet.row_values(r), mask) if m])
     return True
-'''
+
 
 def has_external_choices(json_struct):
     """
