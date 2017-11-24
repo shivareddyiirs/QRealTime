@@ -332,10 +332,10 @@ class aggregate (QTableWidget):
             root = ET.fromstring(response.content)
             ns='{http://opendatakit.org/submissions}'
             instance_ids=[child.text for child in root[0].findall(ns+'id')]
-            print(('instance ids before filter', instance_ids))
+            print('instance ids before filter', instance_ids)
             ns1='{http://www.opendatakit.org/cursor}'
             lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
-            print(('server lastID is',lastReturnedURI))
+            print('server lastID is',lastReturnedURI)
             if lastID ==lastReturnedURI:
                 print ('No Download returning')
                 return response,table
