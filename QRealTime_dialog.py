@@ -345,7 +345,7 @@ class aggregate (QTableWidget):
             except:
                 print ('first Download')
             instance_ids=instance_ids[lastindex:]
-            print(('downloading',instance_ids))
+            print('downloading',instance_ids)
             for id in instance_ids :
                 if id:
                     url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version=null and @uiVersion=null]/{}[@key={}]'.format(XFormKey,XFormKey,id)
@@ -385,7 +385,7 @@ class aggregate (QTableWidget):
                     print ('unable to donwload using the link')
                 localAttachmentPath = os.path.abspath(os.path.join(downloadDir,fileName))
                 if response.status_code == 200:
-                    print(("downloading", URI))
+                    print("downloading", URI)
                     with open(localAttachmentPath, 'wb') as f:
                         for chunk in response:
                             f.write(chunk)
