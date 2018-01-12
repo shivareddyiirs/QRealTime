@@ -12,7 +12,7 @@ Install QGIS (if not already). Open Plugin Manager and search for QRealTime plug
 
 From the main menu choose Plugins --> QRealTime --> QRealTime Setting
 <br>
-Enter ODK aggregat url (required), other fields are optional, sync time is also reuired in case of data sync.
+Enter ODK aggregat url (required), other fields are optional, sync time is also required in case of data sync.
 <br>
 If you don't have ODK Aggregate server access or want to install your own aggregate server,  <a href="http://docs.opendatakit.org/aggregate-guide/"> then visit </a>
 <br>
@@ -23,3 +23,12 @@ If you don't have ODK Aggregate server access or want to install your own aggreg
 Right click over any existing layer --> QRealTIme and choose desired option
 
 ![image](https://user-images.githubusercontent.com/9129316/32544408-65f01516-c49e-11e7-9077-a9e18c602e11.png)
+
+<br>
+QRealTime plugin is capable of converting QGIS layer into data collection form. To design a data collection form for humanitarian crisis, we have to create appropriate vector layer. For the demonstration purpose, you can create the shapefile with following fields:
+<br>
+
+![table](https://user-images.githubusercontent.com/9129316/33984020-2d6d7170-e0dc-11e7-8458-c9c2feb275b6.png)
+
+<br>
+If you are not sure how to create  value map in QGIS,<a href= "http://www.northrivergeographic.com/archives/qgis-and-value-maps"> Visit this link </a>
