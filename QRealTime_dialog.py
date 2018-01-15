@@ -247,7 +247,7 @@ class aggregate (QTableWidget):
                 if wktGeom[:3] != layerGeo[:3]:
                     continue
                 qgisGeom = QgsGeometry.fromWkt(wktGeom)
-                print('geom is',qgisGeom)
+                print('geom is'+ qgisGeom)
                 qgisFeature.setGeometry(qgisGeom)
                 qgisFeature.initAttributes(len(QgisFieldsList))
                 for fieldName, fieldValue in six.iteritems(odkFeature):
@@ -280,15 +280,15 @@ class aggregate (QTableWidget):
 
     def guessWKTGeomType(self,geom):
         coordinates = geom.split(';')
-#        print ('coordinates are ', coordinates)
+#        print ('coordinates are '+ coordinates)
         firstCoordinate = coordinates[0].strip().split(" ")
-#        print ('first Coordinate is ',  firstCoordinate)
+#        print ('first Coordinate is '+  firstCoordinate)
         if len(firstCoordinate) < 2:
             return "invalid", None
         coordinatesList = []
         for coordinate in coordinates:
             decodeCoord = coordinate.strip().split(" ")
-#            print 'decordedCoord is', decodeCoord
+#            print 'decordedCoord is'+ decodeCoord
             try:
                 coordinatesList.append([decodeCoord[0],decodeCoord[1]])
             except:
@@ -332,10 +332,10 @@ class aggregate (QTableWidget):
             root = ET.fromstring(response.content)
             ns='{http://opendatakit.org/submissions}'
             instance_ids=[child.text for child in root[0].findall(ns+'id')]
-            print('instance ids before filter', instance_ids)
+            print('instance ids before filter'+ instance_ids)
             ns1='{http://www.opendatakit.org/cursor}'
             lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
-            print('server lastID is',lastReturnedURI)
+            print('server lastID is'+ lastReturnedURI)
             if lastID ==lastReturnedURI:
                 print ('No Download returning')
                 return response,table
@@ -345,7 +345,7 @@ class aggregate (QTableWidget):
             except:
                 print ('first Download')
             instance_ids=instance_ids[lastindex:]
-            print('downloading',instance_ids)
+            print('downloading'+ instance_ids)
             for id in instance_ids :
                 if id:
                     url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version=null and @uiVersion=null]/{}[@key={}]'.format(XFormKey,XFormKey,id)
@@ -385,7 +385,7 @@ class aggregate (QTableWidget):
                     print ('unable to donwload using the link')
                 localAttachmentPath = os.path.abspath(os.path.join(downloadDir,fileName))
                 if response.status_code == 200:
-                    print("downloading", URI)
+                    print("downloading :" + URI)
                     with open(localAttachmentPath, 'wb') as f:
                         for chunk in response:
                             f.write(chunk)
@@ -395,7 +395,7 @@ class aggregate (QTableWidget):
                     return localURI
                     
                 else:
-                    print('error downloading remote file: ',response.reason)
+                    print('error downloading remote file: '+ response.reason)
                     return 'error downloading remote file: ',response.reason
             else:
                 print ('Not downloaded anything')

@@ -300,16 +300,16 @@ class QRealTime:
         ns='{http://www.w3.org/2002/xforms}'
         root= ET.fromstring(xml)
         key= root[0][1][0][0].attrib['id']
-        print('key captured',key)
+        print('key captured'+ key)
         print (root[0][1].findall(ns+'bind'))
         for bind in root[0][1].findall(ns+'bind'):
             attrib=bind.attrib
             fieldName= attrib['nodeset'].split('/')[-1]
             fieldType=attrib['type']
             qgstype = qtype(attrib['type'])
-            print ('first attribute',fieldName)
+            print ('first attribute'+ fieldName)
             if fieldType[:3]!='geo':
-                print('creating new field:',fieldName)
+                print('creating new field:'+ fieldName)
                 self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype)
         return key
 
@@ -320,7 +320,7 @@ class QRealTime:
     def sendForm(self):
 #        get the fields model like name , widget type, options etc.
         version= str(datetime.datetime.now())
-        print('version is', version)
+        print('version is'+ version)
         layer=self.getLayer()
         self.dlg.getCurrentService().updateFields(layer)
         fieldDict= self.getFieldsModel(layer)
