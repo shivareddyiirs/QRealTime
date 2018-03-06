@@ -37,7 +37,19 @@ from qgis.PyQt.QtCore import QTimer
 import datetime
 import requests
 import xml.etree.ElementTree as ET
-from .pyxform.builder import create_survey_element_from_dict
+
+import pip
+try:
+	from pyxform.builder import create_survey_element_from_dict
+	print('package already installed')
+except ImportError:
+	try:
+		pip.main(['install','--user','pyxform'])
+		print('package is installed now')
+		from pyxform.builder import create_survey_element_from_dict
+	except Exception as e:
+		print (str(e))
+#from pyxform.builder import create_survey_element_from_dict
 import six
     
 def QVariantToODKtype(q_type):
