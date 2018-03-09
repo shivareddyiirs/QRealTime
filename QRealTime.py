@@ -46,11 +46,11 @@ try:
 	print('package already installed')
 except ImportError:
 	try:
-		pip.main(['install','--user','pyxform'])
+		pip.main(['install','--user','--upgrade','pyxform'])
 		print('package is installed now')
 		from pyxform.builder import create_survey_element_from_dict
 	except Exception as e:
-		print (str(e))
+		print ("replace utils.py in pyxform package with file from plugin repository ")
 #from pyxform.builder import create_survey_element_from_dict
 import six
     
@@ -371,7 +371,7 @@ class QRealTime:
             fieldDef['type']='geotrace'
         fieldsModel.append(fieldDef)
         i=0
-        for field in currentLayer.pendingFields():
+        for field in currentLayer.fields():
             fieldDef = {}
             fieldDef['name'] = field.name()
             fieldDef['map'] = field.name()

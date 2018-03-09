@@ -186,17 +186,12 @@ class aggregate (QTableWidget):
         files = {'form_def_file':files }
         response = requests.request(method, url,files = files, proxies = getProxiesConf(),auth=self.getAuth(),verify=False )
         if response.status_code== 201:
-            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
-                                                self.tr('Layer is online('+message+'), Collect data from App'),
-                                                level=QgsMessageBar.SUCCESS, duration=6)
+            self.iface.messageBar().pushSuccess(self.tr("QRealTime plugin"),
+                                                self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
-            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
-                                                self.tr("Form exist and can not be updated"),
-                                                level=QgsMessageBar.CRITICAL, duration=6)
+            self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"),self.tr("Form exist and can not be updated"))
         else:
-            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
-                                                self.tr("Form is not sent "),
-                                                level=QgsMessageBar.CRITICAL, duration=6)
+            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Form is not sent "))
         return response
         
     def collectData(self,layer,xFormKey,importData=False):
@@ -214,13 +209,11 @@ class aggregate (QTableWidget):
                 print ('table have some data')
                 self.updateLayer(layer,remoteTable)
         else:
-            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
-                                                self.tr("Form is invalid"),
-                                                level=QgsMessageBar.CRITICAL, duration=6)
+            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Form is invalid"))
     
     def updateFields(self,layer,text='ODKUUID',q_type=QVariant.String):
         flag=True
-        for field in layer.pendingFields():
+        for field in layer.fields():
             if field.name() == text:
                 flag=False
         if flag:
@@ -233,7 +226,7 @@ class aggregate (QTableWidget):
     def updateLayer(self,layer,dataDict):
         #print "UPDATING N.",len(dataDict),'FEATURES'
         self.processingLayer = layer
-        QgisFieldsList = [field.name() for field in layer.pendingFields()]
+        QgisFieldsList = [field.name() for field in layer.fields()]
         #layer.beginEditCommand("ODK syncronize")
 #        layer.startEditing()
         type=layer.geometryType()
@@ -265,7 +258,7 @@ class aggregate (QTableWidget):
                 newQgisFeatures.append(qgisFeature)
                 
         if fieldError:
-            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"), self.tr("Can't find '%s' field") % fieldError, level=QgsMessageBar.WARNING, duration=6)
+            self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"), self.tr("Can't find '%s' field") % fieldError)
         
         with edit(layer):
             layer.addFeatures(newQgisFeatures)
@@ -275,7 +268,7 @@ class aggregate (QTableWidget):
         uuidList = []
         if lyr:
             uuidFieldName = None
-            for field in lyr.pendingFields():
+            for field in lyr.fields():
                 if 'UUID' in field.name().upper():
                     uuidFieldName = field.name()
             if uuidFieldName:
