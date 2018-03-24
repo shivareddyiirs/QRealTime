@@ -10,7 +10,9 @@
         copyright            : (C) 2017 by IIRS
         email                : kotishiva@gmail.com
  ***************************************************************************/
-
+  code is taken and modified from:
+        copyright            : (C) 2016 by Enrico Ferreguti
+        email                : enricofer@gmail.com
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
