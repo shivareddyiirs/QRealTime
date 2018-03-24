@@ -111,6 +111,11 @@ class aggregate (QTableWidget):
 
     def getServiceName(self):
         return self.service_id
+     
+    def getAuth(self):
+        auth = requests.auth.HTTPDigestAuth(self.getValue('user'),self.getValue('password'))
+        print "auth",auth
+        return auth
 
     def setup(self):
         S = QSettings()
@@ -152,7 +157,7 @@ class aggregate (QTableWidget):
     def getFormList(self):
         method='GET'
         url=self.getValue('url')+'//formList'
-        response= requests.request(method,url,verify=False)
+        response= requests.request(method,url,auth=self.getAuth(),verify=False)
         root=ET.fromstring(response.content)
         keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
         return keylist,response
@@ -179,7 +184,7 @@ class aggregate (QTableWidget):
         #step1 - upload form: POST if new PATCH if exixtent
         files = open(xForm,'r')
         files = {'form_def_file':files }
-        response = requests.request(method, url,files = files, proxies = getProxiesConf(),verify=False )
+        response = requests.request(method, url,files = files, proxies = getProxiesConf(),auth=self.getAuth(),verify=False )
         if response.status_code== 201:
             self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
                                                 self.tr('Layer is online('+message+'), Collect data from App'),
@@ -325,7 +330,7 @@ class aggregate (QTableWidget):
         url=self.getValue('url')+'/view/submissionList?formId='+XFormKey
         method='GET'
         table=[]
-        response = requests.request(method,url,proxies=getProxiesConf(),verify=False)
+        response = requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
         if not response.status_code == 200:
                 return response, table
         try:
@@ -350,7 +355,7 @@ class aggregate (QTableWidget):
                 if id:
                     url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version=null and @uiVersion=null]/{}[@key={}]'.format(XFormKey,XFormKey,id)
                     print (url)
-                    response=requests.request(method,url,verify=False)
+                    response=requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
                     if not response.status_code == 200:
                         return response,table
                     root1=ET.fromstring(response.content)
@@ -380,7 +385,7 @@ class aggregate (QTableWidget):
                 if not os.path.exists(downloadDir):
                     os.makedirs(downloadDir)
                 try:
-                    response = requests.get(URI, stream=True,verify=False)
+                    response = requests.get(URI,auth=self.getAuth(),proxies=getProxiesConf(),allow_redirects=True, stream=True,verify=False)
                 except:
                     print ('unable to donwload using the link')
                 localAttachmentPath = os.path.abspath(os.path.join(downloadDir,fileName))
