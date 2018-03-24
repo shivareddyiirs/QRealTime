@@ -350,7 +350,7 @@ class aggregate (QTableWidget):
                 if id:
                     url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version=null and @uiVersion=null]/{}[@key={}]'.format(XFormKey,XFormKey,id)
                     print (url)
-                    response=requests.request(method,url,auth=self.getAuth(),verify=False)
+                    response=requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
                     if not response.status_code == 200:
                         return response,table
                     root1=ET.fromstring(response.content)
@@ -380,7 +380,7 @@ class aggregate (QTableWidget):
                 if not os.path.exists(downloadDir):
                     os.makedirs(downloadDir)
                 try:
-                    response = requests.get(URI,auth=self.getAuth(), stream=True,verify=False)
+                    response = requests.get(URI,auth=self.getAuth(),proxies=getProxiesConf(),allow_redirects=True, stream=True,verify=False)
                 except:
                     print ('unable to donwload using the link')
                 localAttachmentPath = os.path.abspath(os.path.join(downloadDir,fileName))
