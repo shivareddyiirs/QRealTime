@@ -380,7 +380,7 @@ class aggregate (QTableWidget):
                 if not os.path.exists(downloadDir):
                     os.makedirs(downloadDir)
                 try:
-                    response = requests.get(URI, stream=True,verify=False)
+                    response = requests.get(URI,auth=self.getAuth(), stream=True,verify=False)
                 except:
                     print ('unable to donwload using the link')
                 localAttachmentPath = os.path.abspath(os.path.join(downloadDir,fileName))
