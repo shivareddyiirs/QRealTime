@@ -39,14 +39,14 @@ from qgis.PyQt.QtCore import QTimer
 import datetime
 import requests
 import xml.etree.ElementTree as ET
-
+import subprocess
 import pip
 try:
 	from pyxform.builder import create_survey_element_from_dict
 	print('package already installed')
 except ImportError:
 	try:
-		pip.main(['install','--user','--upgrade','pyxform'])
+		subprocess.call(['python', '-m', 'pip', 'install','pyxform','--user','--no-cache-dir'])
 		print('package is installed now')
 		from pyxform.builder import create_survey_element_from_dict
 	except Exception as e:

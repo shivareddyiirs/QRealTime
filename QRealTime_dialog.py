@@ -114,7 +114,6 @@ class aggregate (QTableWidget):
      
     def getAuth(self):
         auth = requests.auth.HTTPDigestAuth(self.getValue('user'),self.getValue('password'))
-        print "auth",auth
         return auth
 
     def setup(self):
