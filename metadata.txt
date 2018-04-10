@@ -14,7 +14,7 @@ version=3.0
 author=Shiva Reddy Koti, Prabhakar Alok Verma
 email=kotishiva@gmail.com
 
-about=This software is desigend and developed in IIRS for online data collection. Form designing to data compilation is automated in a way that everything can be done from GIS
+about=This software is designed and developed in IIRS for online data collection. Form designing to data compilation is automated in a way that everything can be done inside GIS environment
 
 tracker=https://github.com/shivareddyiirs/QRealTime/tree/QGIS3
 repository=https://github.com/shivareddyiirs/QRealTime/tree/QGIS3
@@ -24,9 +24,9 @@ repository=https://github.com/shivareddyiirs/QRealTime/tree/QGIS3
 
 # Uncomment the following line and add your changelog:
 # changelog=
-
+Major changes to fit to QGIS 3 API changes.
 # Tags are comma separated with spaces allowed
-tags=
+tags= ODK, Data Collection, Mobile GIS
 
 homepage=https://shivareddyiirs.github.io/QRealTime/
 category=Plugins
