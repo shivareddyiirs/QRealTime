@@ -156,7 +156,7 @@ class aggregate (QTableWidget):
     def getFormList(self):
         method='GET'
         url=self.getValue('url')+'//formList'
-        response= requests.request(method,url,auth=self.getAuth(),verify=False)
+        response= requests.request(method,url,auth=self.getAuth(),proxies = getProxiesConf(),verify=False)
         root=ET.fromstring(response.content)
         keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
         return keylist,response
