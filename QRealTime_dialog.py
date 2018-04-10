@@ -28,7 +28,7 @@ from PyQt5.QtCore import Qt, QSettings, QSize,QVariant
 import xml.etree.ElementTree as ET
 import requests
 from qgis.gui import QgsMessageBar
-from qgis.core import QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit,QgsPointXY
+from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit,QgsPointXY
 import six
 from six.moves import range
 
@@ -156,7 +156,7 @@ class aggregate (QTableWidget):
     def getFormList(self):
         method='GET'
         url=self.getValue('url')+'//formList'
-        response= requests.request(method,url,auth=self.getAuth(),proxies = getProxiesConf(),verify=False)
+        response= requests.request(method,url,auth=self.getAuth(),verify=False)
         root=ET.fromstring(response.content)
         keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
         return keylist,response
@@ -244,7 +244,7 @@ class aggregate (QTableWidget):
                 if wktGeom[:3] != layerGeo[:3]:
                     continue
                 qgisGeom = QgsGeometry.fromWkt(wktGeom)
-                print('geom is'+ qgisGeom)
+                print('geom is'+ str(qgisGeom))
                 qgisFeature.setGeometry(qgisGeom)
                 qgisFeature.initAttributes(len(QgisFieldsList))
                 for fieldName, fieldValue in six.iteritems(odkFeature):
@@ -309,7 +309,7 @@ class aggregate (QTableWidget):
         # transformation from the current SRS to WGS84
         crsDest = self.processingLayer.crs () # get layer crs
         crsSrc = QgsCoordinateReferenceSystem(4326)  # WGS 84
-        xform = QgsCoordinateTransform(crsSrc, crsDest)
+        xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
         try:
             return QgsPoint(xform.transform(pPoint))
         except :
@@ -329,7 +329,7 @@ class aggregate (QTableWidget):
             root = ET.fromstring(response.content)
             ns='{http://opendatakit.org/submissions}'
             instance_ids=[child.text for child in root[0].findall(ns+'id')]
-            print('instance ids before filter'+ instance_ids)
+            print('instance ids before filter')
             ns1='{http://www.opendatakit.org/cursor}'
             lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
             print('server lastID is'+ lastReturnedURI)
@@ -342,7 +342,7 @@ class aggregate (QTableWidget):
             except:
                 print ('first Download')
             instance_ids=instance_ids[lastindex:]
-            print('downloading'+ instance_ids)
+            print('downloading')
             for id in instance_ids :
                 if id:
                     url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version=null and @uiVersion=null]/{}[@key={}]'.format(XFormKey,XFormKey,id)
@@ -363,8 +363,8 @@ class aggregate (QTableWidget):
             self.getValue('lastID',lastReturnedURI)
             print (table)
             return response, table
-        except:
-            print ('not able to fetch')
+        except Exception as e:
+            print ('not able to fetch'+e)
             return response,table
         
         

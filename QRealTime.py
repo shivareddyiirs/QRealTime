@@ -53,6 +53,23 @@ except ImportError:
 		print ("replace utils.py in pyxform package with file from plugin repository ")
 #from pyxform.builder import create_survey_element_from_dict
 import six
+
+def getProxiesConf():
+    s = QSettings() #getting proxy from qgis options settings
+    proxyEnabled = s.value("proxy/proxyEnabled", "")
+    proxyType = s.value("proxy/proxyType", "" )
+    proxyHost = s.value("proxy/proxyHost", "" )
+    proxyPort = s.value("proxy/proxyPort", "" )
+    proxyUser = s.value("proxy/proxyUser", "" )
+    proxyPassword = s.value("proxy/proxyPassword", "" )
+    if proxyEnabled == "true" and proxyType == 'HttpProxy': # test if there are proxy settings
+        proxyDict = {
+            "http"  : "http://%s:%s@%s:%s" % (proxyUser,proxyPassword,proxyHost,proxyPort),
+            "https" : "http://%s:%s@%s:%s" % (proxyUser,proxyPassword,proxyHost,proxyPort) 
+        }
+        return proxyDict
+    else:
+        return None
     
 def QVariantToODKtype(q_type):
         if  q_type == QVariant.String:
