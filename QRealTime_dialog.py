@@ -244,7 +244,7 @@ class aggregate (QTableWidget):
                 if wktGeom[:3] != layerGeo[:3]:
                     continue
                 qgisGeom = QgsGeometry.fromWkt(wktGeom)
-                print('geom is'+ str(qgisGeom))
+                print('geom is',qgisGeom)
                 qgisFeature.setGeometry(qgisGeom)
                 qgisFeature.initAttributes(len(QgisFieldsList))
                 for fieldName, fieldValue in six.iteritems(odkFeature):
@@ -332,7 +332,7 @@ class aggregate (QTableWidget):
             print('instance ids before filter')
             ns1='{http://www.opendatakit.org/cursor}'
             lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
-            print('server lastID is'+ lastReturnedURI)
+            print('server lastID is', lastReturnedURI)
             if lastID ==lastReturnedURI:
                 print ('No Download returning')
                 return response,table
@@ -364,7 +364,7 @@ class aggregate (QTableWidget):
             print (table)
             return response, table
         except Exception as e:
-            print ('not able to fetch'+e)
+            print ('not able to fetch',e)
             return response,table
         
         
@@ -382,7 +382,7 @@ class aggregate (QTableWidget):
                     print ('unable to donwload using the link')
                 localAttachmentPath = os.path.abspath(os.path.join(downloadDir,fileName))
                 if response.status_code == 200:
-                    print("downloading :" + URI)
+                    print("downloading :" , URI)
                     with open(localAttachmentPath, 'wb') as f:
                         for chunk in response:
                             f.write(chunk)
@@ -392,8 +392,8 @@ class aggregate (QTableWidget):
                     return localURI
                     
                 else:
-                    print('error downloading remote file: '+ response.reason)
-                    return 'error downloading remote file: ',response.reason
+                    print('error downloading remote file: ', response.reason)
+                    return 'error downloading remote file:'
             else:
                 print ('Not downloaded anything')
                 return URI

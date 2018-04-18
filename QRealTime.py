@@ -385,7 +385,7 @@ class QRealTime:
             fieldDef['type']='geotrace'
         else:
             fieldDef['label']='Draw Area'
-            fieldDef['type']='geotrace'
+            fieldDef['type']='geoshape'
         fieldsModel.append(fieldDef)
         i=0
         for field in currentLayer.fields():
@@ -404,8 +404,14 @@ class QRealTime:
                     fieldDef['type']='select one'
                 elif fieldDef['fieldWidget'] == 'Photo':
                     fieldDef['type']='image'
-                config = {v: k for k, v in six.iteritems(widget.config()['map'])}
-                choicesList=[{'name':name,'label':label} for name,label in six.iteritems(config)]
+                print('checking value of widget' ,widget.config()['map'])
+                valueMap=widget.config()['map']
+                config={}
+                for value in valueMap:
+                        for k,v in value.items():
+                                config[v]=k
+                print('configuration is ',config)
+                choicesList=[{'name':name,'label':label} for name,label in config.items()]
                 fieldDef["choices"] = choicesList
 #                fieldDef['choices'] = config
             else:
