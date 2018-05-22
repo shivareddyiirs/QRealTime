@@ -321,9 +321,9 @@ class QRealTime:
                 if response.status_code==200:
                     # with open('importForm.xml','w') as importForm:
                     #     importForm.write(response.content)
-                    formKey= self.updateLayer(layer,response.content)
+                    formKey,topElement,version= self.updateLayer(layer,response.content)
                     layer.setName(formKey)
-                service.collectData(layer,formKey,True)
+                service.collectData(layer,formKey,True,topElement,version)
 
                 
                         
@@ -331,6 +331,11 @@ class QRealTime:
         ns='{http://www.w3.org/2002/xforms}'
         root= ET.fromstring(xml)
         key= root[0][1][0][0].attrib['id']
+        topElement=root[0][1][0][0].tag.split('}')[1]
+        try:
+            version=root[0][1][0][0].attrib['version']
+        except:
+            version='null'
         print('key captured'+ key)
         print (root[0][1].findall(ns+'bind'))
         for bind in root[0][1].findall(ns+'bind'):
@@ -342,7 +347,7 @@ class QRealTime:
             if fieldType[:3]!='geo':
                 print('creating new field:'+ fieldName)
                 self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype)
-        return key
+        return key,topElement,version
 
 
     def getLayer(self):

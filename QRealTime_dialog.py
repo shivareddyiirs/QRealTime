@@ -193,15 +193,15 @@ class aggregate (QTableWidget):
             self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Form is not sent "))
         return response
         
-    def collectData(self,layer,xFormKey,importData=False):
+    def collectData(self,layer,xFormKey,importData=False,topElement='',version='null'):
 #        if layer :
 #            print("layer is not present or not valid")
 #            return
         self.updateFields(layer)
         if importData:
-            response, remoteTable = self.getTable(xFormKey,"")
+            response, remoteTable = self.getTable(xFormKey,"",topElement,version)
         else:
-            response, remoteTable = self.getTable(xFormKey,self.getValue('lastID'))
+            response, remoteTable = self.getTable(xFormKey,self.getValue('lastID'),topElement,version)
         if response.status_code == 200:
             print ('before Update Layer')
             if remoteTable:
@@ -237,24 +237,47 @@ class aggregate (QTableWidget):
         newQgisFeatures = []
         fieldError = None
         for odkFeature in dataDict:
-            if not odkFeature['ODKUUID'] in uuidList:
-                qgisFeature = QgsFeature()
-                wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
-                print (wktGeom)
-                if wktGeom[:3] != layerGeo[:3]:
-                    continue
-                qgisGeom = QgsGeometry.fromWkt(wktGeom)
-                print('geom is',qgisGeom)
-                qgisFeature.setGeometry(qgisGeom)
-                qgisFeature.initAttributes(len(QgisFieldsList))
-                for fieldName, fieldValue in six.iteritems(odkFeature):
-                    if fieldName != 'GEOMETRY':
-                        try:
-                            qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
-                        except:
-                            fieldError = fieldName
-                        
-                newQgisFeatures.append(qgisFeature)
+            try:
+                if not odkFeature['ODKUUID'] in uuidList:
+                    qgisFeature = QgsFeature()
+                    wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
+                    print (wktGeom)
+                    if wktGeom[:3] != layerGeo[:3]:
+                        continue
+                    qgisGeom = QgsGeometry.fromWkt(wktGeom)
+                    print('geom is',qgisGeom)
+                    qgisFeature.setGeometry(qgisGeom)
+                    qgisFeature.initAttributes(len(QgisFieldsList))
+                    for fieldName, fieldValue in six.iteritems(odkFeature):
+                        if fieldName != 'GEOMETRY':
+                            try:
+                                qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
+                            except:
+                                fieldError = fieldName
+                            
+                    newQgisFeatures.append(qgisFeature)
+            except:
+                    qgisFeature = QgsFeature()
+                    try:
+                        wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
+                    except:
+                        wktGeom=self.guessWKTGeomType(odkFeature['location'])
+                    print (wktGeom)
+                    if wktGeom[:3] != layerGeo[:3]:
+                        continue
+                    qgisGeom = QgsGeometry.fromWkt(wktGeom)
+                    print('geom is',qgisGeom)
+                    qgisFeature.setGeometry(qgisGeom)
+                    qgisFeature.initAttributes(len(QgisFieldsList))
+                    for fieldName, fieldValue in six.iteritems(odkFeature):
+                        if fieldName != 'GEOMETRY'and fieldName!='location':
+                            try:
+                                qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
+                            except:
+                                fieldError = fieldName
+                            
+                    newQgisFeatures.append(qgisFeature)
+                
                 
         if fieldError:
             self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"), self.tr("Can't find '%s' field") % fieldError)
@@ -318,7 +341,7 @@ class aggregate (QTableWidget):
 
         
                                                 
-    def getTable(self,XFormKey,lastID):
+    def getTable(self,XFormKey,lastID,topElement='',version= 'null'):
         url=self.getValue('url')+'/view/submissionList?formId='+XFormKey
         method='GET'
         table=[]
@@ -329,7 +352,7 @@ class aggregate (QTableWidget):
             root = ET.fromstring(response.content)
             ns='{http://opendatakit.org/submissions}'
             instance_ids=[child.text for child in root[0].findall(ns+'id')]
-            print('instance ids before filter')
+            print('instance ids before filter',instance_ids)
             ns1='{http://www.opendatakit.org/cursor}'
             lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
             print('server lastID is', lastReturnedURI)
@@ -345,14 +368,17 @@ class aggregate (QTableWidget):
             print('downloading')
             for id in instance_ids :
                 if id:
-                    url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version=null and @uiVersion=null]/{}[@key={}]'.format(XFormKey,XFormKey,id)
+                    url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version={} and @uiVersion=null]/{}[@key={}]'.format(XFormKey,version,topElement,id)
                     print (url)
                     response=requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
                     if not response.status_code == 200:
                         return response,table
+                    print('xml downloaded is',response.content)
                     root1=ET.fromstring(response.content)
-                    data=root1[0].findall(ns+XFormKey)
-                    dict={child.tag.replace(ns,''):child.text for child in data[0]}
+                    print('downloaded data is',root1)
+                    data=root1[0].findall(ns+topElement)
+                    print('data is',data)
+                    dict={child.tag.split('}')[1]:child.text for child in data[0]}
                     mediaFile=root1.findall(ns+'mediaFile')
                     if len(mediaFile)>0:
                         mediaDict={child.tag.replace(ns,''):child.text for child in mediaFile[0]}
