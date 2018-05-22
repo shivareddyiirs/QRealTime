@@ -208,7 +208,7 @@ class aggregate (QTableWidget):
                 print ('table have some data')
                 self.updateLayer(layer,remoteTable)
         else:
-            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Form is invalid"))
+            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Not able to collect data from Aggregate"))
     
     def updateFields(self,layer,text='ODKUUID',q_type=QVariant.String):
         flag=True
