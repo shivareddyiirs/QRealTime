@@ -409,6 +409,7 @@ class QRealTime:
                     fieldDef['type']='select one'
                 elif fieldDef['fieldWidget'] == 'Photo' or fieldDef['fieldWidget'] == 'Attachment' :
                     fieldDef['type']='image'
+                    print('got an image type field')
                 print('checking value of widget' ,widget.config()['map'])
                 valueMap=widget.config()['map']
                 config={}
