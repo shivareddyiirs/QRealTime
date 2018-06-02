@@ -355,7 +355,7 @@ class QRealTime:
         
     def sendForm(self):
 #        get the fields model like name , widget type, options etc.
-        version= str(datetime.datetime.now())
+        version= str(datetime.date.today())
         print('version is'+ version)
         layer=self.getLayer()
         self.dlg.getCurrentService().updateFields(layer)
@@ -383,6 +383,7 @@ class QRealTime:
         fieldsModel = []
         g_type= currentLayer.geometryType()
         fieldDef={'name':'GEOMETRY','type':'geopoint','bind':{'required':'true()'}}
+        fieldDef['Appearance']= 'maps'
         if g_type==0:
             fieldDef['label']='add point location'
         elif g_type==1:
@@ -404,18 +405,18 @@ class QRealTime:
 #            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
             widget =currentLayer.editorWidgetSetup(i)
             fieldDef['fieldWidget']=widget.type()
-            if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','Attachment'):
+            print(fieldDef['fieldWidget'])
+            if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','ExternalResource'):
                 if fieldDef['fieldWidget'] == 'ValueMap':
                     fieldDef['type']='select one'
-                elif fieldDef['fieldWidget'] == 'Photo' or fieldDef['fieldWidget'] == 'Attachment' :
-                    fieldDef['type']='image'
-                    print('got an image type field')
-                print('checking value of widget' ,widget.config()['map'])
-                valueMap=widget.config()['map']
-                config={}
-                for value in valueMap:
+                    valueMap=widget.config()['map']
+                    config={}
+                    for value in valueMap:
                         for k,v in value.items():
                                 config[v]=k
+                elif fieldDef['fieldWidget'] == 'Photo' or fieldDef['fieldWidget'] == 'ExternalResource' :
+                    fieldDef['type']='image'
+                    print('got an image type field')
                 print('configuration is ',config)
                 choicesList=[{'name':name,'label':label} for name,label in config.items()]
                 fieldDef["choices"] = choicesList
