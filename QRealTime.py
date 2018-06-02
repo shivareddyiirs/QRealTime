@@ -404,10 +404,10 @@ class QRealTime:
 #            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
             widget =currentLayer.editorWidgetSetup(i)
             fieldDef['fieldWidget']=widget.type()
-            if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','FileName'):
+            if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','Attachment'):
                 if fieldDef['fieldWidget'] == 'ValueMap':
                     fieldDef['type']='select one'
-                elif fieldDef['fieldWidget'] == 'Photo':
+                elif fieldDef['fieldWidget'] == 'Photo' or fieldDef['fieldWidget'] == 'Attachment' :
                     fieldDef['type']='image'
                 print('checking value of widget' ,widget.config()['map'])
                 valueMap=widget.config()['map']
