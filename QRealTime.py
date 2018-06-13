@@ -329,11 +329,17 @@ class QRealTime:
                         
     def updateLayer(self,layer,xml):
         ns='{http://www.w3.org/2002/xforms}'
+        print ('xml copied is' ,xml)
         root= ET.fromstring(xml)
-        key= root[0][1][0][0].attrib['id']
-        topElement=root[0][1][0][0].tag.split('}')[1]
+        print('xml is ',root[0][1])
+        #key= root[0][1][0][0].attrib['id']
+        instance=root[0][1].find(ns+'instance')
+        print ('instance is',instance)
+        key=instance[0].attrib['id']
+        #topElement=root[0][1][0][0].tag.split('}')[1]
+        topElement=instance[0].tag.split('}')[1]
         try:
-            version=root[0][1][0][0].attrib['version']
+            version=instance[0].attrib['version']
         except:
             version='null'
         print('key captured'+ key)
