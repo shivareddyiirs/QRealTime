@@ -261,7 +261,10 @@ class aggregate (QTableWidget):
                     try:
                         wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
                     except:
-                        wktGeom=self.guessWKTGeomType(odkFeature['location'])
+                        try:
+                            wktGeom=self.guessWKTGeomType(odkFeature['location'])
+                        except:
+                            wktGeom=self.guessWKTGeomType(odkFeature['gps'])
                     print (wktGeom)
                     if wktGeom[:3] != layerGeo[:3]:
                         continue
@@ -270,7 +273,7 @@ class aggregate (QTableWidget):
                     qgisFeature.setGeometry(qgisGeom)
                     qgisFeature.initAttributes(len(QgisFieldsList))
                     for fieldName, fieldValue in six.iteritems(odkFeature):
-                        if fieldName != 'GEOMETRY'and fieldName!='location':
+                        if fieldName != 'GEOMETRY'and fieldName!='location' and fieldName !='gps':
                             try:
                                 qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
                             except:
@@ -299,7 +302,10 @@ class aggregate (QTableWidget):
         return uuidList
 
     def guessWKTGeomType(self,geom):
-        coordinates = geom.split(';')
+        if geom:
+            coordinates = geom.split(';')
+        else:
+            return 'error'
 #        print ('coordinates are '+ coordinates)
         firstCoordinate = coordinates[0].strip().split(" ")
 #        print ('first Coordinate is '+  firstCoordinate)
