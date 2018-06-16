@@ -420,13 +420,12 @@ class QRealTime:
                     for value in valueMap:
                         for k,v in value.items():
                                 config[v]=k
-                    print('configuration is ',config)
-                    choicesList=[{'name':name,'label':label} for name,label in config.items()]
-                    fieldDef["choices"] = choicesList
                 elif fieldDef['fieldWidget'] == 'Photo' or fieldDef['fieldWidget'] == 'ExternalResource' :
                     fieldDef['type']='image'
                     print('got an image type field')
-                
+                print('configuration is ',config)
+                choicesList=[{'name':name,'label':label} for name,label in config.items()]
+                fieldDef["choices"] = choicesList
 #                fieldDef['choices'] = config
             else:
                 fieldDef['choices'] = {}
