@@ -276,7 +276,7 @@ class QRealTime:
             print ('calling collect data')
             layer=self.getLayer()
             print(layer)
-            service.collectData(layer,layer.name())
+            service.collectData(layer,layer.name(),topElement=layer.name())
         self.timer.timeout.connect(timeEvent)
 
 

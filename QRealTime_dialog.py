@@ -347,7 +347,7 @@ class aggregate (QTableWidget):
 
         
                                                 
-    def getTable(self,XFormKey,lastID,topElement='',version= 'null'):
+    def getTable(self,XFormKey,lastID,topElement,version= 'null'):
         url=self.getValue('url')+'/view/submissionList?formId='+XFormKey
         method='GET'
         table=[]
