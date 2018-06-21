@@ -215,6 +215,7 @@ class aggregate (QTableWidget):
         for field in layer.fields():
             if field.name() == text:
                 flag=False
+                print("not writing fields")
         if flag:
             uuidField = QgsField(text, q_type)
             uuidField.setLength(50)

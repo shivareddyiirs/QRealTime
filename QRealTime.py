@@ -276,7 +276,7 @@ class QRealTime:
             print ('calling collect data')
             layer=self.getLayer()
             print(layer)
-            service.collectData(layer,layer.name(),topElement=layer.name())
+            service.collectData(layer,layer.name(),False,self.topElement,self.version)
         self.timer.timeout.connect(timeEvent)
 
 
@@ -321,9 +321,9 @@ class QRealTime:
                 if response.status_code==200:
                     # with open('importForm.xml','w') as importForm:
                     #     importForm.write(response.content)
-                    formKey,topElement,version= self.updateLayer(layer,response.content)
-                    layer.setName(formKey)
-                service.collectData(layer,formKey,True,topElement,version)
+                    self.formKey,self.topElement,self.version= self.updateLayer(layer,response.content)
+                    layer.setName(self.formKey)
+                    service.collectData(layer,self.formKey,True,self.topElement,self.version)
 
                 
                         
@@ -401,6 +401,10 @@ class QRealTime:
         fieldsModel.append(fieldDef)
         i=0
         for field in currentLayer.fields():
+            widget =currentLayer.editorWidgetSetup(i)
+            fwidget = widget.type()
+            if (fwidget=='Hidden'):
+                continue
             fieldDef = {}
             fieldDef['name'] = field.name()
             fieldDef['map'] = field.name()
@@ -409,7 +413,6 @@ class QRealTime:
             fieldDef['type'] = QVariantToODKtype(field.type())
             fieldDef['bind'] = {}
 #            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
-            widget =currentLayer.editorWidgetSetup(i)
             fieldDef['fieldWidget']=widget.type()
             print(fieldDef['fieldWidget'])
             if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','ExternalResource'):
