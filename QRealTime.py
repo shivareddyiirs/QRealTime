@@ -265,6 +265,8 @@ class QRealTime:
             True)
         service=self.dlg.getCurrentService()
         self.service=service
+        self.topElement= None
+        self.version=''
         self.importData= importData()
         try:
             self.time=1
@@ -276,6 +278,8 @@ class QRealTime:
             print ('calling collect data')
             layer=self.getLayer()
             print(layer)
+            if (not self.topElement):
+                self.topElement= layer.name()
             service.collectData(layer,layer.name(),False,self.topElement,self.version)
         self.timer.timeout.connect(timeEvent)
 
