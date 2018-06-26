@@ -218,7 +218,8 @@ class aggregate (QTableWidget):
                 print("not writing fields")
         if flag:
             uuidField = QgsField(text, q_type)
-            uuidField.setLength(50)
+            if q_type == QVariant.String:
+                uuidField.setLength(100)
             layer.dataProvider().addAttributes([uuidField])
             layer.updateFields()
 
@@ -359,7 +360,9 @@ class aggregate (QTableWidget):
             root = ET.fromstring(response.content)
             ns='{http://opendatakit.org/submissions}'
             instance_ids=[child.text for child in root[0].findall(ns+'id')]
-            print('instance ids before filter',instance_ids)
+            no_sub= len(instance_ids)
+#            print('instance ids before filter',instance_ids)
+            print('number of submissions are',no_sub)
             ns1='{http://www.opendatakit.org/cursor}'
             lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
             print('server lastID is', lastReturnedURI)
@@ -384,17 +387,38 @@ class aggregate (QTableWidget):
                     root1=ET.fromstring(response.content)
                     print('downloaded data is',root1)
                     data=root1[0].findall(ns+topElement)
-                    print('data is',data)
-                    dict={child.tag.split('}')[1]:child.text for child in data[0]}
-                    mediaFile=root1.findall(ns+'mediaFile')
-                    if len(mediaFile)>0:
-                        mediaDict={child.tag.replace(ns,''):child.text for child in mediaFile[0]}
-                        for key,value in six.iteritems(dict):
-                            if value==mediaDict['filename']:
-                                dict[key]=self.cleanURI(mediaDict['downloadUrl'],XFormKey,value)
+                    print('data is',data[0])
+                    dict={child.tag.split('}')[-1]:child.text for child in data[0]}
+                    print('dictionary is',dict)
+                    dict2= dict.copy()
+                    for key,value in six.iteritems(dict2):
+                                if value is None:
+                                    grEle=data[0].findall(ns+key)
+                                    try:
+                                        for child in grEle[0]:
+                                            dict[child.tag.split('}')[-1]]=child.text
+                                            print('found a group element')
+                                    except:
+                                        print('error')
+                    mediaFiles=root1.findall(ns+'mediaFile')
+                    if len(mediaFiles)>0:
+                        for mediaFile in mediaFiles:
+                            mediaDict={child.tag.replace(ns,''):child.text for child in mediaFile}
+                            for key,value in six.iteritems(dict):
+                                print('value is',value)
+                                if (no_sub > 10):
+                                    if value==mediaDict['filename']:
+                                        murl= mediaDict['downloadUrl']
+                                        print('Download url is',murl)
+                                        if murl.endswith('as_attachment=true'):
+                                            murl=murl[:-19]
+                                            dict[key]= murl
+                                else:
+                                    if value==mediaDict['filename']:
+                                        dict[key]=self.cleanURI(mediaDict['downloadUrl'],XFormKey,value)
                     table.append(dict)
             self.getValue('lastID',lastReturnedURI)
-            print (table)
+            print ('table is:',table)
             return response, table
         except Exception as e:
             print ('not able to fetch',e)

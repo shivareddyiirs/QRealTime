@@ -10,7 +10,7 @@
 name=QRealTime
 qgisMinimumVersion=3.00
 description=This plugin connects you to Aggregate Server and do autoupdation of data to and from aggregate
-version=3.1.1
+version=3.2.0
 author=Shiva Reddy Koti, Prabhakar Alok Verma
 email=kotishiva@gmail.com
 
@@ -23,7 +23,7 @@ repository=https://github.com/shivareddyiirs/QRealTime/tree/QGIS3
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog= Minor changes to support ODK forms created without using our plugin: additional support for 'gps' field ('geometry' and 'location' is already supported) Now supports forms with location not mandatory
+changelog= Major changes to support ODK forms created without using our plugin: additional support for groups, Faster Import and Synch: Now download of images is restricted to forms with less than 10 submissions only (aggregate url is saved instead). This will ease the load on bandwidth
 # Tags are comma separated with spaces allowed
 tags= ODK, Data Collection, Mobile GIS
 homepage=https://shivareddyiirs.github.io/QRealTime/
