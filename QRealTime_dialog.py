@@ -28,7 +28,7 @@ from PyQt5.QtCore import Qt, QSettings, QSize,QVariant
 import xml.etree.ElementTree as ET
 import requests
 from qgis.gui import QgsMessageBar
-from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit,QgsPointXY
+from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit,QgsPointXY,QgsEditorWidgetSetup
 import six
 from six.moves import range
 
@@ -210,10 +210,11 @@ class aggregate (QTableWidget):
         else:
             self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Not able to collect data from Aggregate"))
     
-    def updateFields(self,layer,text='ODKUUID',q_type=QVariant.String):
+    def updateFields(self,layer,text='ODKUUID',q_type=QVariant.String,config={}):
         flag=True
         for field in layer.fields():
-            if field.name() == text:
+            
+            if field.name()[:10] == text[:10]:
                 flag=False
                 print("not writing fields")
         if flag:
@@ -222,8 +223,18 @@ class aggregate (QTableWidget):
                 uuidField.setLength(100)
             layer.dataProvider().addAttributes([uuidField])
             layer.updateFields()
-
-    
+        fId= layer.dataProvider().fieldNameIndex(text)
+        try:
+            if config['type']== 'Hidden':
+                print('setting hidden widget')
+                layer.setEditorWidgetSetup( fId, QgsEditorWidgetSetup( "Hidden" ,config ) )
+                return
+        except:
+            print('exception')
+        if config=={}:
+            return
+        print('now setting exernal resource widgt')
+        layer.setEditorWidgetSetup( fId, QgsEditorWidgetSetup( "ExternalResource" ,config ) )
     def updateLayer(self,layer,dataDict):
         #print "UPDATING N.",len(dataDict),'FEATURES'
         self.processingLayer = layer
@@ -406,16 +417,12 @@ class aggregate (QTableWidget):
                             mediaDict={child.tag.replace(ns,''):child.text for child in mediaFile}
                             for key,value in six.iteritems(dict):
                                 print('value is',value)
-                                if (no_sub > 10):
-                                    if value==mediaDict['filename']:
-                                        murl= mediaDict['downloadUrl']
-                                        print('Download url is',murl)
-                                        if murl.endswith('as_attachment=true'):
-                                            murl=murl[:-19]
-                                            dict[key]= murl
-                                else:
-                                    if value==mediaDict['filename']:
-                                        dict[key]=self.cleanURI(mediaDict['downloadUrl'],XFormKey,value)
+                                if value==mediaDict['filename']:
+                                    murl= mediaDict['downloadUrl']
+                                    print('Download url is',murl)
+                                    if murl.endswith('as_attachment=true'):
+                                        murl=murl[:-19]
+                                        dict[key]= murl
                     table.append(dict)
             self.getValue('lastID',lastReturnedURI)
             print ('table is:',table)
@@ -423,35 +430,3 @@ class aggregate (QTableWidget):
         except Exception as e:
             print ('not able to fetch',e)
             return response,table
-        
-        
-        
-    def cleanURI(self,URI,layerName,fileName):
-            
-            attachements = {}
-            if isinstance(URI, six.string_types) and (URI[0:7] == 'http://' or URI[0:8] == 'https://'):
-                downloadDir = os.path.join(os.path.expanduser('~'),'attachments_%s' % layerName)
-                if not os.path.exists(downloadDir):
-                    os.makedirs(downloadDir)
-                try:
-                    response = requests.get(URI,auth=self.getAuth(),proxies=getProxiesConf(),allow_redirects=True, stream=True,verify=False)
-                except:
-                    print ('unable to donwload using the link')
-                localAttachmentPath = os.path.abspath(os.path.join(downloadDir,fileName))
-                if response.status_code == 200:
-                    print("downloading :" , URI)
-                    with open(localAttachmentPath, 'wb') as f:
-                        for chunk in response:
-                            f.write(chunk)
-                        localURI = localAttachmentPath
-                    print ('loaded image')
-                    print (localURI)
-                    return localURI
-                    
-                else:
-                    print('error downloading remote file: ', response.reason)
-                    return 'error downloading remote file:'
-            else:
-                print ('Not downloaded anything')
-                return URI
-

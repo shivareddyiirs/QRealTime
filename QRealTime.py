@@ -45,12 +45,13 @@ try:
 	from pyxform.builder import create_survey_element_from_dict
 	print('package already installed')
 except ImportError:
-	try:
-		subprocess.call(['python', '-m', 'pip', 'install','pyxform','--user','--no-cache-dir'])
-		print('package is installed now')
-		from pyxform.builder import create_survey_element_from_dict
-	except Exception as e:
-		print ("replace utils.py in pyxform package with file from plugin repository ")
+    try:
+        subprocess.call(['python', '-m', 'pip', 'install','pyxform','--user','--no-cache-dir'])
+        from pyxform.builder import create_survey_element_from_dict
+        print('package is installed now')
+    except:
+        print ("not able to install pyxform, install manually pyxform package ")
+        self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"), self.tr('install pyxform package in python3 manually'))
 #from pyxform.builder import create_survey_element_from_dict
 import six
 
@@ -85,17 +86,21 @@ def QVariantToODKtype(q_type):
 
 def qtype(odktype):
     if odktype == 'binary':
-        return QVariant.String
+        return QVariant.String,{'DocumentViewer': 2, 'DocumentViewerHeight': 0, 'DocumentViewerWidth': 0, 'FileWidget': True, 'FileWidgetButton': True, 'FileWidgetFilter': '', 'PropertyCollection': {'name': None, 'properties': {}, 'type': 'collection'}, 'RelativeStorage': 0, 'StorageMode': 0}
     elif odktype=='string':
-        return QVariant.String
+        return QVariant.String,{}
     elif odktype[:3] == 'sel' :
-        return QVariant.String
+        return QVariant.String,{}
     elif odktype[:3] == 'int':
-        return QVariant.Int
+        return QVariant.Int, {}
     elif odktype[:3]=='dat':
-        return QVariant.Date
+        return QVariant.Date, {}
+    elif odktype[:3]=='ima':
+        return QVariant.String,{'DocumentViewer': 2, 'DocumentViewerHeight': 0, 'DocumentViewerWidth': 0, 'FileWidget': True, 'FileWidgetButton': True, 'FileWidgetFilter': '', 'PropertyCollection': {'name': None, 'properties': {}, 'type': 'collection'}, 'RelativeStorage': 0, 'StorageMode': 0}
+    elif odktype == 'Hidden':
+        return 'Hidden'
     else:
-        return QVariant.String
+        return (QVariant.String),{}
     
 class QRealTime:
     """QGIS Plugin Implementation."""
@@ -333,7 +338,6 @@ class QRealTime:
                         
     def updateLayer(self,layer,xml):
         ns='{http://www.w3.org/2002/xforms}'
-        print ('xml copied is' ,xml)
         root= ET.fromstring(xml)
         print('xml is ',root[0][1])
         #key= root[0][1][0][0].attrib['id']
@@ -350,13 +354,24 @@ class QRealTime:
         print (root[0][1].findall(ns+'bind'))
         for bind in root[0][1].findall(ns+'bind'):
             attrib=bind.attrib
+            print (attrib)
             fieldName= attrib['nodeset'].split('/')[-1]
             fieldType=attrib['type']
-            qgstype = qtype(attrib['type'])
+            print('attrib type is',attrib['type'])
+            qgstype,config = qtype(attrib['type'])
             print ('first attribute'+ fieldName)
+            inputs=root[1].findall('.//*[@ref]')
             if fieldType[:3]!='geo':
                 print('creating new field:'+ fieldName)
-                self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype)
+                isHidden= True
+                for input in inputs:
+                    if fieldName == input.attrib['ref'].split('/')[-1]:
+                        isHidden= False
+                        break
+                if isHidden:
+                    print('Reached Hidden')
+                    config['type']='Hidden'
+                self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype,config)
         return key,topElement,version
 
 
@@ -389,7 +404,6 @@ class QRealTime:
             self.timer.stop()
             
     def getFieldsModel(self,currentLayer):
-        currentFormConfig = currentLayer.editFormConfig()
         fieldsModel = []
         g_type= currentLayer.geometryType()
         fieldDef={'name':'GEOMETRY','type':'geopoint','bind':{'required':'true()'}}
