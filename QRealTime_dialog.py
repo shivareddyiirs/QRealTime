@@ -31,7 +31,11 @@ from qgis.gui import QgsMessageBar
 from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit,QgsPointXY,QgsEditorWidgetSetup
 import six
 from six.moves import range
-
+from qgis.core import QgsMessageLog, Qgis
+tag='QRealTime'
+def print(text,opt=None):
+    """ to redirect print to MessageLog"""
+    QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'QRealTime_dialog_services.ui'))
 

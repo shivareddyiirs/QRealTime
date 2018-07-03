@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import QMenu,QAction, QFileDialog
 # import for XML reading writing
 # Import the code for the dialog
 from .QRealTime_dialog import QRealTimeDialog
-from .QRealTime_dialog_import import importData
+from .QRealTime_dialog_import import ImportData
 import os.path
 from qgis.core import QgsMapLayer
 import warnings
@@ -41,6 +41,11 @@ import requests
 import xml.etree.ElementTree as ET
 import subprocess
 import pip
+from qgis.core import QgsMessageLog, Qgis
+tag='QRealTime'
+def print(text,opt=None):
+    """ to redirect print to MessageLog"""
+    QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
 try:
 	from pyxform.builder import create_survey_element_from_dict
 	print('package already installed')
@@ -272,7 +277,6 @@ class QRealTime:
         self.service=service
         self.topElement= None
         self.version=''
-        self.importData= importData()
         try:
             self.time=1
             self.time=int(service.getValue('sync time'))
@@ -320,11 +324,12 @@ class QRealTime:
         layer=self.getLayer()
         forms,response= service.getFormList()
         if response.status_code==200:
-            self.importData.comboBox.addItems(forms)
-            self.importData.show()
-            result=self.importData.exec_()
+            self.ImportData=ImportData()
+            self.ImportData.comboBox.addItems(forms)
+            self.ImportData.show()
+            result=self.ImportData.exec_()
             if result:
-                selectedForm= self.importData.comboBox.currentText()
+                selectedForm= self.ImportData.comboBox.currentText()
                 url=service.getValue('url')+'//formXml?formId='+selectedForm
                 response= requests.request('GET',url,proxies=getProxiesConf(),verify=False)
                 if response.status_code==200:
@@ -339,10 +344,8 @@ class QRealTime:
     def updateLayer(self,layer,xml):
         ns='{http://www.w3.org/2002/xforms}'
         root= ET.fromstring(xml)
-        print('xml is ',root[0][1])
         #key= root[0][1][0][0].attrib['id']
         instance=root[0][1].find(ns+'instance')
-        print ('instance is',instance)
         key=instance[0].attrib['id']
         #topElement=root[0][1][0][0].tag.split('}')[1]
         topElement=instance[0].tag.split('}')[1]
@@ -385,6 +388,7 @@ class QRealTime:
         layer=self.getLayer()
         self.dlg.getCurrentService().updateFields(layer)
         fieldDict= self.getFieldsModel(layer)
+        print ('fieldDict',fieldDict)
         surveyDict= {"name":layer.name(),"title":layer.name(),'VERSION':version,"instance_name": 'uuid()',"submission_url": '',
         "default_language":'default','id_string':layer.name(),'type':'survey','children':fieldDict }
         survey=create_survey_element_from_dict(surveyDict)
@@ -422,7 +426,9 @@ class QRealTime:
             widget =currentLayer.editorWidgetSetup(i)
             fwidget = widget.type()
             if (fwidget=='Hidden'):
+                i+=1
                 continue
+                
             fieldDef = {}
             fieldDef['name'] = field.name()
             fieldDef['map'] = field.name()
@@ -432,7 +438,7 @@ class QRealTime:
             fieldDef['bind'] = {}
 #            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
             fieldDef['fieldWidget']=widget.type()
-            print(fieldDef['fieldWidget'])
+            print('getFieldModel',fieldDef['fieldWidget'])
             if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','ExternalResource'):
                 if fieldDef['fieldWidget'] == 'ValueMap':
                     fieldDef['type']='select one'
