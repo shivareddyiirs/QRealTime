@@ -56,7 +56,6 @@ except ImportError:
         print('package is installed now')
     except:
         print ("not able to install pyxform, install manually pyxform package ")
-        self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"), self.tr('install pyxform package in python3 manually'))
 #from pyxform.builder import create_survey_element_from_dict
 import six
 
