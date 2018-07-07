@@ -55,8 +55,12 @@ except ImportError:
         from pyxform.builder import create_survey_element_from_dict
         print('package is installed now')
     except:
-        print ("not able to install pyxform, install manually pyxform package ")
-#from pyxform.builder import create_survey_element_from_dict
+        subprocess.call(['pip', 'install','pyxform'])
+        print ("after pip3 call")
+        try:
+            from pyxform.builder import create_survey_element_from_dict
+        except:
+            print('not able to install pyxform, install mannually')
 import six
 
 def getProxiesConf():
