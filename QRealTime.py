@@ -43,7 +43,7 @@ import subprocess
 import pip
 from qgis.core import QgsMessageLog, Qgis
 tag='QRealTime'
-def print(text,opt=None):
+def print(text,opt=''):
     """ to redirect print to MessageLog"""
     QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
 try:
