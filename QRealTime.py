@@ -55,7 +55,7 @@ except ImportError:
         from pyxform.builder import create_survey_element_from_dict
         print('package is installed now')
     except:
-        subprocess.call(['pip', 'install','pyxform'])
+        subprocess.call(['pip3', 'install','pyxform'])
         print ("after pip3 call")
         try:
             from pyxform.builder import create_survey_element_from_dict
