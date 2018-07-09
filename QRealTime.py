@@ -51,12 +51,12 @@ try:
 	print('package already installed')
 except ImportError:
     try:
-        subprocess.call(['python3', '-m', 'pip', 'install','pyxform','--user'])
+        subprocess.call(['python3', '-m', 'pip', 'install','pyxform'])
         from pyxform.builder import create_survey_element_from_dict
-        print('package is installed now')
+        print('package is installed after python3')
     except:
-        subprocess.call(['pip3', 'install','pyxform'])
-        print ("after pip3 call")
+        subprocess.call(['python3', '-m', 'pip', 'install','pyxform','--user'])
+        print ("after python3 --user call")
         try:
             from pyxform.builder import create_survey_element_from_dict
         except:
