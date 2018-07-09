@@ -51,7 +51,7 @@ try:
 	print('package already installed')
 except ImportError:
     try:
-        subprocess.call(['python', '-m', 'pip', 'install','pyxform','--user','--no-cache-dir'])
+        subprocess.call(['python3', '-m', 'pip', 'install','pyxform','--user'])
         from pyxform.builder import create_survey_element_from_dict
         print('package is installed now')
     except:
