@@ -21,7 +21,9 @@ If you don't have ODK Aggregate server access or want to install your own aggreg
 ![image](https://user-images.githubusercontent.com/9129316/32544265-ff06041e-c49d-11e7-82a0-24e655052395.png)
 
 <br>
-Right click over any existing layer --> QRealTIme and choose desired option
+Right click over any existing layer --> QRealTIme and choose desired option: 
+<br>Make Online (To Create new form), import (to import data of existing form), synch(to automatically update your layer)
+<br>If you want to import data from already existing form (created without using our plugin) do ensure that the name of the geometry field is 'GEOMETRY','location' or 'gps. Other geometry field names are currently not supported.
 
 ![image](https://user-images.githubusercontent.com/9129316/32544408-65f01516-c49e-11e7-9077-a9e18c602e11.png)
 
