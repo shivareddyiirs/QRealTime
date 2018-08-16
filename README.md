@@ -11,7 +11,7 @@ QRealTime Plugin allows you to:
 Install QGIS (if not already). Open Plugin Manager and search for QRealTime plugin and install it.
 There can be problem in some PCs related to PyXForm installation. 
 Mannually install pyxform library  to python3 by using following command:<br>
-<b> python3 -m pip install pyxform --user <b>
+<h3> python3 -m pip install pyxform --user <h3>
   
 <h3>Configuration:</h3>
 
