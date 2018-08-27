@@ -22,7 +22,7 @@ Enter ODK aggregat url (required), other fields are optional, sync time is also 
 If you don't have ODK Aggregate server access or want to install your own aggregate server,  <a href="http://docs.opendatakit.org/aggregate-guide/"> then visit </a>
 <br>
 <br>
-![image](https://user-images.githubusercontent.com/9129316/32544265-ff06041e-c49d-11e7-82a0-24e655052395.png)
+https://user-images.githubusercontent.com/9129316/32544265-ff06041e-c49d-11e7-82a0-24e655052395.png
 
 <br>
 Right click over any existing layer --> QRealTIme and choose desired option: 
