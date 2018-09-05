@@ -22,15 +22,14 @@ Enter ODK aggregat url (required), other fields are optional, sync time is also 
 If you don't have ODK Aggregate server access or want to install your own aggregate server,  <a href="http://docs.opendatakit.org/aggregate-guide/"> then visit </a>
 
 <br>
-![image](https://user-images.githubusercontent.com/9129316/32544265-ff06041e-c49d-11e7-82a0-24e655052395.png)
+![settings](https://user-images.githubusercontent.com/5653512/45092573-7a69c280-b133-11e8-9b01-6b8c9f48a8c6.png)
 
 <br>
 Right click over any existing layer --> QRealTIme and choose desired option: 
 <br>Make Online (To Create new form), import (to import data of existing form), sync(to automatically update your layer)
 <br>If you want to import data from already existing form (created without using our plugin) do ensure that the name of the geometry field is 'GEOMETRY','location' or 'gps. Other geometry field names are currently not supported.
-
-![image](https://user-images.githubusercontent.com/9129316/32544408-65f01516-c49e-11e7-9077-a9e18c602e11.png)
-
+<br>
+![makeonline](https://user-images.githubusercontent.com/5653512/45092639-be5cc780-b133-11e8-8ee1-d3fb258cbf16.png)
 <br>
 QRealTime plugin is capable of converting QGIS layer into data collection form. To design a data collection form for humanitarian crisis, we have to create appropriate vector layer. For the demonstration purpose, you can create the shapefile with following fields:
 <br>
