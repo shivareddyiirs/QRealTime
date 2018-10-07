@@ -20,17 +20,22 @@
  *                                                                         *
  ***************************************************************************/
 """
-
 import os
-
-from PyQt4 import QtGui, uic
-from PyQt4.QtGui import  QWidget,QTableWidget,QTableWidgetItem
-from PyQt4.QtCore import Qt, QSettings, QSize,QVariant
+from PyQt5 import QtGui, uic
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QTableWidget,QTableWidgetItem
+from PyQt5.QtCore import Qt, QSettings, QSize,QVariant
 import xml.etree.ElementTree as ET
 import requests
 from qgis.gui import QgsMessageBar
-from qgis.core import QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit
-
+from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit,QgsPointXY,QgsEditorWidgetSetup
+import six
+from six.moves import range
+from qgis.core import QgsMessageLog, Qgis
+tag='QRealTime'
+def print(text,opt=None):
+    """ to redirect print to MessageLog"""
+    QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'QRealTime_dialog_services.ui'))
 
@@ -50,7 +55,7 @@ def getProxiesConf():
         return proxyDict
     else:
         return None
-class QRealTimeDialog(QtGui.QDialog, FORM_CLASS):
+class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, caller,parent=None):
         """Constructor."""
         super(QRealTimeDialog, self).__init__(parent)
@@ -113,7 +118,6 @@ class aggregate (QTableWidget):
      
     def getAuth(self):
         auth = requests.auth.HTTPDigestAuth(self.getValue('user'),self.getValue('password'))
-        print "auth",auth
         return auth
 
     def setup(self):
@@ -185,53 +189,60 @@ class aggregate (QTableWidget):
         files = {'form_def_file':files }
         response = requests.request(method, url,files = files, proxies = getProxiesConf(),auth=self.getAuth(),verify=False )
         if response.status_code== 201:
-            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
-                                                self.tr('Layer is online('+message+'), Collect data from App'),
-                                                level=QgsMessageBar.SUCCESS, duration=6)
+            self.iface.messageBar().pushSuccess(self.tr("QRealTime plugin"),
+                                                self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
-            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
-                                                self.tr("Form exist and can not be updated"),
-                                                level=QgsMessageBar.CRITICAL, duration=6)
+            self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"),self.tr("Form exist and can not be updated"))
         else:
-            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
-                                                self.tr("Form is not sent "),
-                                                level=QgsMessageBar.CRITICAL, duration=6)
+            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Form is not sent "))
         return response
         
-    def collectData(self,layer,xFormKey,importData=False):
-        if not layer :
-            return
+    def collectData(self,layer,xFormKey,importData=False,topElement='',version='null'):
+#        if layer :
+#            print("layer is not present or not valid")
+#            return
         self.updateFields(layer)
         if importData:
-            response, remoteTable = self.getTable(xFormKey,"")
+            response, remoteTable = self.getTable(xFormKey,"",topElement,version)
         else:
-            response, remoteTable = self.getTable(xFormKey,self.getValue('lastID'))
+            response, remoteTable = self.getTable(xFormKey,self.getValue('lastID'),topElement,version)
         if response.status_code == 200:
             print ('before Update Layer')
             if remoteTable:
                 print ('table have some data')
                 self.updateLayer(layer,remoteTable)
         else:
-            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"),
-                                                self.tr("Form is invalid"),
-                                                level=QgsMessageBar.CRITICAL, duration=6)
+            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Not able to collect data from Aggregate"))
     
-    def updateFields(self,layer,text='ODKUUID',q_type=QVariant.String):
+    def updateFields(self,layer,text='ODKUUID',q_type=QVariant.String,config={}):
         flag=True
-        for field in layer.pendingFields():
-            if field.name() == text:
+        for field in layer.fields():
+            
+            if field.name()[:10] == text[:10]:
                 flag=False
+                print("not writing fields")
         if flag:
             uuidField = QgsField(text, q_type)
-            uuidField.setLength(50)
+            if q_type == QVariant.String:
+                uuidField.setLength(100)
             layer.dataProvider().addAttributes([uuidField])
             layer.updateFields()
-
-    
+        fId= layer.dataProvider().fieldNameIndex(text)
+        try:
+            if config['type']== 'Hidden':
+                print('setting hidden widget')
+                layer.setEditorWidgetSetup( fId, QgsEditorWidgetSetup( "Hidden" ,config ) )
+                return
+        except:
+            print('exception')
+        if config=={}:
+            return
+        print('now setting exernal resource widgt')
+        layer.setEditorWidgetSetup( fId, QgsEditorWidgetSetup( "ExternalResource" ,config ) )
     def updateLayer(self,layer,dataDict):
         #print "UPDATING N.",len(dataDict),'FEATURES'
         self.processingLayer = layer
-        QgisFieldsList = [field.name() for field in layer.pendingFields()]
+        QgisFieldsList = [field.name() for field in layer.fields()]
         #layer.beginEditCommand("ODK syncronize")
 #        layer.startEditing()
         type=layer.geometryType()
@@ -243,27 +254,53 @@ class aggregate (QTableWidget):
         newQgisFeatures = []
         fieldError = None
         for odkFeature in dataDict:
-            if not odkFeature['ODKUUID'] in uuidList:
-                qgisFeature = QgsFeature()
-                wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
-                print (wktGeom)
-                if wktGeom[:3] != layerGeo[:3]:
-                    continue
-                qgisGeom = QgsGeometry.fromWkt(wktGeom)
-                print ('geom is',qgisGeom)
-                qgisFeature.setGeometry(qgisGeom)
-                qgisFeature.initAttributes(len(QgisFieldsList))
-                for fieldName, fieldValue in odkFeature.iteritems():
-                    if fieldName != 'GEOMETRY':
+            try:
+                if not odkFeature['ODKUUID'] in uuidList:
+                    qgisFeature = QgsFeature()
+                    wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
+                    print (wktGeom)
+                    if wktGeom[:3] != layerGeo[:3]:
+                        continue
+                    qgisGeom = QgsGeometry.fromWkt(wktGeom)
+                    print('geom is',qgisGeom)
+                    qgisFeature.setGeometry(qgisGeom)
+                    qgisFeature.initAttributes(len(QgisFieldsList))
+                    for fieldName, fieldValue in six.iteritems(odkFeature):
+                        if fieldName != 'GEOMETRY':
+                            try:
+                                qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
+                            except:
+                                fieldError = fieldName
+                            
+                    newQgisFeatures.append(qgisFeature)
+            except:
+                    qgisFeature = QgsFeature()
+                    try:
+                        wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
+                    except:
                         try:
-                            qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
+                            wktGeom=self.guessWKTGeomType(odkFeature['location'])
                         except:
-                            fieldError = fieldName
-                        
-                newQgisFeatures.append(qgisFeature)
+                            wktGeom=self.guessWKTGeomType(odkFeature['gps'])
+                    print (wktGeom)
+                    if wktGeom[:3] != layerGeo[:3]:
+                        continue
+                    qgisGeom = QgsGeometry.fromWkt(wktGeom)
+                    print('geom is',qgisGeom)
+                    qgisFeature.setGeometry(qgisGeom)
+                    qgisFeature.initAttributes(len(QgisFieldsList))
+                    for fieldName, fieldValue in six.iteritems(odkFeature):
+                        if fieldName != 'GEOMETRY'and fieldName!='location' and fieldName !='gps':
+                            try:
+                                qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
+                            except:
+                                fieldError = fieldName
+                            
+                    newQgisFeatures.append(qgisFeature)
+                
                 
         if fieldError:
-            self.iface.messageBar().pushMessage(self.tr("QRealTime plugin"), self.tr("Can't find '%s' field") % fieldError, level=QgsMessageBar.WARNING, duration=6)
+            self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"), self.tr("Can't find '%s' field") % fieldError)
         
         with edit(layer):
             layer.addFeatures(newQgisFeatures)
@@ -273,7 +310,7 @@ class aggregate (QTableWidget):
         uuidList = []
         if lyr:
             uuidFieldName = None
-            for field in lyr.pendingFields():
+            for field in lyr.fields():
                 if 'UUID' in field.name().upper():
                     uuidFieldName = field.name()
             if uuidFieldName:
@@ -282,16 +319,19 @@ class aggregate (QTableWidget):
         return uuidList
 
     def guessWKTGeomType(self,geom):
-        coordinates = geom.split(';')
-#        print ('coordinates are ', coordinates)
+        if geom:
+            coordinates = geom.split(';')
+        else:
+            return 'error'
+#        print ('coordinates are '+ coordinates)
         firstCoordinate = coordinates[0].strip().split(" ")
-#        print ('first Coordinate is ',  firstCoordinate)
+#        print ('first Coordinate is '+  firstCoordinate)
         if len(firstCoordinate) < 2:
             return "invalid", None
         coordinatesList = []
         for coordinate in coordinates:
             decodeCoord = coordinate.strip().split(" ")
-#            print 'decordedCoord is', decodeCoord
+#            print 'decordedCoord is'+ decodeCoord
             try:
                 coordinatesList.append([decodeCoord[0],decodeCoord[1]])
             except:
@@ -315,13 +355,16 @@ class aggregate (QTableWidget):
         # transformation from the current SRS to WGS84
         crsDest = self.processingLayer.crs () # get layer crs
         crsSrc = QgsCoordinateReferenceSystem(4326)  # WGS 84
-        xform = QgsCoordinateTransform(crsSrc, crsDest)
-        return xform.transform(pPoint)
+        xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+        try:
+            return QgsPoint(xform.transform(pPoint))
+        except :
+            return QgsPoint(xform.transform(QgsPointXY(pPoint)))
 
 
         
                                                 
-    def getTable(self,XFormKey,lastID):
+    def getTable(self,XFormKey,lastID,topElement,version= 'null'):
         url=self.getValue('url')+'/view/submissionList?formId='+XFormKey
         method='GET'
         table=[]
@@ -332,10 +375,12 @@ class aggregate (QTableWidget):
             root = ET.fromstring(response.content)
             ns='{http://opendatakit.org/submissions}'
             instance_ids=[child.text for child in root[0].findall(ns+'id')]
-            print ('instance ids before filter', instance_ids)
+            no_sub= len(instance_ids)
+#            print('instance ids before filter',instance_ids)
+            print('number of submissions are',no_sub)
             ns1='{http://www.opendatakit.org/cursor}'
             lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
-            print ('server lastID is',lastReturnedURI)
+            print('server lastID is', lastReturnedURI)
             if lastID ==lastReturnedURI:
                 print ('No Download returning')
                 return response,table
@@ -345,59 +390,47 @@ class aggregate (QTableWidget):
             except:
                 print ('first Download')
             instance_ids=instance_ids[lastindex:]
-            print  ('downloading',instance_ids)
+            print('downloading')
             for id in instance_ids :
                 if id:
-                    url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version=null and @uiVersion=null]/{}[@key={}]'.format(XFormKey,XFormKey,id)
+                    url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version={} and @uiVersion=null]/{}[@key={}]'.format(XFormKey,version,topElement,id)
                     print (url)
                     response=requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
                     if not response.status_code == 200:
                         return response,table
+                    print('xml downloaded is',response.content)
                     root1=ET.fromstring(response.content)
-                    data=root1[0].findall(ns+XFormKey)
-                    dict={child.tag.replace(ns,''):child.text for child in data[0]}
-                    mediaFile=root1.findall(ns+'mediaFile')
-                    if len(mediaFile)>0:
-                        mediaDict={child.tag.replace(ns,''):child.text for child in mediaFile[0]}
-                        for key,value in dict.iteritems():
-                            if value==mediaDict['filename']:
-                                dict[key]=self.cleanURI(mediaDict['downloadUrl'],XFormKey,value)
+                    print('downloaded data is',root1)
+                    data=root1[0].findall(ns+topElement)
+                    print('data is',data[0])
+                    dict={child.tag.split('}')[-1]:child.text for child in data[0]}
+                    print('dictionary is',dict)
+                    dict2= dict.copy()
+                    for key,value in six.iteritems(dict2):
+                                if value is None:
+                                    grEle=data[0].findall(ns+key)
+                                    try:
+                                        for child in grEle[0]:
+                                            dict[child.tag.split('}')[-1]]=child.text
+                                            print('found a group element')
+                                    except:
+                                        print('error')
+                    mediaFiles=root1.findall(ns+'mediaFile')
+                    if len(mediaFiles)>0:
+                        for mediaFile in mediaFiles:
+                            mediaDict={child.tag.replace(ns,''):child.text for child in mediaFile}
+                            for key,value in six.iteritems(dict):
+                                print('value is',value)
+                                if value==mediaDict['filename']:
+                                    murl= mediaDict['downloadUrl']
+                                    print('Download url is',murl)
+                                    if murl.endswith('as_attachment=true'):
+                                        murl=murl[:-19]
+                                        dict[key]= murl
                     table.append(dict)
             self.getValue('lastID',lastReturnedURI)
-            print (table)
+            print ('table is:',table)
             return response, table
-        except:
-            print ('not able to fetch')
+        except Exception as e:
+            print ('not able to fetch',e)
             return response,table
-        
-        
-        
-    def cleanURI(self,URI,layerName,fileName):
-            
-            attachements = {}
-            if isinstance(URI, basestring) and (URI[0:7] == 'http://' or URI[0:8] == 'https://'):
-                downloadDir = os.path.join(os.path.expanduser('~'),'attachments_%s' % layerName)
-                if not os.path.exists(downloadDir):
-                    os.makedirs(downloadDir)
-                try:
-                    response = requests.get(URI,auth=self.getAuth(),proxies=getProxiesConf(),allow_redirects=True, stream=True,verify=False)
-                except:
-                    print ('unable to donwload using the link')
-                localAttachmentPath = os.path.abspath(os.path.join(downloadDir,fileName))
-                if response.status_code == 200:
-                    print ("downloading", URI)
-                    with open(localAttachmentPath, 'wb') as f:
-                        for chunk in response:
-                            f.write(chunk)
-                        localURI = localAttachmentPath
-                    print ('loaded image')
-                    print (localURI)
-                    return localURI
-                    
-                else:
-                    print ('error downloading remote file: ',response.reason)
-                    return 'error downloading remote file: ',response.reason
-            else:
-                print ('Not downloaded anything')
-                return URI
-
