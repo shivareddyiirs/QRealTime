@@ -95,6 +95,7 @@ class aggregate (QTableWidget):
         self.setRowCount(len(self.parameters)-1)
         self.verticalHeader().hide()
         self.horizontalHeader().hide()
+        self.token=''
         
         S = QSettings()
         for row,parameter in enumerate(self.parameters):
@@ -113,12 +114,27 @@ class aggregate (QTableWidget):
             else:
                 self.setItem(row,1,QTableWidgetItem (valueFromSettings))
 
+
     def getServiceName(self):
         return self.service_id
      
     def getAuth(self):
-        auth = requests.auth.HTTPDigestAuth(self.getValue('user'),self.getValue('password'))
-        return auth
+        url=self.getValue('url')+'/v1'+'/sessions'
+        print('session url is test', url)
+        value= """
+  {
+    "email": "kotishiva@gmail.com",
+    "password": "Shivram@9"
+  }
+"""
+        print('payload is',value)
+        headers={'Content-Type': 'application/json'}
+        response = requests.post(url,data=value, headers=headers)
+        session=response.json()
+        self.token= session['token']
+        print('Printing token',self.token)
+        tokenHeader = {'Authorization': 'Bearer '+ self.token}
+        return tokenHeader
 
     def setup(self):
         S = QSettings()
@@ -159,11 +175,18 @@ class aggregate (QTableWidget):
         
     def getFormList(self):
         method='GET'
-        url=self.getValue('url')+'//formList'
-        response= requests.request(method,url,auth=self.getAuth(),verify=False)
-        root=ET.fromstring(response.content)
-        keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
-        return keylist,response
+        url=self.getValue('url')+'/v1'+'/forms'
+        print (url)
+        status='not able to download'
+        try:
+            response= requests.get(url,headers=self.getAuth(),verify=False)
+            forms=response.json()
+            keylist= [form["xmlFormId"] for form in forms]
+            print('keylist is',keylist)
+            return keylist,response
+        except:
+            print ('getformList','not able to get the forms')
+            return [''],status
     
             
     def sendForm(self,xForm_id,xForm):
@@ -172,23 +195,27 @@ class aggregate (QTableWidget):
         formList, response = self.getFormList()
         form_key=xForm_id in formList
         if response.status_code != requests.codes.ok:
-            return response
+            print(status)
+            return status
         message =''
         if form_key:
             message= 'Form Updated'
             method = 'POST'
-            url = self.getValue('url')+'//formUpload'
+            url = self.getValue('url')+'/v1'+'/forms'
         else:
             message= 'Created new form'
             method = 'POST'
-            url = self.getValue('url')+'//formUpload'
+            url = self.getValue('url')+'/v1''/forms'
 #        method = 'POST'
 #        url = self.getValue('url')+'//formUpload'
         #step1 - upload form: POST if new PATCH if exixtent
-        files = open(xForm,'r')
-        files = {'form_def_file':files }
-        response = requests.request(method, url,files = files, proxies = getProxiesConf(),auth=self.getAuth(),verify=False )
-        if response.status_code== 201:
+        with open(xForm,'r') as myfile:
+            xml= myfile.read()
+        headers=self.getAuth()
+        headers['Content-Type']= 'application/xml'
+        print('header is',headers)
+        response = requests.post(url,data=xml, proxies = getProxiesConf(),headers=headers,verify=False )
+        if response.status_code== 201 or response.status_code == 200:
             self.iface.messageBar().pushSuccess(self.tr("QRealTime plugin"),
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
