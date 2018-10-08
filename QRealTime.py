@@ -143,10 +143,10 @@ class QRealTime:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&QRealTime')
+        self.menu = self.tr(u'&ODK-Central')
         # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'QRealTime')
-        self.toolbar.setObjectName(u'QRealTime')
+        self.toolbar = self.iface.addToolBar(u'ODK-Central')
+        self.toolbar.setObjectName(u'ODK-Central')
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -246,10 +246,10 @@ class QRealTime:
         icon_path = os.path.join(self.plugin_dir,'icon.png')
         self.add_action(
             icon_path,
-            text=self.tr(u'QRealTime Setting'),
+            text=self.tr(u'ODK-Central Setting'),
             callback=self.run,
             parent=self.iface.mainWindow())
-        self.ODKMenu = QMenu('QRealTime')
+        self.ODKMenu = QMenu('ODK-Central')
         icon = QIcon(icon_path)
         self.sync= QAction(self.tr(u'sync'),self.ODKMenu)
         self.sync.setCheckable(True)
@@ -258,7 +258,7 @@ class QRealTime:
         self.sync.setChecked(False)
         self.iface.addCustomActionForLayerType(
                 self.sync,
-                'QRealTime',
+                'ODK-Central',
                 QgsMapLayer.VectorLayer,
                 True)
 
@@ -266,14 +266,14 @@ class QRealTime:
         self.Import.triggered.connect(self.importData)
         self.iface.addCustomActionForLayerType(
                 self.Import,
-                'QRealTime',
+                'ODK-Central',
                 QgsMapLayer.VectorLayer,
                 True)
         self.makeOnline=QAction(icon,self.tr(u'Make Online'),self.ODKMenu)
         self.makeOnline.triggered.connect(self.sendForm)
         self.iface.addCustomActionForLayerType(
             self.makeOnline,
-            'QRealTime',
+            'ODK-Central',
             QgsMapLayer.VectorLayer,
             True)
         service=self.dlg.getCurrentService()
@@ -300,7 +300,7 @@ class QRealTime:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'QRealTime'),
+                self.tr(u'ODK-Central'),
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
