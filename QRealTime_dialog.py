@@ -32,7 +32,7 @@ from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateR
 import six
 from six.moves import range
 from qgis.core import QgsMessageLog, Qgis
-tag='QRealTime'
+tag='ODK-Central'
 def print(text,opt=None):
     """ to redirect print to MessageLog"""
     QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
@@ -205,7 +205,7 @@ class aggregate (QTableWidget):
         else:
             message= 'Created new form'
             method = 'POST'
-            url = self.getValue('url')+'/v1''/forms'
+            url = self.getValue('url')+'/v1/forms'
 #        method = 'POST'
 #        url = self.getValue('url')+'//formUpload'
         #step1 - upload form: POST if new PATCH if exixtent
@@ -392,41 +392,33 @@ class aggregate (QTableWidget):
         
                                                 
     def getTable(self,XFormKey,lastID,topElement,version= 'null'):
-        url=self.getValue('url')+'/view/submissionList?formId='+XFormKey
+        url=self.getValue('url')+'/v1/forms/'+XFormKey+'/submissions'
+        print('inside getTable',url)
         method='GET'
         table=[]
-        response = requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
+        response = requests.request(method,url,proxies=getProxiesConf(),headers=self.getAuth(),verify=False)
         if not response.status_code == 200:
                 return response, table
         try:
-            root = ET.fromstring(response.content)
-            ns='{http://opendatakit.org/submissions}'
-            instance_ids=[child.text for child in root[0].findall(ns+'id')]
-            no_sub= len(instance_ids)
-#            print('instance ids before filter',instance_ids)
+            submissions= response.json()
+            instances={instance['instanceId']:instance['xml'] for instance in submissions}
+            no_sub= len(instances)
+            print('instance ids before filter',instances)
             print('number of submissions are',no_sub)
-            ns1='{http://www.opendatakit.org/cursor}'
-            lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
-            print('server lastID is', lastReturnedURI)
-            if lastID ==lastReturnedURI:
-                print ('No Download returning')
-                return response,table
-            lastindex=0
-            try:
-                lastindex= instance_ids.index(lastID)
-            except:
-                print ('first Download')
-            instance_ids=instance_ids[lastindex:]
             print('downloading')
-            for id in instance_ids :
+            ns='{http:opendatakit.org/submissions}'
+            for id,instanceXML in instances.items() :
                 if id:
-                    url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version={} and @uiVersion=null]/{}[@key={}]'.format(XFormKey,version,topElement,id)
-                    print (url)
-                    response=requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
+                    url=self.getValue('url')+'/v1/forms/'+XFormKey+'/submissions/'+id
+                    print ('instance download url is',url)
+                    response=requests.request(method,url,proxies=getProxiesConf(),headers=self.getAuth(),verify=False)
                     if not response.status_code == 200:
                         return response,table
-                    print('xml downloaded is',response.content)
-                    root1=ET.fromstring(response.content)
+                    xml= response.json()['xml']
+                    print ('xml downlaoded is',xml)
+                    print ('xml from the submissions is',instanceXML)
+                    print('xml downloaded is',xml)
+                    root1=ET.fromstring(xml)
                     print('downloaded data is',root1)
                     data=root1[0].findall(ns+topElement)
                     print('data is',data[0])

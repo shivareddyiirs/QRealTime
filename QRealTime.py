@@ -42,7 +42,7 @@ import xml.etree.ElementTree as ET
 import subprocess
 import pip
 from qgis.core import QgsMessageLog, Qgis
-tag='QRealTime'
+tag='ODK-Central'
 def print(text,opt=''):
     """ to redirect print to MessageLog"""
     QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
@@ -333,12 +333,14 @@ class QRealTime:
             result=self.ImportData.exec_()
             if result:
                 selectedForm= self.ImportData.comboBox.currentText()
-                url=service.getValue('url')+'//formXml?formId='+selectedForm
-                response= requests.request('GET',url,proxies=getProxiesConf(),verify=False)
+                url=service.getValue('url')+'/v1/forms/'+selectedForm+'.xml'
+                headers=service.getAuth()
+                response= requests.request('GET',url,proxies=getProxiesConf(),headers=headers,verify=False)
                 if response.status_code==200:
+                    xml=response.content
                     # with open('importForm.xml','w') as importForm:
                     #     importForm.write(response.content)
-                    self.formKey,self.topElement,self.version= self.updateLayer(layer,response.content)
+                    self.formKey,self.topElement,self.version= self.updateLayer(layer,xml)
                     layer.setName(self.formKey)
                     service.collectData(layer,self.formKey,True,self.topElement,self.version)
 
