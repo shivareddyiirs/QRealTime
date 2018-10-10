@@ -418,26 +418,24 @@ class aggregate (QTableWidget):
                     print ('xml downlaoded is',xml)
                     print ('xml from the submissions is',instanceXML)
                     print('xml downloaded is',xml)
-                    root1=ET.fromstring(xml)
-                    print('downloaded data is',root1)
-                    data=root1[0].findall(ns+topElement)
-                    print('data is',data[0])
-                    dict={child.tag.split('}')[-1]:child.text for child in data[0]}
+                    data=ET.fromstring(xml)
+                    print('downloaded data is',data)
+                    print('data is',data)
+                    dict={child.tag:child.text for child in data}
                     print('dictionary is',dict)
-                    dict2= dict.copy()
-                    for key,value in six.iteritems(dict2):
+                    for key,value in dict.items():
                                 if value is None:
-                                    grEle=data[0].findall(ns+key)
+                                    grEle=data.findall(key)
                                     try:
                                         for child in grEle[0]:
-                                            dict[child.tag.split('}')[-1]]=child.text
+                                            dict[child.tag]=child.text
                                             print('found a group element')
                                     except:
                                         print('error')
-                    mediaFiles=root1.findall(ns+'mediaFile')
+                    mediaFiles=root1.findall('mediaFile')
                     if len(mediaFiles)>0:
                         for mediaFile in mediaFiles:
-                            mediaDict={child.tag.replace(ns,''):child.text for child in mediaFile}
+                            mediaDict={child.tag:child.text for child in mediaFile}
                             for key,value in six.iteritems(dict):
                                 print('value is',value)
                                 if value==mediaDict['filename']:
