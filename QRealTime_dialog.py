@@ -407,20 +407,11 @@ class aggregate (QTableWidget):
             print('number of submissions are',no_sub)
             print('downloading')
             ns='{http:opendatakit.org/submissions}'
-            for id,instanceXML in instances.items() :
+            for id,xml in instances.items() :
                 if id:
-                    url=self.getValue('url')+'/v1/forms/'+XFormKey+'/submissions/'+id
-                    print ('instance download url is',url)
-                    response=requests.request(method,url,proxies=getProxiesConf(),headers=self.getAuth(),verify=False)
-                    if not response.status_code == 200:
-                        return response,table
-                    xml= response.json()['xml']
                     print ('xml downlaoded is',xml)
-                    print ('xml from the submissions is',instanceXML)
-                    print('xml downloaded is',xml)
                     data=ET.fromstring(xml)
                     print('downloaded data is',data)
-                    print('data is',data)
                     dict={child.tag:child.text for child in data}
                     print('dictionary is',dict)
                     for key,value in dict.items():
@@ -432,20 +423,19 @@ class aggregate (QTableWidget):
                                             print('found a group element')
                                     except:
                                         print('error')
-                    mediaFiles=data.findall('mediaFile')
-                    if len(mediaFiles)>0:
-                        for mediaFile in mediaFiles:
-                            mediaDict={child.tag:child.text for child in mediaFile}
-                            for key,value in six.iteritems(dict):
-                                print('value is',value)
-                                if value==mediaDict['filename']:
-                                    murl= mediaDict['downloadUrl']
-                                    print('Download url is',murl)
-                                    if murl.endswith('as_attachment=true'):
-                                        murl=murl[:-19]
-                                        dict[key]= murl
+                    urlAttachments= url+'/'+id+'/attachments'
+                    headers= self.getAuth()
+                    res=requests.get(urlAttachments,proxies=getProxiesConf(),headers=headers,verify=False)
+                    mediaFiles=res.json()
+                    print('mediaFiles are',mediaFiles)
+                    for mediaFile in mediaFiles:
+                        for key,value in dict.items():
+                            print('value is',value)
+                            if value==mediaFile:
+                                murl= urlAttachments+'/'+mediaFile
+                                print('Download url is',murl)
+                                dict[key]= murl
                     table.append(dict)
-            self.getValue('lastID',lastReturnedURI)
             print ('table is:',table)
             return response, table
         except Exception as e:
