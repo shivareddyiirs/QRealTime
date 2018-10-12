@@ -432,7 +432,7 @@ class aggregate (QTableWidget):
                                             print('found a group element')
                                     except:
                                         print('error')
-                    mediaFiles=root1.findall('mediaFile')
+                    mediaFiles=data.findall('mediaFile')
                     if len(mediaFiles)>0:
                         for mediaFile in mediaFiles:
                             mediaDict={child.tag:child.text for child in mediaFile}
