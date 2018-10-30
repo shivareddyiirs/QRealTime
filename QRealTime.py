@@ -40,7 +40,6 @@ import datetime
 import requests
 import xml.etree.ElementTree as ET
 import subprocess
-import pip
 from qgis.core import QgsMessageLog, Qgis
 tag='ODK-Central'
 def print(text,opt=''):
