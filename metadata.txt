@@ -23,7 +23,7 @@ repository=https://github.com/shivareddyiirs/QRealTime/tree/QGIS3
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog= 3.5: Now installing package 'pyxform' automatically. Tested in Mac and Windows. 3.4: Changes Major refactoring to replace 'print' statements with QgsMessageLog: It avoids QGIS crashes and make it thread safe.Now user can see all print statement outputs in log messages under 'QRealTime' tag. Some UI Improvements and minor bug fixes.
+changelog= 3.5.1: Removed unnecesary import pip, problem seen in lates QGIS 3.4 plugin installation. User may need to install pyxform using easy_install as QGIS python does not have pip since QGIS 3.4. 3.5: Now installing package 'pyxform' automatically. Tested in Mac and Windows. 3.4: Changes Major refactoring to replace 'print' statements with QgsMessageLog: It avoids QGIS crashes and make it thread safe.Now user can see all print statement outputs in log messages under 'QRealTime' tag. Some UI Improvements and minor bug fixes.
 # Tags are comma separated with spaces allowed
 tags= ODK, Data Collection, Mobile GIS
 homepage=https://shivareddyiirs.github.io/QRealTime/
