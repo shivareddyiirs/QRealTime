@@ -50,4 +50,12 @@ Following video demonstarte, how to use QRealTime Plugin:
 <br>
 <iframe width="560" height="315" src="https://www.youtube.com/embed/zmr2CC5G-m4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 <br>
+<h2> Please cite us:  </h2>
+  <UL>
+<LI > QGIS 3 Users:
+  <a href="https://zenodo.org/badge/latestdoi/99995529"><img src="https://zenodo.org/badge/99995529.svg" alt="DOI"></a></LI>
+  
+ <LI> QGIS 2 Users: <a href="https://doi.org/10.5281/zenodo.1045466"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1045466.svg" alt="DOI"></a> </LI>
+  </UL>
+
 
