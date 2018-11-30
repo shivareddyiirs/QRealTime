@@ -18,20 +18,14 @@ install:
   - pip install pyxform
 
 script:
+  - pyrcc5 -o QRealTime/resources_rc.py QRealTime/resources.qrc
+jobs:
+  include:
+    - stage: deploy
+      if: tag IS present
+      script: plugin_ci/release/release.sh
 
-env:
-  global:
-    # OSGEO credentials to release the plugin
-    # Generate with the following command for proper special characters support
-    # travis encrypt OSGEO_PASSWORD=\''Your super secret password!'\'
-    # TRANSIFEX_API_TOKEN, generated on Transifex website
-    # travis encrypt TX_TOKEN="......"
+    - stage: deploy
+      if: branch = master
+      script: plugin_ci/translate/update-translations.sh
 
-    # GH_TOKEN for creating releases
-    # https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line
-    # authorize only "public_repo"
-    # travis encrypt GH_TOKEN="......"
-
-    # if APPEND_CHANGELOG is defined, a list of all commits since
-    # the last release will be appended to the changelog.
-    # - APPEND_CHANGELOG=true
