@@ -1,7 +1,7 @@
-*.pyc
-*.pyc
-*.pyc
-*.pyc
-*.pyc
-*.pyc
-*.bak
+.idea
+__pycache__
+*.orig
+i18n
+.DS_Store
+github_deploy_key.out
+
