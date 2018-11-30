@@ -16,16 +16,8 @@ before_install:
 
 install:
   - pip install pyxform
-
-script:
-  - pyrcc5 -o QRealTime/resources_rc.py QRealTime/resources.qrc
 jobs:
   include:
     - stage: deploy
       if: tag IS present
       script: plugin_ci/release/release.sh
-
-    - stage: deploy
-      if: branch = master
-      script: plugin_ci/translate/update-translations.sh
-
