@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/shivareddyiirs/QRealTime.svg?branch=plugin-CI)](https://travis-ci.org/shivareddyiirs/QRealTime)
 <h1> Welcome to QRealTime plugin</h1>
 ![flowchart 2](https://user-images.githubusercontent.com/5653512/40710547-8e30b57c-6416-11e8-8c48-3075bd63e68b.jpg)
 QRealTime Plugin allows you to:
