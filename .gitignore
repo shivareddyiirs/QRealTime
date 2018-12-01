@@ -1,7 +1,4 @@
-*.pyc
-*.pyc
-*.pyc
-*.pyc
-*.pyc
+/.idea
 *.pyc
 *.bak
+.DS_Store
