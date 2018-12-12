@@ -119,22 +119,13 @@ class aggregate (QTableWidget):
         return self.service_id
      
     def getAuth(self):
-        url=self.getValue('url')+'/v1'+'/sessions'
-        print('session url is test', url)
-        value= """
-  {
-    "email": "kotishiva@gmail.com",
-    "password": "Shivram@9"
-  }
-"""
-        print('payload is',value)
-        headers={'Content-Type': 'application/json'}
-        response = requests.post(url,data=value, headers=headers)
-        session=response.json()
-        self.token= session['token']
-        print('Printing token',self.token)
-        tokenHeader = {'Authorization': 'Bearer '+ self.token}
-        return tokenHeader
+        url= 'https://kf.kobotoolbox.org/token?format=json'
+        response = requests.get(url,auth=(self.getValue('user'), self.getValue('password')))
+        token=response.json()['token']
+        headers = {
+    'Authorization': 'Token '+ token,
+}
+        return headers
 
     def setup(self):
         S = QSettings()
@@ -175,18 +166,18 @@ class aggregate (QTableWidget):
         
     def getFormList(self):
         method='GET'
-        url=self.getValue('url')+'/v1'+'/forms'
+        url=self.getValue('url')+'/api/v1/forms'
         print (url)
         status='not able to download'
+        response= requests.get(url,headers=self.getAuth())
+        forms= response.json()
         try:
-            response= requests.get(url,headers=self.getAuth(),verify=False)
-            forms=response.json()
             keylist= [form["xmlFormId"] for form in forms]
             print('keylist is',keylist)
             return keylist,response
         except:
             print ('getformList','not able to get the forms')
-            return [''],status
+            return [''],response
     
             
     def sendForm(self,xForm_id,xForm):
@@ -201,27 +192,21 @@ class aggregate (QTableWidget):
         if form_key:
             message= 'Form Updated'
             method = 'POST'
-            url = self.getValue('url')+'/v1'+'/forms'
+            url = self.getValue('url')+'/api/v1/forms'
         else:
             message= 'Created new form'
             method = 'POST'
-            url = self.getValue('url')+'/v1/forms'
-#        method = 'POST'
-#        url = self.getValue('url')+'//formUpload'
-        #step1 - upload form: POST if new PATCH if exixtent
-        with open(xForm,'r') as myfile:
-            xml= myfile.read()
-        headers=self.getAuth()
-        headers['Content-Type']= 'application/xml'
-        print('header is',headers)
-        response = requests.post(url,data=xml, proxies = getProxiesConf(),headers=headers,verify=False )
+            url = self.getValue('url')+'/api/v1/forms'
+        os.chdir(os.path.expanduser('~'))
+        files = {'xls_file': (xForm, open(xForm, 'rb')),}
+        response = requests.post(url,files=files,headers=self.getAuth())
         if response.status_code== 201 or response.status_code == 200:
             self.iface.messageBar().pushSuccess(self.tr("QRealTime plugin"),
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
             self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"),self.tr("Form exist and can not be updated"))
         else:
-            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Form is not sent "))
+            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr(str(response.status_code)))
         return response
         
     def collectData(self,layer,xFormKey,importData=False,topElement='',version='null'):
