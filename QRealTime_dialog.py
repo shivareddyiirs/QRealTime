@@ -197,7 +197,7 @@ class aggregate (QTableWidget):
             self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Form is not sent "))
         return response
         
-    def collectData(self,layer,xFormKey,importData=False,topElement='',version='null'):
+    def collectData(self,layer,xFormKey,importData=False,topElement='',version='null',geoField=''):
 #        if layer :
 #            print("layer is not present or not valid")
 #            return
@@ -210,7 +210,7 @@ class aggregate (QTableWidget):
             print ('before Update Layer')
             if remoteTable:
                 print ('table have some data')
-                self.updateLayer(layer,remoteTable)
+                self.updateLayer(layer,remoteTable,geoField)
         else:
             self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Not able to collect data from Aggregate"))
     
@@ -224,7 +224,7 @@ class aggregate (QTableWidget):
         if flag:
             uuidField = QgsField(text, q_type)
             if q_type == QVariant.String:
-                uuidField.setLength(100)
+                uuidField.setLength(300)
             layer.dataProvider().addAttributes([uuidField])
             layer.updateFields()
         fId= layer.dataProvider().fieldNameIndex(text)
@@ -239,7 +239,7 @@ class aggregate (QTableWidget):
             return
         print('now setting exernal resource widgt')
         layer.setEditorWidgetSetup( fId, QgsEditorWidgetSetup( "ExternalResource" ,config ) )
-    def updateLayer(self,layer,dataDict):
+    def updateLayer(self,layer,dataDict,geoField=''):
         #print "UPDATING N.",len(dataDict),'FEATURES'
         self.processingLayer = layer
         QgisFieldsList = [field.name() for field in layer.fields()]
@@ -253,11 +253,16 @@ class aggregate (QTableWidget):
 
         newQgisFeatures = []
         fieldError = None
+        print('geofield is',geoField)
         for odkFeature in dataDict:
             try:
-                if not odkFeature['ODKUUID'] in uuidList:
+                id=odkFeature['ODKUUID']
+            except:
+                print('error in reading ODKUUID')
+            try:
+                if not id in uuidList:
                     qgisFeature = QgsFeature()
-                    wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
+                    wktGeom = self.guessWKTGeomType(odkFeature[geoField])
                     print (wktGeom)
                     if wktGeom[:3] != layerGeo[:3]:
                         continue
@@ -266,7 +271,7 @@ class aggregate (QTableWidget):
                     qgisFeature.setGeometry(qgisGeom)
                     qgisFeature.initAttributes(len(QgisFieldsList))
                     for fieldName, fieldValue in six.iteritems(odkFeature):
-                        if fieldName != 'GEOMETRY':
+                        if fieldName != geoField:
                             try:
                                 qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
                             except:
@@ -274,30 +279,7 @@ class aggregate (QTableWidget):
                             
                     newQgisFeatures.append(qgisFeature)
             except:
-                    qgisFeature = QgsFeature()
-                    try:
-                        wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
-                    except:
-                        try:
-                            wktGeom=self.guessWKTGeomType(odkFeature['location'])
-                        except:
-                            wktGeom=self.guessWKTGeomType(odkFeature['gps'])
-                    print (wktGeom)
-                    if wktGeom[:3] != layerGeo[:3]:
-                        continue
-                    qgisGeom = QgsGeometry.fromWkt(wktGeom)
-                    print('geom is',qgisGeom)
-                    qgisFeature.setGeometry(qgisGeom)
-                    qgisFeature.initAttributes(len(QgisFieldsList))
-                    for fieldName, fieldValue in six.iteritems(odkFeature):
-                        if fieldName != 'GEOMETRY'and fieldName!='location' and fieldName !='gps':
-                            try:
-                                qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
-                            except:
-                                fieldError = fieldName
-                            
-                    newQgisFeatures.append(qgisFeature)
-                
+                    print('unable to create',fielderror)
                 
         if fieldError:
             self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"), self.tr("Can't find '%s' field") % fieldError)
@@ -393,9 +375,10 @@ class aggregate (QTableWidget):
             print('downloading')
             for id in instance_ids :
                 if id:
-                    url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version={} and @uiVersion=null]/{}[@key={}]'.format(XFormKey,version,topElement,id)
+                    url=self.getValue('url')+'/view/downloadSubmission'
                     print (url)
-                    response=requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
+                    para={'formId':'{}[@version={} and @uiVersion=null]/{}[@key={}]'.format(XFormKey,version,topElement,id)}
+                    response=requests.request(method,url,params=para,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
                     if not response.status_code == 200:
                         return response,table
                     print('xml downloaded is',response.content)
@@ -404,6 +387,7 @@ class aggregate (QTableWidget):
                     data=root1[0].findall(ns+topElement)
                     print('data is',data[0])
                     dict={child.tag.split('}')[-1]:child.text for child in data[0]}
+                    dict['ODKUUID']=id
                     print('dictionary is',dict)
                     dict2= dict.copy()
                     for key,value in six.iteritems(dict2):
