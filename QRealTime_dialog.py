@@ -348,14 +348,16 @@ class aggregate (QTableWidget):
             print  ('downloading',instance_ids)
             for id in instance_ids :
                 if id:
-                    url=self.getValue('url')+'/view/downloadSubmission?formId={}[@version=null and @uiVersion=null]/{}[@key={}]'.format(XFormKey,XFormKey,id)
+                    url=self.getValue('url')+'/view/downloadSubmission
                     print (url)
-                    response=requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
+                    para= {'formId':'{}[@version=null and @uiVersion=null]/{}[@key={}]'.format(XFormKey,XFormKey,id)}
+                    response=requests.request(method,url,params=para,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
                     if not response.status_code == 200:
                         return response,table
                     root1=ET.fromstring(response.content)
                     data=root1[0].findall(ns+XFormKey)
                     dict={child.tag.replace(ns,''):child.text for child in data[0]}
+                    dict['ODKUUID']=id
                     mediaFile=root1.findall(ns+'mediaFile')
                     if len(mediaFile)>0:
                         mediaDict={child.tag.replace(ns,''):child.text for child in mediaFile[0]}
