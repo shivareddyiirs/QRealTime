@@ -339,9 +339,9 @@ class QRealTime:
                     xml=response.content
                     # with open('importForm.xml','w') as importForm:
                     #     importForm.write(response.content)
-                    self.formKey,self.topElement,self.version= self.updateLayer(layer,xml)
+                    self.formKey,self.topElement,self.version, self.geoField= self.updateLayer(layer,xml)
                     layer.setName(self.formKey)
-                    service.collectData(layer,self.formKey,True,self.topElement,self.version)
+                    service.collectData(layer,self.formKey,True,self.topElement,self.version,self.geoField)
 
                 
                         
@@ -379,7 +379,9 @@ class QRealTime:
                     print('Reached Hidden')
                     config['type']='Hidden'
                 self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype,config)
-        return key,topElement,version
+	     else:
+		geoField=fieldName
+        return key,topElement,version,geoField
 
 
     def getLayer(self):
