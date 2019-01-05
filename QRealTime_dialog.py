@@ -391,6 +391,7 @@ class aggregate (QTableWidget):
                     data=ET.fromstring(xml)
                     print('downloaded data is',data)
                     dict={child.tag:child.text for child in data}
+                    dict['ODKUUID']=id
                     print('dictionary is',dict)
                     for key,value in dict.items():
                                 if value is None:
