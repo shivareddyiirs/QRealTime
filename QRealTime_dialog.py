@@ -3,11 +3,11 @@
 /***************************************************************************
  QRealTimeDialog
                                  A QGIS plugin
- This plugin connects you to Aggregate Server and do autoupdation of data to and from aggregate
+ This plugin connects you to KoBoToolbox Server
                              -------------------
-        begin                : 2017-08-09
+        begin                : 2019-01-13
         git sha              : $Format:%H$
-        copyright            : (C) 2017 by IIRS
+        copyright            : (C) 2019 by IIRS
         email                : kotishiva@gmail.com
  ***************************************************************************/
 
@@ -65,7 +65,7 @@ class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
-        service='aggregate'
+        service='KoBoToolbox'
         container = self.tabServices.widget(0)
         serviceClass = globals()[service]
         serviceClass(container,caller)
@@ -74,7 +74,7 @@ class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
     def getCurrentService(self):
         return self.tabServices.currentWidget().children()[0]
 
-class aggregate (QTableWidget):
+class KoBoToolbox (QTableWidget):
     parameters = [
         ["id","KoBoToolbox"],
         ["user", ''],
@@ -84,7 +84,7 @@ class aggregate (QTableWidget):
         ]
         
     def __init__(self,parent,caller):
-        super(aggregate, self).__init__(parent)
+        super(KoBoToolbox, self).__init__(parent)
         self.parent = parent
         self.iface=caller.iface
         self.resize(QSize(310,260))

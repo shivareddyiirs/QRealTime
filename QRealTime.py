@@ -3,11 +3,11 @@
 /***************************************************************************
  QRealTime
                                  A QGIS plugin
- This plugin connects you to Aggregate Server and do autoupdation of data to and from aggregate
+ This plugin connects you to KoBoToolbox
                               -------------------
-        begin                : 2017-08-09
+        begin                : 2019-01-13
         git sha              : $Format:%H$
-        copyright            : (C) 2017 by IIRS
+        copyright            : (C) 2019 by IIRS
         email                : kotishiva@gmail.com
  ***************************************************************************/
   code is taken and modified from:
