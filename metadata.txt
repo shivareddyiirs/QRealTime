@@ -9,7 +9,7 @@
 [general]
 name=ODKCentral
 qgisMinimumVersion=3.00
-description=This plugin connects you to Aggregate Server and do autoupdation of data to and from aggregate
+description=This plugin connects you to Kobotoolbox.
 version=1.0.0
 author=Shiva Reddy Koti
 email=kotishiva@gmail.com
