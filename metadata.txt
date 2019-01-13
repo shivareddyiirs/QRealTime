@@ -7,7 +7,7 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=ODKCentral
+name=KoBoToolbox
 qgisMinimumVersion=3.00
 description=This plugin connects you to Kobotoolbox.
 version=1.0.0
@@ -16,8 +16,8 @@ email=kotishiva@gmail.com
 
 about=This software is designed and developed in IIRS for online data collection. Form designing to data compilation every step is automated in a way that everything can be done inside GIS environment
 
-tracker=https://github.com/shivareddyiirs/QRealTime/tree/odk-central
-repository=https://github.com/shivareddyiirs/QRealTime/tree/odk-central
+tracker=https://github.com/shivareddyiirs/QRealTime/tree/Kobo
+repository=https://github.com/shivareddyiirs/QRealTime/tree/Kobo
 # End of mandatory metadata
 
 # Recommended items:
