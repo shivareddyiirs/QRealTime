@@ -32,7 +32,7 @@ from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateR
 import six
 from six.moves import range
 from qgis.core import QgsMessageLog, Qgis
-tag='ODK-Central'
+tag='KoBoToolbox'
 def print(text,opt=None):
     """ to redirect print to MessageLog"""
     QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
@@ -76,8 +76,7 @@ class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
 
 class aggregate (QTableWidget):
     parameters = [
-        ["id","aggregate"],
-        ["url",''],
+        ["id","KoBoToolbox"],
         ["user", ''],
         ["password", ''],
         ["lastID",''],
@@ -107,10 +106,10 @@ class aggregate (QTableWidget):
             pKey.setFlags(pKey.flags() ^ Qt.ItemIsEditable)
             pValue = QTableWidgetItem (parameter[1])
             self.setItem(row,0,pKey)
-            valueFromSettings = S.value("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()), defaultValue =  "undef")
+            valueFromSettings = S.value("KoBoToolbox/%s/%s/" % (self.service_id,self.item(row,0).text()), defaultValue =  "undef")
             if not valueFromSettings or valueFromSettings == "undef":
                 self.setItem(row,1,pValue)
-                S.setValue("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()),parameter[1])
+                S.setValue("KoBoToolbox/%s/%s/" % (self.service_id,self.item(row,0).text()),parameter[1])
             else:
                 self.setItem(row,1,QTableWidgetItem (valueFromSettings))
 
@@ -129,9 +128,9 @@ class aggregate (QTableWidget):
 
     def setup(self):
         S = QSettings()
-        S.setValue("QRealTime/", self.parent.parent().currentIndex())
+        S.setValue("KoBoToolbox/", self.parent.parent().currentIndex())
         for row in range (0,self.rowCount()):
-            S.setValue("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()),self.item(row,1).text())
+            S.setValue("KoBoToolbox/%s/%s/" % (self.service_id,self.item(row,0).text()),self.item(row,1).text())
         
     def getValue(self,key, newValue = None):
         for row in range (0,self.rowCount()):
@@ -166,7 +165,7 @@ class aggregate (QTableWidget):
         
     def getFormList(self):
         method='GET'
-        url=self.getValue('url')+'/api/v1/forms'
+        url='https://kf.kobotoolbox.org'+'/api/v1/forms'
         print (url)
         status='not able to download'
         response= requests.get(url,headers=self.getAuth())
@@ -192,21 +191,21 @@ class aggregate (QTableWidget):
         if form_key:
             message= 'Form Updated'
             method = 'POST'
-            url = self.getValue('url')+'/api/v1/forms'
+            url = 'https://kf.kobotoolbox.org'+'/api/v1/forms'
         else:
             message= 'Created new form'
             method = 'POST'
-            url = self.getValue('url')+'/api/v1/forms'
+            url = 'https://kf.kobotoolbox.org'+'/api/v1/forms'
         os.chdir(os.path.expanduser('~'))
         files = {'xls_file': (xForm, open(xForm, 'rb')),}
         response = requests.post(url,files=files,headers=self.getAuth())
         if response.status_code== 201 or response.status_code == 200:
-            self.iface.messageBar().pushSuccess(self.tr("QRealTime plugin"),
+            self.iface.messageBar().pushSuccess(self.tr("KoBoToolbox plugin"),
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
-            self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"),self.tr("Form exist and can not be updated"))
+            self.iface.messageBar().pushWarning(self.tr("KoBoToolbox plugin"),self.tr("Form exist and can not be updated"))
         else:
-            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr(str(response.status_code)))
+            self.iface.messageBar().pushCritical(self.tr("KoBoToolbox plugin"),self.tr(str(response.status_code)))
         return response
         
     def collectData(self,layer,xFormKey,importData=False,topElement='',version='null'):
@@ -224,7 +223,7 @@ class aggregate (QTableWidget):
                 print ('table have some data')
                 self.updateLayer(layer,remoteTable)
         else:
-            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Not able to collect data from Aggregate"))
+            self.iface.messageBar().pushCritical(self.tr("KoBoToolbox"),self.tr("Not able to collect data from Aggregate"))
     
     def updateFields(self,layer,text='ODKUUID',q_type=QVariant.String,config={}):
         flag=True
@@ -312,7 +311,7 @@ class aggregate (QTableWidget):
                 
                 
         if fieldError:
-            self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"), self.tr("Can't find '%s' field") % fieldError)
+            self.iface.messageBar().pushWarning(self.tr("KoBoToolbox"), self.tr("Can't find '%s' field") % fieldError)
         
         with edit(layer):
             layer.addFeatures(newQgisFeatures)

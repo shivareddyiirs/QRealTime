@@ -41,7 +41,7 @@ import requests
 import xml.etree.ElementTree as ET
 import subprocess
 from qgis.core import QgsMessageLog, Qgis
-tag='ODK-Central'
+tag='KoBoToolbox'
 def print(text,opt=''):
     """ to redirect print to MessageLog"""
     QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
@@ -142,10 +142,10 @@ class QRealTime:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&ODK-Central')
+        self.menu = self.tr(u'&KoBoToolbox')
         # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'ODK-Central')
-        self.toolbar.setObjectName(u'ODK-Central')
+        self.toolbar = self.iface.addToolBar(u'KoBoToolbox')
+        self.toolbar.setObjectName(u'KoBoToolbox')
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -160,7 +160,7 @@ class QRealTime:
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate('QRealTime', message)
+        return QCoreApplication.translate('KoBoToolbox', message)
 
 
     def add_action(
@@ -245,10 +245,10 @@ class QRealTime:
         icon_path = os.path.join(self.plugin_dir,'icon.png')
         self.add_action(
             icon_path,
-            text=self.tr(u'ODK-Central Setting'),
+            text=self.tr(u'KoBoToolbox Setting'),
             callback=self.run,
             parent=self.iface.mainWindow())
-        self.ODKMenu = QMenu('ODK-Central')
+        self.ODKMenu = QMenu('KoBoToolbox')
         icon = QIcon(icon_path)
         self.sync= QAction(self.tr(u'sync'),self.ODKMenu)
         self.sync.setCheckable(True)
@@ -257,7 +257,7 @@ class QRealTime:
         self.sync.setChecked(False)
         self.iface.addCustomActionForLayerType(
                 self.sync,
-                'ODK-Central',
+                'KoBoToolbox',
                 QgsMapLayer.VectorLayer,
                 True)
 
@@ -265,14 +265,14 @@ class QRealTime:
         self.Import.triggered.connect(self.importData)
         self.iface.addCustomActionForLayerType(
                 self.Import,
-                'ODK-Central',
+                'KoBoToolbox',
                 QgsMapLayer.VectorLayer,
                 True)
         self.makeOnline=QAction(icon,self.tr(u'Make Online'),self.ODKMenu)
         self.makeOnline.triggered.connect(self.sendForm)
         self.iface.addCustomActionForLayerType(
             self.makeOnline,
-            'ODK-Central',
+            'KoBoToolbox',
             QgsMapLayer.VectorLayer,
             True)
         service=self.dlg.getCurrentService()
@@ -299,7 +299,7 @@ class QRealTime:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'ODK-Central'),
+                self.tr(u'KoBoToolbox'),
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar

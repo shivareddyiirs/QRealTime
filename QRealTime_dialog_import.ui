@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>QRealTime Import</string>
+   <string>KoBoToolbox Import</string>
   </property>
   <widget class="QComboBox" name="comboBox">
    <property name="geometry">
