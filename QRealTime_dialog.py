@@ -32,6 +32,8 @@ from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateR
 import six
 from six.moves import range
 from qgis.core import QgsMessageLog, Qgis
+import csv
+import codecs
 tag='KoBoToolbox'
 def print(text,opt=None):
     """ to redirect print to MessageLog"""
@@ -82,7 +84,7 @@ class KoBoToolbox (QTableWidget):
         ["lastID",''],
         ['sync time','']
         ]
-        
+    kpi='https://kf.kobotoolbox.org/'
     def __init__(self,parent,caller):
         super(KoBoToolbox, self).__init__(parent)
         self.parent = parent
@@ -118,8 +120,9 @@ class KoBoToolbox (QTableWidget):
         return self.service_id
      
     def getAuth(self):
-        url= 'https://kf.kobotoolbox.org/token?format=json'
-        response = requests.get(url,auth=(self.getValue('user'), self.getValue('password')))
+        url= self.kpi+'token'
+        para={'format':'json'}
+        response = requests.get(url,auth=(self.getValue('user'), self.getValue('password')),params=para)
         token=response.json()['token']
         headers = {
     'Authorization': 'Token '+ token,
@@ -165,13 +168,15 @@ class KoBoToolbox (QTableWidget):
         
     def getFormList(self):
         method='GET'
-        url='https://kf.kobotoolbox.org'+'/api/v1/forms'
+        user=self.getValue('user')
+        url=self.kpi+'assets/'
         print (url)
         status='not able to download'
-        response= requests.get(url,headers=self.getAuth())
+        para={'format':'json'}
+        response= requests.get(url,headers=self.getAuth(),params=para)
         forms= response.json()
         try:
-            keylist= [form["xmlFormId"] for form in forms]
+            keylist= [form['uid'] for form in forms['results']]
             print('keylist is',keylist)
             return keylist,response
         except:
@@ -191,11 +196,11 @@ class KoBoToolbox (QTableWidget):
         if form_key:
             message= 'Form Updated'
             method = 'POST'
-            url = 'https://kf.kobotoolbox.org'+'/api/v1/forms'
+            url = kpi+'/api/v1/forms'
         else:
             message= 'Created new form'
             method = 'POST'
-            url = 'https://kf.kobotoolbox.org'+'/api/v1/forms'
+            url = kpi+'/api/v1/forms'
         os.chdir(os.path.expanduser('~'))
         files = {'xls_file': (xForm, open(xForm, 'rb')),}
         response = requests.post(url,files=files,headers=self.getAuth())
@@ -214,11 +219,11 @@ class KoBoToolbox (QTableWidget):
 #            return
         self.updateFields(layer)
         if importData:
-            response, remoteTable = self.getTable(xFormKey,"",topElement,version)
+            response,remoteTable = self.getTable(xFormKey,"",topElement,version)
         else:
-            response, remoteTable = self.getTable(xFormKey,self.getValue('lastID'),topElement,version)
-        if response.status_code == 200:
-            print ('before Update Layer')
+            response,remoteTable = self.getTable(xFormKey,self.getValue('lastID'),topElement,version)
+        print ('before Update Layer')
+        if response.status_code==200:
             if remoteTable:
                 print ('table have some data')
                 self.updateLayer(layer,remoteTable)
@@ -266,24 +271,26 @@ class KoBoToolbox (QTableWidget):
         fieldError = None
         for odkFeature in dataDict:
             try:
-                if not odkFeature['ODKUUID'] in uuidList:
-                    qgisFeature = QgsFeature()
-                    wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
-                    print (wktGeom)
-                    if wktGeom[:3] != layerGeo[:3]:
-                        continue
-                    qgisGeom = QgsGeometry.fromWkt(wktGeom)
-                    print('geom is',qgisGeom)
-                    qgisFeature.setGeometry(qgisGeom)
-                    qgisFeature.initAttributes(len(QgisFieldsList))
-                    for fieldName, fieldValue in six.iteritems(odkFeature):
-                        if fieldName != 'GEOMETRY':
-                            try:
-                                qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
-                            except:
-                                fieldError = fieldName
-                            
-                    newQgisFeatures.append(qgisFeature)
+                qgisFeature = QgsFeature()
+                odkFeature=dict(odkFeature)
+                print('dict is',odkFeature)
+                wktGeom = self.guessWKTGeomType(odkFeature['Location'])
+                print (wktGeom)
+                if wktGeom[:3] != layerGeo[:3]:
+                    continue
+                qgisGeom = QgsGeometry.fromWkt(wktGeom)
+                print('geom is',qgisGeom)
+                qgisFeature.setGeometry(qgisGeom)
+                qgisFeature.initAttributes(len(QgisFieldsList))
+                for fieldName, fieldValue in six.iteritems(odkFeature):
+                    if fieldName != 'Location':
+                        try:
+                            qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
+                        except:
+                            fieldError = fieldName
+                                
+                newQgisFeatures.append(qgisFeature)
+                        
             except:
                     qgisFeature = QgsFeature()
                     try:
@@ -376,52 +383,22 @@ class KoBoToolbox (QTableWidget):
         
                                                 
     def getTable(self,XFormKey,lastID,topElement,version= 'null'):
-        url=self.getValue('url')+'/v1/forms/'+XFormKey+'/submissions'
-        print('inside getTable',url)
+        url='https://kc.kobotoolbox.org/'+self.getValue('user')+'/reports/'+'aAqVAT82pC6ECsKX2TD3kZ'+'/export.csv'
         method='GET'
+        print('inside getTable',url)
         table=[]
         response = requests.request(method,url,proxies=getProxiesConf(),headers=self.getAuth(),verify=False)
         if not response.status_code == 200:
                 return response, table
         try:
-            submissions= response.json()
-            instances={instance['instanceId']:instance['xml'] for instance in submissions}
-            no_sub= len(instances)
-            print('instance ids before filter',instances)
-            print('number of submissions are',no_sub)
-            print('downloading')
-            ns='{http:opendatakit.org/submissions}'
-            for id,xml in instances.items() :
-                if id:
-                    print ('xml downlaoded is',xml)
-                    data=ET.fromstring(xml)
-                    print('downloaded data is',data)
-                    dict={child.tag:child.text for child in data}
-                    print('dictionary is',dict)
-                    for key,value in dict.items():
-                                if value is None:
-                                    grEle=data.findall(key)
-                                    try:
-                                        for child in grEle[0]:
-                                            dict[child.tag]=child.text
-                                            print('found a group element')
-                                    except:
-                                        print('error')
-                    urlAttachments= url+'/'+id+'/attachments'
-                    headers= self.getAuth()
-                    res=requests.get(urlAttachments,proxies=getProxiesConf(),headers=headers,verify=False)
-                    mediaFiles=res.json()
-                    print('mediaFiles are',mediaFiles)
-                    for mediaFile in mediaFiles:
-                        for key,value in dict.items():
-                            print('value is',value)
-                            if value==mediaFile:
-                                murl= urlAttachments+'/'+mediaFile
-                                print('Download url is',murl)
-                                dict[key]= murl
-                    table.append(dict)
+            print('response content  is',response.text)
+            print ('response content type is',response.encoding)
+            response.encoding='utf-8'
+            data = csv.DictReader(response.content.decode('utf-8').splitlines(),delimiter=';')
+            print('dictionary is',data)
+            table=data
             print ('table is:',table)
             return response, table
         except Exception as e:
             print ('not able to fetch',e)
-            return response,table
+            return response, table

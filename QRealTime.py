@@ -332,9 +332,10 @@ class QRealTime:
             result=self.ImportData.exec_()
             if result:
                 selectedForm= self.ImportData.comboBox.currentText()
-                url=service.getValue('url')+'/v1/forms/'+selectedForm+'.xml'
+                url='https://kf.kobotoolbox.org/assets/'+selectedForm
+                para={'format':'xml'}
                 headers=service.getAuth()
-                response= requests.request('GET',url,proxies=getProxiesConf(),headers=headers,verify=False)
+                response= requests.request('GET',url,proxies=getProxiesConf(),headers=headers,verify=False,params=para)
                 if response.status_code==200:
                     xml=response.content
                     # with open('importForm.xml','w') as importForm:
