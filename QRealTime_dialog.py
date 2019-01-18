@@ -167,7 +167,6 @@ class KoBoToolbox (QTableWidget):
 #        return 'xml'
         
     def getFormList(self):
-        method='GET'
         user=self.getValue('user')
         url=self.kpi+'assets/'
         print (url)
@@ -176,12 +175,12 @@ class KoBoToolbox (QTableWidget):
         response= requests.get(url,headers=self.getAuth(),params=para)
         forms= response.json()
         try:
-            keylist= [form['uid'] for form in forms['results']]
-            print('keylist is',keylist)
-            return keylist,response
+            keyDict= {form['uid']:form['name'] for form in forms['results']}
+            print('keyDict is',keyDict)
+            return keyDict,response
         except:
             print ('getformList','not able to get the forms')
-            return [''],response
+            return {},response
     
             
     def sendForm(self,xForm_id,xForm):
@@ -378,7 +377,7 @@ class KoBoToolbox (QTableWidget):
         
                                                 
     def getTable(self,XFormKey,lastID,topElement,version= 'null'):
-        url='https://kc.kobotoolbox.org/'+self.getValue('user')+'/reports/'+'aAqVAT82pC6ECsKX2TD3kZ'+'/export.csv'
+        url='https://kc.kobotoolbox.org/'+self.getValue('user')+'/reports/'+XFormKey+'/export.csv'
         method='GET'
         print('inside getTable',url)
         table=[]

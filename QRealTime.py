@@ -327,11 +327,13 @@ class QRealTime:
         forms,response= service.getFormList()
         if response.status_code==200:
             self.ImportData=ImportData()
-            self.ImportData.comboBox.addItems(forms)
+            for key,name in forms.items():
+                self.ImportData.comboBox.addItem(name,key)
             self.ImportData.show()
             result=self.ImportData.exec_()
             if result:
-                selectedForm= self.ImportData.comboBox.currentText()
+                index=self.ImportData.comboBox.currentIndex()
+                selectedForm= self.ImportData.comboBox.itemData(index)
                 url='https://kf.kobotoolbox.org/assets/'+selectedForm
                 para={'format':'xml'}
                 headers=service.getAuth()
@@ -340,25 +342,25 @@ class QRealTime:
                     xml=response.content
                     # with open('importForm.xml','w') as importForm:
                     #     importForm.write(response.content)
-                    self.formKey,self.topElement,self.version= self.updateLayer(layer,xml)
-                    layer.setName(self.formKey)
-                    service.collectData(layer,self.formKey,True,self.topElement,self.version)
+                    self.layer_name,self.version= self.updateLayer(layer,xml)
+                    layer.setName(self.layer_name)
+                    service.collectData(layer,selectedForm,True,self.layer_name,self.version)
 
                 
                         
     def updateLayer(self,layer,xml):
         ns='{http://www.w3.org/2002/xforms}'
+        nsh='{http://www.w3.org/1999/xhtml}'
         root= ET.fromstring(xml)
         #key= root[0][1][0][0].attrib['id']
+        layer_name=root[0].find(nsh+'title').text
         instance=root[0][1].find(ns+'instance')
-        key=instance[0].attrib['id']
         #topElement=root[0][1][0][0].tag.split('}')[1]
-        topElement=instance[0].tag.split('}')[1]
         try:
             version=instance[0].attrib['version']
         except:
             version='null'
-        print('key captured'+ key)
+        print('form name is '+ layer_name)
         print (root[0][1].findall(ns+'bind'))
         for bind in root[0][1].findall(ns+'bind'):
             attrib=bind.attrib
@@ -380,7 +382,7 @@ class QRealTime:
                     print('Reached Hidden')
                     config['type']='Hidden'
                 self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype,config)
-        return key,topElement,version
+        return layer_name,version
 
 
     def getLayer(self):
