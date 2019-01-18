@@ -230,7 +230,7 @@ class KoBoToolbox (QTableWidget):
         else:
             self.iface.messageBar().pushCritical(self.tr("KoBoToolbox"),self.tr("Not able to collect data from Aggregate"))
     
-    def updateFields(self,layer,text='ODKUUID',q_type=QVariant.String,config={}):
+    def updateFields(self,layer,text='instanceID',q_type=QVariant.String,config={}):
         flag=True
         for field in layer.fields():
             
@@ -327,13 +327,8 @@ class KoBoToolbox (QTableWidget):
     def getUUIDList(self,lyr):
         uuidList = []
         if lyr:
-            uuidFieldName = None
-            for field in lyr.fields():
-                if 'UUID' in field.name().upper():
-                    uuidFieldName = field.name()
-            if uuidFieldName:
-                for qgisFeature in lyr.getFeatures():
-                    uuidList.append(qgisFeature[uuidFieldName])
+            for qgisFeature in lyr.getFeatures():
+                uuidList.append(qgisFeature['instanceID'])
         return uuidList
 
     def guessWKTGeomType(self,geom):
