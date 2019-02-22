@@ -227,7 +227,7 @@ class KoBoToolbox (QTableWidget):
                 print ('table have some data')
                 self.updateLayer(layer,remoteTable)
         else:
-            self.iface.messageBar().pushCritical(self.tr("KoBoToolbox"),self.tr("Not able to collect data from Aggregate"))
+            self.iface.messageBar().pushCritical(self.tr("KoBoToolbox"),self.tr("Not able to collect data from KoBoToolbox"))
     
     def updateFields(self,layer,text='instanceID',q_type=QVariant.String,config={}):
         flag=True
