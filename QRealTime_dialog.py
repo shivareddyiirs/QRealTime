@@ -212,7 +212,7 @@ class KoBoToolbox (QTableWidget):
             self.iface.messageBar().pushCritical(self.tr("KoBoToolbox plugin"),self.tr(str(response.status_code)))
         return response
         
-    def collectData(self,layer,xFormKey,importData=False,topElement='',version='null'):
+    def collectData(self,layer,xFormKey,importData=False,topElement='',version='null',geoField=''):
 #        if layer :
 #            print("layer is not present or not valid")
 #            return
@@ -225,7 +225,7 @@ class KoBoToolbox (QTableWidget):
         if response.status_code==200:
             if remoteTable:
                 print ('table have some data')
-                self.updateLayer(layer,remoteTable)
+                self.updateLayer(layer,remoteTable,geoField)
         else:
             self.iface.messageBar().pushCritical(self.tr("KoBoToolbox"),self.tr("Not able to collect data from KoBoToolbox"))
     
@@ -254,7 +254,7 @@ class KoBoToolbox (QTableWidget):
             return
         print('now setting exernal resource widgt')
         layer.setEditorWidgetSetup( fId, QgsEditorWidgetSetup( "ExternalResource" ,config ) )
-    def updateLayer(self,layer,dataDict):
+    def updateLayer(self,layer,dataDict,geoField):
         #print "UPDATING N.",len(dataDict),'FEATURES'
         self.processingLayer = layer
         QgisFieldsList = [field.name() for field in layer.fields()]
@@ -273,7 +273,7 @@ class KoBoToolbox (QTableWidget):
                 qgisFeature = QgsFeature()
                 odkFeature=dict(odkFeature)
                 print('dict is',odkFeature)
-                wktGeom = self.guessWKTGeomType(odkFeature['Location'])
+                wktGeom = self.guessWKTGeomType(odkFeature[geoField])
                 print (wktGeom)
                 if wktGeom[:3] != layerGeo[:3]:
                     continue
@@ -282,38 +282,15 @@ class KoBoToolbox (QTableWidget):
                 qgisFeature.setGeometry(qgisGeom)
                 qgisFeature.initAttributes(len(QgisFieldsList))
                 for fieldName, fieldValue in six.iteritems(odkFeature):
-                    if fieldName != 'Location':
-                        try:
-                            qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
-                        except:
-                            fieldError = fieldName
+                    try:
+                        qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
+                    except:
+                        fieldError = fieldName
                                 
                 newQgisFeatures.append(qgisFeature)
                         
-            except:
-                    qgisFeature = QgsFeature()
-                    try:
-                        wktGeom = self.guessWKTGeomType(odkFeature['GEOMETRY'])
-                    except:
-                        try:
-                            wktGeom=self.guessWKTGeomType(odkFeature['location'])
-                        except:
-                            wktGeom=self.guessWKTGeomType(odkFeature['gps'])
-                    print (wktGeom)
-                    if wktGeom[:3] != layerGeo[:3]:
-                        continue
-                    qgisGeom = QgsGeometry.fromWkt(wktGeom)
-                    print('geom is',qgisGeom)
-                    qgisFeature.setGeometry(qgisGeom)
-                    qgisFeature.initAttributes(len(QgisFieldsList))
-                    for fieldName, fieldValue in six.iteritems(odkFeature):
-                        if fieldName != 'GEOMETRY'and fieldName!='location' and fieldName !='gps':
-                            try:
-                                qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
-                            except:
-                                fieldError = fieldName
-                            
-                    newQgisFeatures.append(qgisFeature)
+            except Exception as e :
+                print(e)
                 
                 
         if fieldError:
@@ -337,7 +314,6 @@ class KoBoToolbox (QTableWidget):
             return 'error'
 #        print ('coordinates are '+ coordinates)
         firstCoordinate = coordinates[0].strip().split(" ")
-#        print ('first Coordinate is '+  firstCoordinate)
         if len(firstCoordinate) < 2:
             return "invalid", None
         coordinatesList = []
@@ -386,9 +362,7 @@ class KoBoToolbox (QTableWidget):
                 return response, table
         try:
             print('response content  is',response.text)
-            print ('response content type is',response.encoding)
-            response.encoding='utf-8'
-            data = csv.DictReader(response.content.decode('utf-8').splitlines(),delimiter=';')
+            data = csv.DictReader(response.text.splitlines(),delimiter=';')
             print('dictionary is',data)
             table=data
             print ('table is:',table)
