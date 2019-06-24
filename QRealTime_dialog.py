@@ -232,7 +232,6 @@ class KoBoToolbox (QTableWidget):
 #        if layer :
 #            print("layer is not present or not valid")
 #            return
-        QgsMessageLog.logMessage("CollectData() QRT_d runs")
         self.updateFields(layer)
         if importData:
             response,remoteTable = self.getTable(xFormKey,"",topElement,version)
@@ -326,7 +325,6 @@ class KoBoToolbox (QTableWidget):
         return uuidList
 
     def guessWKTGeomType(self,geom):
-        QgsMessageLog.logMessage("guessWKTGeomType() runs")
         if geom:
             coordinates = geom.split(';')
         else:
@@ -372,7 +370,6 @@ class KoBoToolbox (QTableWidget):
         
                                                 
     def getTable(self,XFormKey,lastID,topElement,version= 'null'):
-        QgsMessageLog.logMessage("getTable() QRT_d runs")
         url='https://kc.humanitarianresponse.info/'+self.getValue('user')+'/reports/'+XFormKey+'/export.csv'
         table=[]
         response = requests.get(url,auth=(self.getValue('user'),self.getValue('password')),verify=False)

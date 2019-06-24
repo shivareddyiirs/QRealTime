@@ -33,6 +33,7 @@ import os.path
 from qgis.core import QgsMapLayer
 import warnings
 import unicodedata
+import six
 import re
 import json
 from qgis.PyQt.QtCore import QTimer
@@ -46,23 +47,6 @@ tag='KoBoToolbox'
 def print(text,opt=''):
     """ to redirect print to MessageLog"""
     QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
-
-try:
-	from pyxform.builder import create_survey_element_from_dict
-	print('pyxform already installed')
-except ImportError:
-    try:
-        subprocess.call(['python3', '-m', 'pip', 'install','pyxform'])
-        from pyxform.builder import create_survey_element_from_dict
-        print('package is installed after python3')
-    except:
-        subprocess.call(['python3', '-m', 'pip', 'install','pyxform','--user'])
-        print ("after python3 --user call")
-        try:
-            from pyxform.builder import create_survey_element_from_dict
-        except:
-            print('not able to install pyxform, install manually')
-import six
 
 def getProxiesConf():
     s = QSettings() #getting proxy from qgis options settings
@@ -94,7 +78,6 @@ def QVariantToODKtype(q_type):
             raise AttributeError("Can't cast QVariant to ODKType: " + q_type)
 
 def qtype(odktype):
-    QgsMessageLog.logMessage("qtype() runs")
     if odktype == 'binary':
         return QVariant.String,{'DocumentViewer': 2, 'DocumentViewerHeight': 0, 'DocumentViewerWidth': 0, 'FileWidget': True, 'FileWidgetButton': True, 'FileWidgetFilter': '', 'PropertyCollection': {'name': None, 'properties': {}, 'type': 'collection'}, 'RelativeStorage': 0, 'StorageMode': 0}
     elif odktype=='string':
@@ -353,7 +336,6 @@ class QRealTime:
                 
                         
     def updateLayer(self,layer,xml):
-        print("updateLayer() runs")
         geoField=''
         ns='{http://www.w3.org/2002/xforms}'
         nsh='{http://www.w3.org/1999/xhtml}'
