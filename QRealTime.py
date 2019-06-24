@@ -32,7 +32,6 @@ from .QRealTime_dialog_import import ImportData
 import os.path
 from qgis.core import QgsMapLayer
 import warnings
-import unicodedata
 import six
 import re
 import json
@@ -40,7 +39,6 @@ from qgis.PyQt.QtCore import QTimer
 import datetime
 import requests
 import xml.etree.ElementTree as ET
-import subprocess
 from qgis.core import QgsMessageLog, Qgis
 
 tag='KoBoToolbox'
@@ -97,7 +95,6 @@ def qtype(odktype):
     
 class QRealTime:
     """QGIS Plugin Implementation."""
-
 
     def __init__(self, iface):
         """Constructor.

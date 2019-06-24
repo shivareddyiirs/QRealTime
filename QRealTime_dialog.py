@@ -35,8 +35,7 @@ from qgis.core import QgsMessageLog, Qgis
 import csv
 import json
 import ast
-import codecs
-import subprocess
+
 tag='KoBoToolbox'
 def print(text,opt=None):
     """ to redirect print to MessageLog"""
@@ -193,15 +192,19 @@ class KoBoToolbox (QTableWidget):
 
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
-        form_key=xForm_id in formList
+        form=''
+        for item in formList:
+            if formList[item]==xForm:
+                form=xForm
+                xForm_id=item
         if response.status_code != requests.codes.ok:
             print(status)
             return status
         message =''
-        if form_key:
+        if form:
             message= 'Form Updated'
-            method = 'POST'
-            url = self.kpi+'assets/'
+            method = 'PATCH'
+            url = self.kpi+'assets/'+xForm_id
         else:
             message= 'Created new form'
             method = 'POST'
@@ -209,7 +212,7 @@ class KoBoToolbox (QTableWidget):
         para = {"format":"json"}
         headers = {'Content-Type': "application/json",'Accept': "application/json"}
         #creates form:
-        response = requests.post(url,json=payload,auth=(self.getValue('user'),self.getValue('password')),headers=headers,params=para)
+        response = requests.request(method,url,json=payload,auth=(self.getValue('user'),self.getValue('password')),headers=headers,params=para)
         responseJson=json.loads(response.text)
         urlDeploy = "https://kobo.humanitarianresponse.info/assets/"+responseJson['uid']+"/deployment/"
         payload2 = json.dumps({"active": True})
@@ -233,16 +236,26 @@ class KoBoToolbox (QTableWidget):
 #            print("layer is not present or not valid")
 #            return
         self.updateFields(layer)
-        if importData:
-            response,remoteTable = self.getTable(xFormKey,"",topElement,version)
-        else:
-            response,remoteTable = self.getTable(xFormKey,self.getValue('lastID'),topElement,version)
-        print ('before Update Layer')
-        if response.status_code==200:
-            if remoteTable:
-                print ('table has some data')
-                self.updateLayer(layer,remoteTable,geoField)
-        else:
+        try:
+            if importData:
+                response,remoteTable = self.getTable(xFormKey,"",topElement,layer,version)
+                if response.status_code==200:
+                    if remoteTable:
+                        print ('table has some data')
+                        self.updateLayer(layer,remoteTable,geoField)
+                        self.iface.messageBar().pushSuccess(self.tr("KoBoToolbox plugin"),
+                                                    self.tr('Import Successful'))
+            else:
+                response,remoteTable,geoField = self.getTable(xFormKey,self.getValue('lastID'),topElement,layer,version)
+                if response.status_code==200:
+                    if remoteTable:
+                        print ('table has some data')
+                        self.updateLayer(layer,remoteTable,geoField)
+                        self.iface.messageBar().pushSuccess(self.tr("KoBoToolbox plugin"),
+                                                    self.tr('Successfully synced data'))
+                    else:
+                        self.iface.messageBar().pushSuccess(self.tr("KoBoToolbox plugin"),self.tr("No new data to sync"))
+        except:
             self.iface.messageBar().pushCritical(self.tr("KoBoToolbox"),self.tr("Not able to collect data from KoBoToolbox"))
     
     def updateFields(self,layer,text='instanceID',q_type=QVariant.String,config={}):
@@ -270,7 +283,6 @@ class KoBoToolbox (QTableWidget):
         print('now setting exernal resource widgt')
         layer.setEditorWidgetSetup( fId, QgsEditorWidgetSetup( "ExternalResource" ,config ) )
     def updateLayer(self,layer,dataDict,geoField):
-        QgsMessageLog.logMessage("updateLayer() runs")
         #print "UPDATING N.",len(dataDict),'FEATURES'
         self.processingLayer = layer
         QgisFieldsList = [field.name() for field in layer.fields()]
@@ -369,44 +381,86 @@ class KoBoToolbox (QTableWidget):
 
         
                                                 
-    def getTable(self,XFormKey,lastID,topElement,version= 'null'):
-        url='https://kc.humanitarianresponse.info/'+self.getValue('user')+'/reports/'+XFormKey+'/export.csv'
-        table=[]
-        response = requests.get(url,auth=(self.getValue('user'),self.getValue('password')),verify=False)
-        if not response.status_code == 200:
-                return response, table
-        try:
-            data = csv.DictReader(response.text.splitlines(),delimiter=';')
-            out = json.dumps(  [row for row in data]  )
-            tempTable=ast.literal_eval(out)
+    def getTable(self,XFormKey,lastID,topElement,layer,version= 'null'):
+        if lastID:
+            requests.packages.urllib3.disable_warnings()
             table=[]
-            xmlurl="https://kobo.humanitarianresponse.info/assets/"+XFormKey
-            para={'format':'xml'}
-            response2=requests.get(xmlurl,auth=(self.getValue('user'),self.getValue('password')),params=para)
-            ns='{http://www.w3.org/2002/xforms}'
-            xml=response2.content
-            root= ET.fromstring(xml)
+            geoField=''
             imageField=''
-            for bind in root[0][1].findall(ns+'bind'):
-                attrib=bind.attrib
-                fieldName= attrib['nodeset'].split('/')[-1].replace('_', ' ')
-                fieldType=attrib['type']
-                if fieldType[:3]=='bin':
-                    imageField=fieldName
-            submissionIndex=0
-            for submission in tempTable:
-                for key in list(submission):
-                    if key[0]=='_' and key!='_uuid':
-                        submission.pop(key)
-                    if key=='_uuid':
-                        submission['instanceID']=submission[key]
-                        submission.pop(key)
-                    if key==imageField:
-                        imageurl='https://kc.humanitarianresponse.info/attachment/original?media_file='+self.getValue('user')+'/attachments/'+submission[key]
-                        submission[key]=imageurl
-                table.append(submission)
-            print ('table is:',table)
-            return response, table
-        except Exception as e:
-            print ('not able to fetch',e)
-            return response, table
+            url='https://kc.humanitarianresponse.info/api/v1/forms'
+            response = requests.get(url,auth=(self.getValue('user'),self.getValue('password')),verify=False)
+            responseJSON=json.loads(response.text)
+            formID=''
+            for form in responseJSON:
+                if str(form['title'])==XFormKey:
+                    formID=str(form['formid'])
+            urlData='https://kc.humanitarianresponse.info/api/v1/data/'+formID
+            responseData = requests.get(urlData,auth=(self.getValue('user'),self.getValue('password')),verify=False)
+            data=json.loads(responseData.text)
+            uuidList = self.getUUIDList(layer)
+            for submission in data:
+                if submission['meta/instanceID'] not in uuidList:
+                    xmlurl="https://kobo.humanitarianresponse.info/assets/"+submission['_xform_id_string']
+                    para={'format':'xml'}
+                    response2=requests.get(xmlurl,auth=(self.getValue('user'),self.getValue('password')),params=para)
+                    ns='{http://www.w3.org/2002/xforms}'
+                    xml=response2.content
+                    root= ET.fromstring(xml)
+                    fieldDict={}
+                    for bind in root[0][1].findall(ns+'bind'):
+                        attrib=bind.attrib
+                        fieldName= attrib['nodeset'].split('/')[-1]
+                        fieldType= attrib['type']
+                        if fieldType[:3]=='geo':
+                            geoField=fieldName.replace("_"," ")
+                        if fieldType[:3]=='bin':
+                            imageField=fieldName
+                        for item in submission:
+                            if item==fieldName:
+                                fieldDict[item.replace("_"," ")]=submission[item]
+                                fieldDict['instanceID']=submission['meta/instanceID']
+                    fieldDict[imageField]='https://kc.humanitarianresponse.info/attachment/original?media_file='+self.getValue('user')+'/attachments/'+submission[imageField]
+                    table.append(fieldDict)
+                    print("sync table",table)
+            return responseData,table,geoField
+        else:
+            url='https://kc.humanitarianresponse.info/'+self.getValue('user')+'/reports/'+XFormKey+'/export.csv'
+            table=[]
+            response = requests.get(url,auth=(self.getValue('user'),self.getValue('password')),verify=False)
+            if not response.status_code == 200:
+                return response, table
+            try:
+                data = csv.DictReader(response.text.splitlines(),delimiter=';')
+                out = json.dumps(  [row for row in data]  )
+                tempTable=ast.literal_eval(out)
+                table=[]
+                xmlurl="https://kobo.humanitarianresponse.info/assets/"+XFormKey
+                para={'format':'xml'}
+                response2=requests.get(xmlurl,auth=(self.getValue('user'),self.getValue('password')),params=para)
+                ns='{http://www.w3.org/2002/xforms}'
+                xml=response2.content
+                root= ET.fromstring(xml)
+                imageField=''
+                for bind in root[0][1].findall(ns+'bind'):
+                    attrib=bind.attrib
+                    fieldName= attrib['nodeset'].split('/')[-1].replace('_', ' ')
+                    fieldType=attrib['type']
+                    if fieldType[:3]=='bin':
+                        imageField=fieldName
+                for submission in tempTable:
+                    for key in list(submission):
+                        if key[0]=='_' and key!='_uuid':
+                            submission.pop(key)
+                        if key=='_uuid':
+                            submission['instanceID']='uuid:'+submission[key]
+                            self.getValue('lastID',submission['instanceID'])
+                            submission.pop(key)
+                        if key==imageField:
+                            imageurl='https://kc.humanitarianresponse.info/attachment/original?media_file='+self.getValue('user')+'/attachments/'+submission[key]
+                            submission[key]=imageurl
+                    table.append(submission)
+                print ('table is:',table)
+                return response, table
+            except Exception as e:
+                print ('not able to fetch',e)
+                return response, table
