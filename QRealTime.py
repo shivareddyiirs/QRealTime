@@ -32,35 +32,19 @@ from .QRealTime_dialog_import import ImportData
 import os.path
 from qgis.core import QgsMapLayer
 import warnings
-import unicodedata
+import six
 import re
 import json
 from qgis.PyQt.QtCore import QTimer
 import datetime
 import requests
 import xml.etree.ElementTree as ET
-import subprocess
 from qgis.core import QgsMessageLog, Qgis
+
 tag='KoBoToolbox'
 def print(text,opt=''):
     """ to redirect print to MessageLog"""
     QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
-try:
-	from pyxform.builder import create_survey_element_from_dict
-	print('package already installed')
-except ImportError:
-    try:
-        subprocess.call(['python3', '-m', 'pip', 'install','pyxform'])
-        from pyxform.builder import create_survey_element_from_dict
-        print('package is installed after python3')
-    except:
-        subprocess.call(['python3', '-m', 'pip', 'install','pyxform','--user'])
-        print ("after python3 --user call")
-        try:
-            from pyxform.builder import create_survey_element_from_dict
-        except:
-            print('not able to install pyxform, install mannually')
-import six
 
 def getProxiesConf():
     s = QSettings() #getting proxy from qgis options settings
@@ -111,7 +95,6 @@ def qtype(odktype):
     
 class QRealTime:
     """QGIS Plugin Implementation."""
-
 
     def __init__(self, iface):
         """Constructor.
@@ -261,7 +244,7 @@ class QRealTime:
                 QgsMapLayer.VectorLayer,
                 True)
 
-        self.Import = QAction(icon,self.tr(u'import'),self.ODKMenu)
+        self.Import = QAction(icon,self.tr(u'Import'),self.ODKMenu)
         self.Import.triggered.connect(self.importData)
         self.iface.addCustomActionForLayerType(
                 self.Import,
@@ -291,7 +274,7 @@ class QRealTime:
             print(layer)
             if (not self.topElement):
                 self.topElement= layer.name()
-            service.collectData(layer,layer.name(),False,self.topElement,self.version)
+            service.collectData(layer,layer.name(),'',False,self.topElement,self.version,'')
         self.timer.timeout.connect(timeEvent)
 
 
@@ -334,17 +317,18 @@ class QRealTime:
             if result:
                 index=self.ImportData.comboBox.currentIndex()
                 selectedForm= self.ImportData.comboBox.itemData(index)
-                url='https://kf.kobotoolbox.org/assets/'+selectedForm
+                url='https://kobo.humanitarianresponse.info/assets/'+selectedForm
                 para={'format':'xml'}
-                headers=service.getAuth()
-                response= requests.request('GET',url,proxies=getProxiesConf(),headers=headers,verify=False,params=para)
+                #headers=service.getAuth()
+                requests.packages.urllib3.disable_warnings()
+                response= requests.request('GET',url,proxies=getProxiesConf(),auth=(service.getValue('user'), service.getValue('password')),verify=False,params=para)
                 if response.status_code==200:
                     xml=response.content
                     # with open('importForm.xml','w') as importForm:
                     #     importForm.write(response.content)
-                    self.layer_name,self.version, self.geoField= self.updateLayer(layer,xml)
+                    self.layer_name,self.version, self.geoField,self.fields= self.updateLayer(layer,xml)
                     layer.setName(self.layer_name)
-                    service.collectData(layer,selectedForm,True,self.layer_name,self.version,self.geoField)
+                    service.collectData(layer,selectedForm,self.fields,True,self.layer_name,self.version,self.geoField)
 
                 
                         
@@ -356,27 +340,29 @@ class QRealTime:
         #key= root[0][1][0][0].attrib['id']
         layer_name=root[0].find(nsh+'title').text
         instance=root[0][1].find(ns+'instance')
+        fields={}
         #topElement=root[0][1][0][0].tag.split('}')[1]
         try:
             version=instance[0].attrib['version']
         except:
             version='null'
-        print('form name is '+ layer_name)
-        print (root[0][1].findall(ns+'bind'))
+#        print('form name is '+ layer_name)
+#        print (root[0][1].findall(ns+'bind'))
         for bind in root[0][1].findall(ns+'bind'):
             attrib=bind.attrib
             print (attrib)
-            fieldName= attrib['nodeset'].split('/')[-1]
+            fieldName= attrib['nodeset'].split('/')[-1].replace("_", " ")
             fieldType=attrib['type']
-            print('attrib type is',attrib['type'])
+            fields[fieldName]=fieldType
+#            print('attrib type is',attrib['type'])
             qgstype,config = qtype(attrib['type'])
-            print ('first attribute'+ fieldName)
+#            print ('first attribute'+ fieldName)
             inputs=root[1].findall('.//*[@ref]')
             if fieldType[:3]!='geo':
-                print('creating new field:'+ fieldName)
+                #print('creating new field:'+ fieldName)
                 isHidden= True
                 for input in inputs:
-                    if fieldName == input.attrib['ref'].split('/')[-1]:
+                    if fieldName == input.attrib['ref'].split('/')[-1].replace("_", " "):
                         isHidden= False
                         break
                 if isHidden:
@@ -385,8 +371,9 @@ class QRealTime:
                 self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype,config)
             else:
                 geoField=fieldName
-                print('geometry field is',fieldName)
-        return layer_name,version,geoField
+                self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype,config)
+                print('geometry field is =',fieldName)
+        return layer_name,version,geoField,fields
 
 
     def getLayer(self):
@@ -394,21 +381,14 @@ class QRealTime:
         
     def sendForm(self):
 #        get the fields model like name , widget type, options etc.
-        version= str(datetime.date.today())
-        print('version is'+ version)
         layer=self.getLayer()
         self.dlg.getCurrentService().updateFields(layer)
-        fieldDict= self.getFieldsModel(layer)
+        fieldDict,choicesList= self.getFieldsModel(layer)
         print ('fieldDict',fieldDict)
-        surveyDict= {"name":layer.name(),"title":layer.name(),'VERSION':version,"instance_name": 'uuid()',"submission_url": '',
-        "default_language":'default','id_string':layer.name(),'type':'survey','children':fieldDict }
-        survey=create_survey_element_from_dict(surveyDict)
-        xml=survey.to_xml(validate=None, warnings=warnings)
-        os.chdir(os.path.expanduser('~'))
-        with open('Xform.xml','w') as xForm:
-            xForm.write(xml)
-        self.dlg.getCurrentService().sendForm(layer.name(),'Xform.xml')
-        
+        payload={"name":layer.name(),"asset_type":"survey","content":json.dumps({"survey":fieldDict,"choices":choicesList})}
+        print("Payload= ",payload)
+        self.dlg.getCurrentService().sendForm('',layer.name(),payload)
+
     def download(self,checked=False):
         if checked==True:
             self.layer= self.getLayer()
@@ -420,19 +400,21 @@ class QRealTime:
             
     def getFieldsModel(self,currentLayer):
         fieldsModel = []
+        choicesList = []
         g_type= currentLayer.geometryType()
-        fieldDef={'name':'GEOMETRY','type':'geopoint','bind':{'required':'true()'}}
-        fieldDef['Appearance']= 'maps'
+        fieldDef={"type":"geopoint","required":True}
+#        fieldDef['Appearance']= 'maps'
         if g_type==0:
-            fieldDef['label']='add point location'
+            fieldDef["label"]="Point Location"
         elif g_type==1:
-            fieldDef['label']='Draw Line'
-            fieldDef['type']='geotrace'
+            fieldDef["label"]="Draw Line"
+            fieldDef["type"]="geotrace"
         else:
-            fieldDef['label']='Draw Area'
-            fieldDef['type']='geoshape'
+            fieldDef["label"]="Draw Area"
+            fieldDef["type"]="geoshape"
         fieldsModel.append(fieldDef)
         i=0
+        j=0
         for field in currentLayer.fields():
             widget =currentLayer.editorWidgetSetup(i)
             fwidget = widget.type()
@@ -441,35 +423,42 @@ class QRealTime:
                 continue
                 
             fieldDef = {}
-            fieldDef['name'] = field.name()
-            fieldDef['map'] = field.name()
-            fieldDef['label'] = field.alias() or field.name()
-            fieldDef['hint'] = ''
-            fieldDef['type'] = QVariantToODKtype(field.type())
-            fieldDef['bind'] = {}
+            fieldDef["label"] = field.alias() or field.name()
+#            fieldDef['hint'] = ''
+            fieldDef["type"] = QVariantToODKtype(field.type())
+#            fieldDef['bind'] = {}
 #            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
-            fieldDef['fieldWidget']=widget.type()
-            print('getFieldModel',fieldDef['fieldWidget'])
-            if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','ExternalResource'):
-                if fieldDef['fieldWidget'] == 'ValueMap':
-                    fieldDef['type']='select one'
-                    valueMap=widget.config()['map']
+            fieldDef["fieldWidget"]=widget.type()
+            print("getFieldModel",fieldDef["fieldWidget"])
+            if fieldDef["fieldWidget"] in ("ValueMap","CheckBox","Photo","ExternalResource"):
+                if fieldDef["fieldWidget"] == "ValueMap":
+                    fieldDef["type"]="select_one"
+                    j+=1
+                    listName="select"+str(j)
+                    fieldDef["select_from_list_name"]=listName
+                    valueMap=widget.config()["map"]
                     config={}
                     for value in valueMap:
                         for k,v in value.items():
                                 config[v]=k
                     print('configuration is ',config)
-                    choicesList=[{'name':name,'label':label} for name,label in config.items()]
-                    fieldDef["choices"] = choicesList
-                elif fieldDef['fieldWidget'] == 'Photo' or fieldDef['fieldWidget'] == 'ExternalResource' :
-                    fieldDef['type']='image'
+                    for name,label in config.items():
+                        choicesList.append({"name":name,"label":label,"list_name":listName})
+#                    fieldDef["choices"] = choicesList
+                elif fieldDef["fieldWidget"] == 'Photo' or fieldDef["fieldWidget"] == 'ExternalResource' :
+                    fieldDef["type"]="image"
                     print('got an image type field')
                 
 #                fieldDef['choices'] = config
-            else:
-                fieldDef['choices'] = {}
-            if fieldDef['name'] == 'ODKUUID':
-                fieldDef["bind"] = {"readonly": "true()", "calculate": "concat('uuid:', uuid())"}
+#            else:
+#                fieldDef['choices'] = {}
+#            if fieldDef['name'] == 'ODKUUID':
+#                fieldDef["bind"] = {"readonly": "true()", "calculate": "concat('uuid:', uuid())"}
+            fieldDef.pop("fieldWidget")
+            for key, value in list(fieldDef.items()):
+                if value[:8]=="instance":
+                    fieldDef.pop(key)
+                    fieldDef.pop("type")
             fieldsModel.append(fieldDef)
             i+=1
-        return fieldsModel
+        return fieldsModel,choicesList

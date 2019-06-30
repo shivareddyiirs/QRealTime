@@ -10,7 +10,7 @@
 name=KoBoToolbox
 qgisMinimumVersion=3.00
 description=This plugin connects you to Kobotoolbox.
-version=1.0.0
+version=1.0.2
 author=Shiva Reddy Koti
 email=kotishiva@gmail.com
 
