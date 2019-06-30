@@ -274,7 +274,7 @@ class QRealTime:
             print(layer)
             if (not self.topElement):
                 self.topElement= layer.name()
-            service.collectData(layer,layer.name(),False,self.topElement,self.version)
+            service.collectData(layer,layer.name(),'',False,self.topElement,self.version,'')
         self.timer.timeout.connect(timeEvent)
 
 
@@ -326,9 +326,9 @@ class QRealTime:
                     xml=response.content
                     # with open('importForm.xml','w') as importForm:
                     #     importForm.write(response.content)
-                    self.layer_name,self.version, self.geoField= self.updateLayer(layer,xml)
+                    self.layer_name,self.version, self.geoField,self.fields= self.updateLayer(layer,xml)
                     layer.setName(self.layer_name)
-                    service.collectData(layer,selectedForm,True,self.layer_name,self.version,self.geoField)
+                    service.collectData(layer,selectedForm,self.fields,True,self.layer_name,self.version,self.geoField)
 
                 
                         
@@ -340,6 +340,7 @@ class QRealTime:
         #key= root[0][1][0][0].attrib['id']
         layer_name=root[0].find(nsh+'title').text
         instance=root[0][1].find(ns+'instance')
+        fields={}
         #topElement=root[0][1][0][0].tag.split('}')[1]
         try:
             version=instance[0].attrib['version']
@@ -352,6 +353,7 @@ class QRealTime:
             print (attrib)
             fieldName= attrib['nodeset'].split('/')[-1].replace("_", " ")
             fieldType=attrib['type']
+            fields[fieldName]=fieldType
 #            print('attrib type is',attrib['type'])
             qgstype,config = qtype(attrib['type'])
 #            print ('first attribute'+ fieldName)
@@ -370,8 +372,8 @@ class QRealTime:
             else:
                 geoField=fieldName
                 self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype,config)
-                print('geometry field is',fieldName)
-        return layer_name,version,geoField
+                print('geometry field is =',fieldName)
+        return layer_name,version,geoField,fields
 
 
     def getLayer(self):

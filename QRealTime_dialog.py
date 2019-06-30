@@ -35,6 +35,7 @@ from qgis.core import QgsMessageLog, Qgis
 import csv
 import json
 import ast
+from datetime import datetime
 
 tag='KoBoToolbox'
 def print(text,opt=None):
@@ -83,7 +84,7 @@ class KoBoToolbox (QTableWidget):
         ["id","KoBoToolbox"],
         ["user", ''],
         ["password", ''],
-        ["lastID",''],
+        ["last Submission",''],
         ['sync time','']
         ]
     kpi='https://kobo.humanitarianresponse.info/'
@@ -203,7 +204,7 @@ class KoBoToolbox (QTableWidget):
         message =''
         if form:
             message= 'Form Updated'
-            method = 'PATCH'
+            method = 'POST'
             url = self.kpi+'assets/'+xForm_id
         else:
             message= 'Created new form'
@@ -231,14 +232,14 @@ class KoBoToolbox (QTableWidget):
             self.iface.messageBar().pushCritical(self.tr("KoBoToolbox plugin"),self.tr(str(response.status_code)))
         return response
 
-    def collectData(self,layer,xFormKey,importData=False,topElement='',version='null',geoField=''):
+    def collectData(self,layer,xFormKey,fields,importData=False,topElement='',version='null',geoField=''):
 #        if layer :
 #            print("layer is not present or not valid")
 #            return
         self.updateFields(layer)
         try:
             if importData:
-                response,remoteTable = self.getTable(xFormKey,"",topElement,layer,version)
+                response,remoteTable = self.getTable(xFormKey,"",topElement,layer,fields,version)
                 if response.status_code==200:
                     if remoteTable:
                         print ('table has some data')
@@ -246,7 +247,7 @@ class KoBoToolbox (QTableWidget):
                         self.iface.messageBar().pushSuccess(self.tr("KoBoToolbox plugin"),
                                                     self.tr('Import Successful'))
             else:
-                response,remoteTable,geoField = self.getTable(xFormKey,self.getValue('lastID'),topElement,layer,version)
+                response,remoteTable,geoField = self.getTable(xFormKey,self.getValue('last Submission'),topElement,layer,fields,version)
                 if response.status_code==200:
                     if remoteTable:
                         print ('table has some data')
@@ -277,7 +278,8 @@ class KoBoToolbox (QTableWidget):
                 layer.setEditorWidgetSetup( fId, QgsEditorWidgetSetup( "Hidden" ,config ) )
                 return
         except:
-            print('exception')
+            pass
+
         if config=={}:
             return
         print('now setting exernal resource widgt')
@@ -381,85 +383,80 @@ class KoBoToolbox (QTableWidget):
 
         
                                                 
-    def getTable(self,XFormKey,lastID,topElement,layer,version= 'null'):
-        if lastID:
-            requests.packages.urllib3.disable_warnings()
-            table=[]
+    def getTable(self,XFormKey,lastSub,topElement,layer,fields,version= 'null'):
+        requests.packages.urllib3.disable_warnings()
+        if lastSub:
+            print("sync works")
             geoField=''
-            imageField=''
-            url='https://kc.humanitarianresponse.info/api/v1/forms'
+            url='https://kc.humanitarianresponse.info/api/v1/data'
             response = requests.get(url,auth=(self.getValue('user'),self.getValue('password')),verify=False)
             responseJSON=json.loads(response.text)
+            print("FORMS JSON= ",responseJSON)
             formID=''
             for form in responseJSON:
                 if str(form['title'])==XFormKey:
-                    formID=str(form['formid'])
+                    formID=str(form['id'])
+            para={"query":json.dumps({"_submission_time": {"$gt": lastSub}}) }
             urlData='https://kc.humanitarianresponse.info/api/v1/data/'+formID
-            responseData = requests.get(urlData,auth=(self.getValue('user'),self.getValue('password')),verify=False)
-            data=json.loads(responseData.text)
-            uuidList = self.getUUIDList(layer)
+            response = requests.get(urlData,auth=(self.getValue('user'),self.getValue('password')),params=para,verify=False)
+            data=json.loads(response.text)
+            table=[]
             for submission in data:
-                if submission['meta/instanceID'] not in uuidList:
-                    xmlurl="https://kobo.humanitarianresponse.info/assets/"+submission['_xform_id_string']
-                    para={'format':'xml'}
-                    response2=requests.get(xmlurl,auth=(self.getValue('user'),self.getValue('password')),params=para)
-                    ns='{http://www.w3.org/2002/xforms}'
-                    xml=response2.content
-                    root= ET.fromstring(xml)
-                    fieldDict={}
-                    for bind in root[0][1].findall(ns+'bind'):
-                        attrib=bind.attrib
-                        fieldName= attrib['nodeset'].split('/')[-1]
-                        fieldType= attrib['type']
-                        if fieldType[:3]=='geo':
-                            geoField=fieldName.replace("_"," ")
-                        if fieldType[:3]=='bin':
-                            imageField=fieldName
-                        for item in submission:
-                            if item==fieldName:
-                                fieldDict[item.replace("_"," ")]=submission[item]
-                                fieldDict['instanceID']=submission['meta/instanceID']
-                    fieldDict[imageField]='https://kc.humanitarianresponse.info/attachment/original?media_file='+self.getValue('user')+'/attachments/'+submission[imageField]
-                    table.append(fieldDict)
-                    print("sync table",table)
+                submission['instanceID']=submission['meta/instanceID']
+                lastSubmission=submission['_submission_time']
+                for key in list(submission):
+                    item=key.replace("_"," ")
+                    submission[item]=submission.pop(key)
+                    if item not in fields:
+                        submission.pop(item)
+                    else:
+                        if fields[item][:3]=="geo":
+                            geoField=fields[item]
+                        if fields[item]=="binary":
+                            submission[item]='https://kc.humanitarianresponse.info/attachment/original?media_file=sawan/attachments/'+submission[item]
+                table.append(submission)
+                print ("table=",table)
             return responseData,table,geoField
         else:
-            url='https://kc.humanitarianresponse.info/'+self.getValue('user')+'/reports/'+XFormKey+'/export.csv'
-            table=[]
-            response = requests.get(url,auth=(self.getValue('user'),self.getValue('password')),verify=False)
-            if not response.status_code == 200:
-                return response, table
             try:
-                data = csv.DictReader(response.text.splitlines(),delimiter=';')
-                out = json.dumps(  [row for row in data]  )
-                tempTable=ast.literal_eval(out)
+                url='https://kc.humanitarianresponse.info/api/v1/data'
+                response = requests.get(url,auth=(self.getValue('user'),self.getValue('password')),verify=False)
+                responseJSON=json.loads(response.text)
+                formID=''
+                subTimeList=[]
+                for form in responseJSON:
+                    if str(form['id_string'])==XFormKey:
+                        formID=str(form['id'])
+                urlData='https://kc.humanitarianresponse.info/api/v1/data/'+formID
+                response = requests.get(urlData,auth=(self.getValue('user'),self.getValue('password')),verify=False)
+                if not response.status_code == 200:
+                    return response, table
+                data=json.loads(response.text)
+                fieldDict={}
                 table=[]
-                xmlurl="https://kobo.humanitarianresponse.info/assets/"+XFormKey
-                para={'format':'xml'}
-                response2=requests.get(xmlurl,auth=(self.getValue('user'),self.getValue('password')),params=para)
-                ns='{http://www.w3.org/2002/xforms}'
-                xml=response2.content
-                root= ET.fromstring(xml)
-                imageField=''
-                for bind in root[0][1].findall(ns+'bind'):
-                    attrib=bind.attrib
-                    fieldName= attrib['nodeset'].split('/')[-1].replace('_', ' ')
-                    fieldType=attrib['type']
-                    if fieldType[:3]=='bin':
-                        imageField=fieldName
-                for submission in tempTable:
+#                fieldNames = [field.name() for field in layer.fields()]
+                for submission in data:
+                    submission['instanceID']=submission['meta/instanceID']
+                    subTime=submission['_submission_time']
+                    subTime_datetime=datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
+                    subTimeList.append(subTime_datetime)
                     for key in list(submission):
-                        if key[0]=='_' and key!='_uuid':
-                            submission.pop(key)
-                        if key=='_uuid':
-                            submission['instanceID']='uuid:'+submission[key]
-                            self.getValue('lastID',submission['instanceID'])
-                            submission.pop(key)
-                        if key==imageField:
-                            imageurl='https://kc.humanitarianresponse.info/attachment/original?media_file='+self.getValue('user')+'/attachments/'+submission[key]
-                            submission[key]=imageurl
+                        item=key.replace("_"," ")
+                        submission[item]=submission.pop(key)
+                        if item not in fields:
+                            submission.pop(item)
+                        else:
+                            if fields[item]=="binary":
+                                submission[item]='https://kc.humanitarianresponse.info/attachment/original?media_file=sawan/attachments/'+submission[item]
                     table.append(submission)
-                print ('table is:',table)
+                lastSubmission=subTimeList[0]
+                print("subTimeListElement=",subTimeList[0])
+                for item in subTimeList:
+                    if item>lastSubmission:
+                        lastSubmission=item
+                lastSubmission=datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
+                self.getValue('last Submission',lastSubmission)
+                print ("table=",table)
                 return response, table
             except Exception as e:
                 print ('not able to fetch',e)
