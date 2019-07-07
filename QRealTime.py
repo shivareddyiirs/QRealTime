@@ -32,7 +32,6 @@ from .QRealTime_dialog_import import ImportData
 import os.path
 from qgis.core import QgsMapLayer
 import warnings
-import six
 import re
 import json
 from qgis.PyQt.QtCore import QTimer
@@ -251,7 +250,7 @@ class QRealTime:
                 'KoBoToolbox',
                 QgsMapLayer.VectorLayer,
                 True)
-        self.makeOnline=QAction(icon,self.tr(u'Make Online'),self.ODKMenu)
+        self.makeOnline=QAction(icon,self.tr(u'Deploy Form'),self.ODKMenu)
         self.makeOnline.triggered.connect(self.sendForm)
         self.iface.addCustomActionForLayerType(
             self.makeOnline,
@@ -274,7 +273,7 @@ class QRealTime:
             print(layer)
             if (not self.topElement):
                 self.topElement= layer.name()
-            service.collectData(layer,layer.name(),'',False,self.topElement,self.version,'')
+            service.collectData(layer,layer.name(),{},False,self.topElement,self.version,'')
         self.timer.timeout.connect(timeEvent)
 
 

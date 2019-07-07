@@ -29,12 +29,9 @@ import xml.etree.ElementTree as ET
 import requests
 from qgis.gui import QgsMessageBar
 from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit,QgsPointXY,QgsEditorWidgetSetup
-import six
 from six.moves import range
 from qgis.core import QgsMessageLog, Qgis
-import csv
 import json
-import ast
 from datetime import datetime
 
 tag='KoBoToolbox'
@@ -294,7 +291,6 @@ class KoBoToolbox (QTableWidget):
         geo=['POINT','LINE','POLYGON']
         layerGeo=geo[type]
         uuidList = self.getUUIDList(self.processingLayer)
-        print("uuidlist is ",uuidList)
         uuidList = list(dict.fromkeys(uuidList))
         newQgisFeatures = []
         fieldError = None
@@ -312,7 +308,7 @@ class KoBoToolbox (QTableWidget):
                     print('geom is',qgisGeom)
                     qgisFeature.setGeometry(qgisGeom)
                     qgisFeature.initAttributes(len(QgisFieldsList))
-                    for fieldName, fieldValue in six.iteritems(odkFeature):
+                    for fieldName, fieldValue in odkFeature.items():
                         try:
                             qgisFeature.setAttribute(QgisFieldsList.index(fieldName[:10]),fieldValue)
                         except:
@@ -386,24 +382,41 @@ class KoBoToolbox (QTableWidget):
     def getTable(self,XFormKey,lastSub,topElement,layer,fields,version= 'null'):
         requests.packages.urllib3.disable_warnings()
         if lastSub:
-            print("sync works")
             geoField=''
             url='https://kc.humanitarianresponse.info/api/v1/data'
             response = requests.get(url,auth=(self.getValue('user'),self.getValue('password')),verify=False)
             responseJSON=json.loads(response.text)
-            print("FORMS JSON= ",responseJSON)
             formID=''
+            formUID=''
+            subTimeList=[]
             for form in responseJSON:
                 if str(form['title'])==XFormKey:
                     formID=str(form['id'])
+                    formUID=form['id_string']
             para={"query":json.dumps({"_submission_time": {"$gt": lastSub}}) }
             urlData='https://kc.humanitarianresponse.info/api/v1/data/'+formID
             response = requests.get(urlData,auth=(self.getValue('user'),self.getValue('password')),params=para,verify=False)
             data=json.loads(response.text)
+#            print("DATA =",json.dumps(data,indent=4))
             table=[]
+            xmlurl="https://kobo.humanitarianresponse.info/assets/"+formUID
+            para={'format':'xml'}
+            response2=requests.get(xmlurl,auth=(self.getValue('user'),self.getValue('password')),params=para)
+            print(response2.status_code)
+            ns='{http://www.w3.org/2002/xforms}'
+            xml=response2.content
+            root= ET.fromstring(xml)
+            for bind in root[0][1].findall(ns+'bind'):
+                attrib=bind.attrib
+                fieldName= attrib['nodeset'].split('/')[-1].replace("_"," ")
+                fieldType= attrib['type']
+                fields[fieldName]=fieldType
+            print ("FIELDS =",fields)
             for submission in data:
                 submission['instanceID']=submission['meta/instanceID']
-                lastSubmission=submission['_submission_time']
+                subTime=submission['_submission_time']
+                subTime_datetime=datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
+                subTimeList.append(subTime_datetime)
                 for key in list(submission):
                     item=key.replace("_"," ")
                     submission[item]=submission.pop(key)
@@ -411,12 +424,18 @@ class KoBoToolbox (QTableWidget):
                         submission.pop(item)
                     else:
                         if fields[item][:3]=="geo":
-                            geoField=fields[item]
+                            geoField=item
                         if fields[item]=="binary":
                             submission[item]='https://kc.humanitarianresponse.info/attachment/original?media_file=sawan/attachments/'+submission[item]
                 table.append(submission)
-                print ("table=",table)
-            return responseData,table,geoField
+            if subTimeList:
+                lastSubmission=subTimeList[0]
+                for item in subTimeList:
+                    if item>lastSubmission:
+                        lastSubmission=item
+                lastSubmission=datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
+                self.getValue('last Submission',lastSubmission)
+            return response,table,geoField
         else:
             try:
                 url='https://kc.humanitarianresponse.info/api/v1/data'
@@ -450,13 +469,11 @@ class KoBoToolbox (QTableWidget):
                                 submission[item]='https://kc.humanitarianresponse.info/attachment/original?media_file=sawan/attachments/'+submission[item]
                     table.append(submission)
                 lastSubmission=subTimeList[0]
-                print("subTimeListElement=",subTimeList[0])
                 for item in subTimeList:
                     if item>lastSubmission:
                         lastSubmission=item
                 lastSubmission=datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
                 self.getValue('last Submission',lastSubmission)
-                print ("table=",table)
                 return response, table
             except Exception as e:
                 print ('not able to fetch',e)
