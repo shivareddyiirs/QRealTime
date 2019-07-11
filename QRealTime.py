@@ -290,8 +290,11 @@ class QRealTime:
             layer=self.getLayer()
             print(layer)
             if (not self.topElement):
-                self.topElement= layer.name()
-            service.collectData(layer,layer.name(),False,self.topElement,self.version)
+                url=service.getValue('url')+'//formXml?formId='+layer.name()
+                response= requests.request('GET',url,proxies=getProxiesConf(),verify=False)
+                if response.status_code==200:
+                    self.formKey,self.topElement,self.version,self.geoField = self.updateLayer(layer,response.content)
+            service.collectData(layer,layer.name(),False,self.topElement,self.version,self.geoField)
         self.timer.timeout.connect(timeEvent)
 
 
