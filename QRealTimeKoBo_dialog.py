@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- QRealTimeDialog
+ QRealTimeKoBoDialog
                                  A QGIS plugin
  This plugin connects you to KoBoToolbox Server
                              -------------------
@@ -34,12 +34,12 @@ from qgis.core import QgsMessageLog, Qgis
 import json
 from datetime import datetime
 
-tag='KoBoToolbox'
+tag='QRealTime-KoBo'
 def print(text,opt=None):
     """ to redirect print to MessageLog"""
     QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'QRealTime_dialog_services.ui'))
+    os.path.dirname(__file__), 'QRealTimeKoBo_dialog_services.ui'))
 
 def getProxiesConf():
     s = QSettings() #getting proxy from qgis options settings
@@ -57,10 +57,10 @@ def getProxiesConf():
         return proxyDict
     else:
         return None
-class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
+class QRealTimeKoBoDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, caller,parent=None):
         """Constructor."""
-        super(QRealTimeDialog, self).__init__(parent)
+        super(QRealTimeKoBoDialog, self).__init__(parent)
         # Set up the user interface from Designer.
         # After setupUI you can access any designer object by doing
         # self.<objectname>, and you can use autoconnect slots - see
@@ -221,15 +221,15 @@ class KoBoToolbox (QTableWidget):
         #shares submissions publicly:
         response3 = requests.post(urlShare, json=permissions, auth=(self.getValue('user'),self.getValue('password')),headers=headers)
         if response.status_code== 201 or response.status_code == 200:
-            self.iface.messageBar().pushSuccess(self.tr("KoBoToolbox plugin"),
+            self.iface.messageBar().pushSuccess(self.tr("QRealTime-KoBo plugin"),
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
-            self.iface.messageBar().pushWarning(self.tr("KoBoToolbox plugin"),self.tr("Form exist and can not be updated"))
+            self.iface.messageBar().pushWarning(self.tr("QRealTime-KoBo plugin"),self.tr("Form exist and can not be updated"))
         else:
-            self.iface.messageBar().pushCritical(self.tr("KoBoToolbox plugin"),self.tr(str(response.status_code)))
+            self.iface.messageBar().pushCritical(self.tr("QRealTime-KoBo plugin"),self.tr(str(response.status_code)))
         return response
 
-    def collectData(self,layer,xFormKey,fields,importData=False,topElement='',version='null',geoField=''):
+    def collectData(self,layer,xFormKey,fields,geoField,importData=False,topElement='',version='null'):
 #        if layer :
 #            print("layer is not present or not valid")
 #            return
@@ -241,20 +241,20 @@ class KoBoToolbox (QTableWidget):
                     if remoteTable:
                         print ('table has some data')
                         self.updateLayer(layer,remoteTable,geoField)
-                        self.iface.messageBar().pushSuccess(self.tr("KoBoToolbox plugin"),
+                        self.iface.messageBar().pushSuccess(self.tr("QRealTime-KoBo plugin"),
                                                     self.tr('Import Successful'))
             else:
-                response,remoteTable,geoField = self.getTable(xFormKey,self.getValue('last Submission'),topElement,layer,fields,version)
+                response,remoteTable = self.getTable(xFormKey,self.getValue('last Submission'),topElement,layer,fields,version)
                 if response.status_code==200:
                     if remoteTable:
                         print ('table has some data')
                         self.updateLayer(layer,remoteTable,geoField)
-                        self.iface.messageBar().pushSuccess(self.tr("KoBoToolbox plugin"),
+                        self.iface.messageBar().pushSuccess(self.tr("QRealTime-KoBo plugin"),
                                                     self.tr('Successfully synced data'))
                     else:
-                        self.iface.messageBar().pushSuccess(self.tr("KoBoToolbox plugin"),self.tr("No new data to sync"))
+                        self.iface.messageBar().pushSuccess(self.tr("QRealTime-KoBo plugin"),self.tr("No new data to sync"))
         except:
-            self.iface.messageBar().pushCritical(self.tr("KoBoToolbox"),self.tr("Not able to collect data from KoBoToolbox"))
+            self.iface.messageBar().pushCritical(self.tr("QRealTime-KoBo"),self.tr("Not able to collect data from KoBoToolbox"))
     
     def updateFields(self,layer,text='instanceID',q_type=QVariant.String,config={}):
         flag=True
@@ -321,7 +321,7 @@ class KoBoToolbox (QTableWidget):
                     print(e)
                 
         if fieldError:
-            self.iface.messageBar().pushWarning(self.tr("KoBoToolbox"), self.tr("Can't find '%s' field") % fieldError)
+            self.iface.messageBar().pushWarning(self.tr("QRealTime-KoBo"), self.tr("Can't find '%s' field") % fieldError)
         
         with edit(layer):
             layer.addFeatures(newQgisFeatures)
@@ -376,105 +376,45 @@ class KoBoToolbox (QTableWidget):
         except :
             return QgsPoint(xform.transform(QgsPointXY(pPoint)))
 
-
-        
-                                                
     def getTable(self,XFormKey,lastSub,topElement,layer,fields,version= 'null'):
         requests.packages.urllib3.disable_warnings()
-        if lastSub:
-            geoField=''
-            url='https://kc.humanitarianresponse.info/api/v1/data'
-            response = requests.get(url,auth=(self.getValue('user'),self.getValue('password')),verify=False)
-            responseJSON=json.loads(response.text)
-            formID=''
-            formUID=''
-            subTimeList=[]
-            for form in responseJSON:
+        url='https://kc.humanitarianresponse.info/api/v1/data'
+        response = requests.get(url,auth=(self.getValue('user'),self.getValue('password')),verify=False)
+        responseJSON=json.loads(response.text)
+        formID=''
+        subTimeList=[]
+        geoField=''
+        formUID=''
+        table=[]
+        for form in responseJSON:
+            if lastSub:
                 if str(form['title'])==XFormKey:
                     formID=str(form['id'])
                     formUID=form['id_string']
-            para={"query":json.dumps({"_submission_time": {"$gt": lastSub}}) }
-            urlData='https://kc.humanitarianresponse.info/api/v1/data/'+formID
-            response = requests.get(urlData,auth=(self.getValue('user'),self.getValue('password')),params=para,verify=False)
-            data=json.loads(response.text)
-#            print("DATA =",json.dumps(data,indent=4))
-            table=[]
-            xmlurl="https://kobo.humanitarianresponse.info/assets/"+formUID
-            para={'format':'xml'}
-            response2=requests.get(xmlurl,auth=(self.getValue('user'),self.getValue('password')),params=para)
-            print(response2.status_code)
-            ns='{http://www.w3.org/2002/xforms}'
-            xml=response2.content
-            root= ET.fromstring(xml)
-            for bind in root[0][1].findall(ns+'bind'):
-                attrib=bind.attrib
-                fieldName= attrib['nodeset'].split('/')[-1].replace("_"," ")
-                fieldType= attrib['type']
-                fields[fieldName]=fieldType
-            print ("FIELDS =",fields)
-            for submission in data:
-                submission['instanceID']=submission['meta/instanceID']
-                subTime=submission['_submission_time']
-                subTime_datetime=datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
-                subTimeList.append(subTime_datetime)
-                for key in list(submission):
-                    item=key.replace("_"," ")
-                    submission[item]=submission.pop(key)
-                    if item not in fields:
-                        submission.pop(item)
-                    else:
-                        if fields[item][:3]=="geo":
-                            geoField=item
-                        if fields[item]=="binary":
-                            submission[item]='https://kc.humanitarianresponse.info/attachment/original?media_file=sawan/attachments/'+submission[item]
-                table.append(submission)
-            if subTimeList:
-                lastSubmission=subTimeList[0]
-                for item in subTimeList:
-                    if item>lastSubmission:
-                        lastSubmission=item
-                lastSubmission=datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
-                self.getValue('last Submission',lastSubmission)
-            return response,table,geoField
-        else:
-            try:
-                url='https://kc.humanitarianresponse.info/api/v1/data'
-                response = requests.get(url,auth=(self.getValue('user'),self.getValue('password')),verify=False)
-                responseJSON=json.loads(response.text)
-                formID=''
-                subTimeList=[]
-                for form in responseJSON:
-                    if str(form['id_string'])==XFormKey:
-                        formID=str(form['id'])
-                urlData='https://kc.humanitarianresponse.info/api/v1/data/'+formID
-                response = requests.get(urlData,auth=(self.getValue('user'),self.getValue('password')),verify=False)
-                if not response.status_code == 200:
-                    return response, table
-                data=json.loads(response.text)
-                fieldDict={}
-                table=[]
-#                fieldNames = [field.name() for field in layer.fields()]
-                for submission in data:
-                    submission['instanceID']=submission['meta/instanceID']
-                    subTime=submission['_submission_time']
-                    subTime_datetime=datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
-                    subTimeList.append(subTime_datetime)
-                    for key in list(submission):
-                        item=key.replace("_"," ")
-                        submission[item]=submission.pop(key)
-                        if item not in fields:
-                            submission.pop(item)
-                        else:
-                            if fields[item]=="binary":
-                                submission[item]='https://kc.humanitarianresponse.info/attachment/original?media_file=sawan/attachments/'+submission[item]
-                    table.append(submission)
-                lastSubmission=subTimeList[0]
-                for item in subTimeList:
-                    if item>lastSubmission:
-                        lastSubmission=item
-                lastSubmission=datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
-                self.getValue('last Submission',lastSubmission)
-                return response, table
-            except Exception as e:
-                print ('not able to fetch',e)
-                return response, table
+            else:
+                if str(form['id_string'])==XFormKey:
+                    formID=str(form['id'])
+                    formUID=XFormKey
+        para={"query":json.dumps({"_submission_time": {"$gt": lastSub}}) }
+        urlData='https://kc.humanitarianresponse.info/api/v1/data/'+formID
+        response = requests.get(urlData,auth=(self.getValue('user'),self.getValue('password')),params=para,verify=False)
+        data=json.loads(response.text)
+        for submission in data:
+            submission['instanceID']=submission['meta/instanceID']
+            subTime=submission['_submission_time']
+            subTime_datetime=datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
+            subTimeList.append(subTime_datetime)
+            for key in list(submission):
+                item=key.replace("_"," ")
+                submission[item]=submission.pop(key)
+                if item not in fields:
+                    submission.pop(item)
+                else:
+                    if fields[item]=="binary":
+                        submission[item]='https://kc.humanitarianresponse.info/attachment/original?media_file=sawan/attachments/'+submission[item]
+            table.append(submission)
+        if subTimeList:
+            lastSubmission=max(subTimeList)
+            lastSubmission=datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
+            self.getValue('last Submission',lastSubmission)
+        return response, table

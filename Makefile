@@ -1,7 +1,7 @@
 #/***************************************************************************
 # QRealTime
 #
-# This plugin connects you to Aggregate Server and do autoupdation of data to and from aggregate
+# This plugin connects you to KoBoToolbox Server and does autoupdation of data to and from KoBoToolbox
 #							 -------------------
 #		begin				: 2017-08-09
 #		git sha				: $Format:%H$
@@ -40,7 +40,7 @@ SOURCES = \
 	__init__.py \
 	QRealTime.py QRealTime_dialog.py
 
-PLUGINNAME = QRealTime
+PLUGINNAME = QRealTime-KoBo
 
 PY_FILES = \
 	__init__.py \

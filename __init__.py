@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- QRealTime
+ QRealTime-KoBo
                                  A QGIS plugin
  This plugin connects you to Aggregate Server and do autoupdation of data to and from aggregate
                              -------------------
@@ -31,5 +31,5 @@ def classFactory(iface):  # pylint: disable=invalid-name
     :type iface: QgsInterface
     """
     #
-    from .QRealTime import QRealTime
-    return QRealTime(iface)
+    from .QRealTimeKoBo import QRealTimeKoBo
+    return QRealTimeKoBo(iface)

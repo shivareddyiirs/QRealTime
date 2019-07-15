@@ -3,7 +3,7 @@ import os
 from qgis.core import *
 
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join( os.path.dirname(__file__), 'QRealTime_dialog_import.ui'))
+FORM_CLASS, _ = uic.loadUiType(os.path.join( os.path.dirname(__file__), 'QRealTimeKoBo_dialog_import.ui'))
 
     
 class ImportData(QtWidgets.QDialog, FORM_CLASS):
