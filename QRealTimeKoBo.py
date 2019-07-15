@@ -284,7 +284,7 @@ class QRealTimeKoBo:
                 para={'format':'xml'}
                 response=requests.get(xmlurl,auth=(service.getValue('user'),service.getValue('password')),params=para)
                 self.formKey,self.version,self.geoField,self.fields = self.updateLayer(layer,response.content)
-            service.collectData(layer,layer.name(),self.fields,self.geoField,False,self.topElement,self.version)
+            service.collectData(layer,formUID,self.fields,self.geoField,False,self.topElement,self.version)
         self.timer.timeout.connect(timeEvent)
 
 

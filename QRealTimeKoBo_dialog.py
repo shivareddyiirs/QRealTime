@@ -384,17 +384,10 @@ class KoBoToolbox (QTableWidget):
         formID=''
         subTimeList=[]
         geoField=''
-        formUID=''
         table=[]
         for form in responseJSON:
-            if lastSub:
-                if str(form['title'])==XFormKey:
-                    formID=str(form['id'])
-                    formUID=form['id_string']
-            else:
-                if str(form['id_string'])==XFormKey:
-                    formID=str(form['id'])
-                    formUID=XFormKey
+            if str(form['id_string'])==XFormKey:
+                formID=str(form['id'])
         para={"query":json.dumps({"_submission_time": {"$gt": lastSub}}) }
         urlData='https://kc.humanitarianresponse.info/api/v1/data/'+formID
         response = requests.get(urlData,auth=(self.getValue('user'),self.getValue('password')),params=para,verify=False)
