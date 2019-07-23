@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/QRealTime" >
+    <qresource prefix="/plugins/QRealTime-KoBo" >
         <file>icon.png</file>
     </qresource>
 </RCC>

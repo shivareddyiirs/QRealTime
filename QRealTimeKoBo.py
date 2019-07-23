@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- QRealTime
+ QRealTime-KoBo
                                  A QGIS plugin
  This plugin connects you to KoBoToolbox
                               -------------------
@@ -27,12 +27,11 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMenu,QAction, QFileDialog
 # import for XML reading writing
 # Import the code for the dialog
-from .QRealTime_dialog import QRealTimeDialog
-from .QRealTime_dialog_import import ImportData
+from .QRealTimeKoBo_dialog import QRealTimeKoBoDialog
+from .QRealTimeKoBo_dialog_import import ImportData
 import os.path
 from qgis.core import QgsMapLayer
 import warnings
-import six
 import re
 import json
 from qgis.PyQt.QtCore import QTimer
@@ -41,7 +40,7 @@ import requests
 import xml.etree.ElementTree as ET
 from qgis.core import QgsMessageLog, Qgis
 
-tag='KoBoToolbox'
+tag='QRealTime-KoBo'
 def print(text,opt=''):
     """ to redirect print to MessageLog"""
     QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
@@ -93,7 +92,7 @@ def qtype(odktype):
     else:
         return (QVariant.String),{}
     
-class QRealTime:
+class QRealTimeKoBo:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
@@ -113,7 +112,7 @@ class QRealTime:
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            'QRealTime_{}.qm'.format(locale))
+            'QRealTime-KoBo_{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -125,10 +124,10 @@ class QRealTime:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&KoBoToolbox')
+        self.menu = self.tr(u'&QRealTime-KoBo')
         # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'KoBoToolbox')
-        self.toolbar.setObjectName(u'KoBoToolbox')
+        self.toolbar = self.iface.addToolBar(u'QRealTime-KoBo')
+        self.toolbar.setObjectName(u'QRealTime-KoBo')
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -143,7 +142,7 @@ class QRealTime:
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate('KoBoToolbox', message)
+        return QCoreApplication.translate('QRealTime-KoBo', message)
 
 
     def add_action(
@@ -197,7 +196,7 @@ class QRealTime:
         """
 
         # Create the dialog (after translation) and keep reference
-        self.dlg = QRealTimeDialog(self)
+        self.dlg = QRealTimeKoBoDialog(self)
 
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
@@ -228,10 +227,10 @@ class QRealTime:
         icon_path = os.path.join(self.plugin_dir,'icon.png')
         self.add_action(
             icon_path,
-            text=self.tr(u'KoBoToolbox Setting'),
+            text=self.tr(u'QRealTime-KoBo Settings'),
             callback=self.run,
             parent=self.iface.mainWindow())
-        self.ODKMenu = QMenu('KoBoToolbox')
+        self.ODKMenu = QMenu('QRealTime-KoBo')
         icon = QIcon(icon_path)
         self.sync= QAction(self.tr(u'sync'),self.ODKMenu)
         self.sync.setCheckable(True)
@@ -240,7 +239,7 @@ class QRealTime:
         self.sync.setChecked(False)
         self.iface.addCustomActionForLayerType(
                 self.sync,
-                'KoBoToolbox',
+                'QRealTime-KoBo',
                 QgsMapLayer.VectorLayer,
                 True)
 
@@ -248,14 +247,14 @@ class QRealTime:
         self.Import.triggered.connect(self.importData)
         self.iface.addCustomActionForLayerType(
                 self.Import,
-                'KoBoToolbox',
+                'QRealTime-KoBo',
                 QgsMapLayer.VectorLayer,
                 True)
-        self.makeOnline=QAction(icon,self.tr(u'Make Online'),self.ODKMenu)
+        self.makeOnline=QAction(icon,self.tr(u'Deploy Form'),self.ODKMenu)
         self.makeOnline.triggered.connect(self.sendForm)
         self.iface.addCustomActionForLayerType(
             self.makeOnline,
-            'KoBoToolbox',
+            'QRealTime-KoBo',
             QgsMapLayer.VectorLayer,
             True)
         service=self.dlg.getCurrentService()
@@ -269,12 +268,23 @@ class QRealTime:
             print ('can not read time')
         self.timer=QTimer()
         def timeEvent():
-            print ('calling collect data')
             layer=self.getLayer()
+            service=self.dlg.getCurrentService()
             print(layer)
             if (not self.topElement):
                 self.topElement= layer.name()
-            service.collectData(layer,layer.name(),'',False,self.topElement,self.version,'')
+                url='https://kc.humanitarianresponse.info/api/v1/data'
+                response = requests.get(url,auth=(service.getValue('user'),service.getValue('password')),verify=False)
+                responseJSON=json.loads(response.text)
+                formUID=''
+                for form in responseJSON:
+                    if str(form['title'])==self.topElement:
+                        formUID=form['id_string']
+                xmlurl="https://kobo.humanitarianresponse.info/assets/"+formUID
+                para={'format':'xml'}
+                response=requests.get(xmlurl,auth=(service.getValue('user'),service.getValue('password')),params=para)
+                self.formKey,self.version,self.geoField,self.fields = self.updateLayer(layer,response.content)
+            service.collectData(layer,formUID,self.fields,self.geoField,False,self.topElement,self.version)
         self.timer.timeout.connect(timeEvent)
 
 
@@ -282,7 +292,7 @@ class QRealTime:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'KoBoToolbox'),
+                self.tr(u'QRealTime-KoBo'),
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
@@ -328,7 +338,7 @@ class QRealTime:
                     #     importForm.write(response.content)
                     self.layer_name,self.version, self.geoField,self.fields= self.updateLayer(layer,xml)
                     layer.setName(self.layer_name)
-                    service.collectData(layer,selectedForm,self.fields,True,self.layer_name,self.version,self.geoField)
+                    service.collectData(layer,selectedForm,self.fields,self.geoField,True,self.layer_name,self.version)
 
                 
                         

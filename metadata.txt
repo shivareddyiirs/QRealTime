@@ -7,10 +7,10 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=KoBoToolbox
+name=QRealTime-KoBo
 qgisMinimumVersion=3.00
 description=This plugin connects you to Kobotoolbox.
-version=1.0.2
+version=1.0.4
 author=Shiva Reddy Koti
 email=kotishiva@gmail.com
 
@@ -21,7 +21,9 @@ repository=https://github.com/shivareddyiirs/QRealTime/tree/Kobo
 # End of mandatory metadata
 
 # Recommended items:
-
+tags= KoBoToolbox, Data Collection, Mobile GIS, import, web
+icon=icon.png
+category=Plugins
 # Uncomment the following line and add your changelog:
 # experimental flag
 experimental=True
