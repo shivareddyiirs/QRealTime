@@ -404,7 +404,7 @@ class KoBoToolbox (QTableWidget):
                     submission.pop(item)
                 else:
                     if fields[item]=="binary":
-                        submission[item]='https://kc.humanitarianresponse.info/attachment/original?media_file=sawan/attachments/'+submission[item]
+                        submission[item]='https://kc.humanitarianresponse.info/attachment/original?media_file=self.getValue('user')/attachments/'+submission[item]
             table.append(submission)
         if subTimeList:
             lastSubmission=max(subTimeList)
