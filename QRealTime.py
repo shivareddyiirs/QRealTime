@@ -466,6 +466,8 @@ class QRealTime:
                 fieldDef['choices'] = {}
             if fieldDef['name'] == 'ODKUUID':
                 fieldDef["bind"] = {"readonly": "true()", "calculate": "concat('uuid:', uuid())"}
+	    if fieldDef['fieldWidget'] == 'DateTime':
+                fieldDef["type"] = 'date'
             fieldsModel.append(fieldDef)
             i+=1
         return fieldsModel
