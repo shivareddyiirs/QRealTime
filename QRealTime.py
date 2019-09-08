@@ -291,7 +291,7 @@ class QRealTime:
             print(layer)
             if (not self.topElement):
                 url=service.getValue('url')+'//formXml?formId='+layer.name()
-                response= requests.request('GET',url,proxies=getProxiesConf(),verify=False)
+                response= requests.request('GET',url,proxies=getProxiesConf(),auth=service.getAuth(),verify=False)
                 if response.status_code==200:
                     self.formKey,self.topElement,self.version,self.geoField = self.updateLayer(layer,response.content)
             service.collectData(layer,layer.name(),False,self.topElement,self.version,self.geoField)
@@ -336,13 +336,15 @@ class QRealTime:
             if result:
                 selectedForm= self.ImportData.comboBox.currentText()
                 url=service.getValue('url')+'//formXml?formId='+selectedForm
-                response= requests.request('GET',url,proxies=getProxiesConf(),verify=False)
+                response= requests.request('GET',url,proxies=getProxiesConf(),auth=service.getAuth(),verify=False)
                 if response.status_code==200:
                     # with open('importForm.xml','w') as importForm:
                     #     importForm.write(response.content)
                     self.formKey,self.topElement,self.version,self.geoField = self.updateLayer(layer,response.content)
                     layer.setName(self.formKey)
                     service.collectData(layer,self.formKey,True,self.topElement,self.version,self.geoField)
+                else:
+                    print("unable to connect to server")
 
                 
                         
@@ -466,7 +468,7 @@ class QRealTime:
                 fieldDef['choices'] = {}
             if fieldDef['name'] == 'ODKUUID':
                 fieldDef["bind"] = {"readonly": "true()", "calculate": "concat('uuid:', uuid())"}
-	    if fieldDef['fieldWidget'] == 'DateTime':
+            if fieldDef['fieldWidget'] == 'DateTime':
                 fieldDef["type"] = 'date'
             fieldsModel.append(fieldDef)
             i+=1
