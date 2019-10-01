@@ -1,4 +1,4 @@
-<h1> Welcome to QRealTime plugin</h1>
+<h1> Welcome to QRealTime plugin (Upcoming verstion integrating kobotoolbox support to QRealTime Plugin)</h1>
 <img src="https://user-images.githubusercontent.com/5653512/40710547-8e30b57c-6416-11e8-8c48-3075bd63e68b.jpg" alt="flowchart">
 
 QRealTime Plugin allows you to:
