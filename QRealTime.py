@@ -335,58 +335,7 @@ class QRealTime:
             result=self.ImportData.exec_()
             if result:
                 selectedForm= self.ImportData.comboBox.currentText()
-                url=service.getValue('url')+'//formXml?formId='+selectedForm
-                response= requests.request('GET',url,proxies=getProxiesConf(),auth=service.getAuth(),verify=False)
-                if response.status_code==200:
-                    # with open('importForm.xml','w') as importForm:
-                    #     importForm.write(response.content)
-                    self.formKey,self.topElement,self.version,self.geoField = self.updateLayer(layer,response.content)
-                    layer.setName(self.formKey)
-                    service.collectData(layer,self.formKey,True,self.topElement,self.version,self.geoField)
-                else:
-                    print("unable to connect to server")
-
-                
-                        
-    def updateLayer(self,layer,xml):
-        ns='{http://www.w3.org/2002/xforms}'
-        root= ET.fromstring(xml)
-        #key= root[0][1][0][0].attrib['id']
-        instance=root[0][1].find(ns+'instance')
-        key=instance[0].attrib['id']
-        #topElement=root[0][1][0][0].tag.split('}')[1]
-        topElement=instance[0].tag.split('}')[1]
-        try:
-            version=instance[0].attrib['version']
-        except:
-            version='null'
-        print('key captured'+ key)
-        print (root[0][1].findall(ns+'bind'))
-        for bind in root[0][1].findall(ns+'bind'):
-            attrib=bind.attrib
-            print (attrib)
-            fieldName= attrib['nodeset'].split('/')[-1]
-            fieldType=attrib['type']
-            print('attrib type is',attrib['type'])
-            qgstype,config = qtype(attrib['type'])
-            print ('first attribute'+ fieldName)
-            inputs=root[1].findall('.//*[@ref]')
-            if fieldType[:3]!='geo':
-                print('creating new field:'+ fieldName)
-                isHidden= True
-                for input in inputs:
-                    if fieldName == input.attrib['ref'].split('/')[-1]:
-                        isHidden= False
-                        break
-                if isHidden:
-                    print('Reached Hidden')
-                    config['type']='Hidden'
-                self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype,config)
-            else:
-                geoField=fieldName
-        return key,topElement,version,geoField
-
-
+                service.importData(layer,selectedForm)            
     def getLayer(self):
         return self.iface.activeLayer()
         
@@ -395,18 +344,10 @@ class QRealTime:
         version= str(datetime.date.today())
         print('version is'+ version)
         layer=self.getLayer()
-        self.dlg.getCurrentService().updateFields(layer)
-        fieldDict= self.getFieldsModel(layer)
-        print ('fieldDict',fieldDict)
-        surveyDict= {"name":layer.name(),"title":layer.name(),'VERSION':version,"instance_name": 'uuid()',"submission_url": '',
-        "default_language":'default','id_string':layer.name(),'type':'survey','children':fieldDict }
-        survey=create_survey_element_from_dict(surveyDict)
-        xml=survey.to_xml(validate=None, warnings=warnings)
-        os.chdir(os.path.expanduser('~'))
-        with open('Xform.xml','w') as xForm:
-            xForm.write(xml)
-        self.dlg.getCurrentService().sendForm(layer.name(),'Xform.xml')
-        
+        service=self.dlg.getCurrentService()
+        service.updateFields(layer)
+        service.prepareForm(self,layer,'Xform.xml') 
+        service.sendForm(layer.name(),'Xform.xml')
     def download(self,checked=False):
         if checked==True:
             self.layer= self.getLayer()
@@ -416,60 +357,4 @@ class QRealTime:
         elif checked==False:
             self.timer.stop()
             
-    def getFieldsModel(self,currentLayer):
-        fieldsModel = []
-        g_type= currentLayer.geometryType()
-        fieldDef={'name':'GEOMETRY','type':'geopoint','bind':{'required':'true()'}}
-        fieldDef['Appearance']= 'maps'
-        if g_type==0:
-            fieldDef['label']='add point location'
-        elif g_type==1:
-            fieldDef['label']='Draw Line'
-            fieldDef['type']='geotrace'
-        else:
-            fieldDef['label']='Draw Area'
-            fieldDef['type']='geoshape'
-        fieldsModel.append(fieldDef)
-        i=0
-        for field in currentLayer.fields():
-            widget =currentLayer.editorWidgetSetup(i)
-            fwidget = widget.type()
-            if (fwidget=='Hidden'):
-                i+=1
-                continue
-                
-            fieldDef = {}
-            fieldDef['name'] = field.name()
-            fieldDef['map'] = field.name()
-            fieldDef['label'] = field.alias() or field.name()
-            fieldDef['hint'] = ''
-            fieldDef['type'] = QVariantToODKtype(field.type())
-            fieldDef['bind'] = {}
-#            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
-            fieldDef['fieldWidget']=widget.type()
-            print('getFieldModel',fieldDef['fieldWidget'])
-            if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','ExternalResource'):
-                if fieldDef['fieldWidget'] == 'ValueMap':
-                    fieldDef['type']='select one'
-                    valueMap=widget.config()['map']
-                    config={}
-                    for value in valueMap:
-                        for k,v in value.items():
-                                config[v]=k
-                    print('configuration is ',config)
-                    choicesList=[{'name':name,'label':label} for name,label in config.items()]
-                    fieldDef["choices"] = choicesList
-                elif fieldDef['fieldWidget'] == 'Photo' or fieldDef['fieldWidget'] == 'ExternalResource' :
-                    fieldDef['type']='image'
-                    print('got an image type field')
-                
-#                fieldDef['choices'] = config
-            else:
-                fieldDef['choices'] = {}
-            if fieldDef['name'] == 'ODKUUID':
-                fieldDef["bind"] = {"readonly": "true()", "calculate": "concat('uuid:', uuid())"}
-            if fieldDef['fieldWidget'] == 'DateTime':
-                fieldDef["type"] = 'date'
-            fieldsModel.append(fieldDef)
-            i+=1
-        return fieldsModel
+    
