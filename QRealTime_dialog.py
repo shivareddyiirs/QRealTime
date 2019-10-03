@@ -32,6 +32,22 @@ from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateR
 import six
 from six.moves import range
 from qgis.core import QgsMessageLog, Qgis
+import datetime
+try:
+        from pyxform.builder import create_survey_element_from_dict
+        print('package already installed')
+except ImportError:
+    try:
+        subprocess.call(['python3', '-m', 'pip', 'install','pyxform'])
+        from pyxform.builder import create_survey_element_from_dict
+        print('package is installed after python3')
+    except:
+        subprocess.call(['python3', '-m', 'pip', 'install','pyxform','--user'])
+        print ("after python3 --user call")
+        try:
+            from pyxform.builder import create_survey_element_from_dict
+        except:
+            print('not able to install pyxform, install mannually') 
 tag='QRealTime'
 def print(text,opt=None):
     """ to redirect print to MessageLog"""
@@ -55,6 +71,34 @@ def getProxiesConf():
         return proxyDict
     else:
         return None
+def qtype(odktype):
+    if odktype == 'binary':
+        return QVariant.String,{'DocumentViewer': 2, 'DocumentViewerHeight': 0, 'DocumentViewerWidth': 0, 'FileWidget': True, 'FileWidgetButton': True, 'FileWidgetFilter': '', 'PropertyCollection': {'name': None, 'properties': {}, 'type': 'collection'}, 'RelativeStorage': 0, 'StorageMode': 0}
+    elif odktype=='string':
+        return QVariant.String,{}
+    elif odktype[:3] == 'sel' :
+        return QVariant.String,{}
+    elif odktype[:3] == 'int':
+        return QVariant.Int, {}
+    elif odktype[:3]=='dat':
+        return QVariant.Date, {}
+    elif odktype[:3]=='ima':
+        return QVariant.String,{'DocumentViewer': 2, 'DocumentViewerHeight': 0, 'DocumentViewerWidth': 0, 'FileWidget': True, 'FileWidgetButton': True, 'FileWidgetFilter': '', 'PropertyCollection': {'name': None, 'properties': {}, 'type': 'collection'}, 'RelativeStorage': 0, 'StorageMode': 0}
+    elif odktype == 'Hidden':
+        return 'Hidden'
+    else:
+        return (QVariant.String),{}
+def QVariantToODKtype(q_type):
+        if  q_type == QVariant.String:
+            return 'text'
+        elif q_type == QVariant.Date:
+            return 'datetime'
+        elif q_type in [2,3,4,32,33,35,36]:
+            return 'integer'
+        elif q_type in [6,38]:
+            return 'decimal'
+        else:
+            raise AttributeError("Can't cast QVariant to ODKType: " + q_type)
 class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, caller,parent=None):
         """Constructor."""
@@ -83,7 +127,7 @@ class aggregate (QTableWidget):
         ["lastID",''],
         ['sync time','']
         ]
-        
+     
     def __init__(self,parent,caller):
         super(aggregate, self).__init__(parent)
         self.parent = parent
@@ -166,11 +210,11 @@ class aggregate (QTableWidget):
         return keylist,response
     def importData(self,layer,selectedForm):
         url=self.getValue('url')+'//formXml?formId='+selectedForm
-        response= requests.request('GET',url,proxies=getProxiesConf(),auth=service.getAuth(),verify=False)
+        response= requests.request('GET',url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
         if response.status_code==200:
             # with open('importForm.xml','w') as importForm:
             #     importForm.write(response.content)
-            self.formKey,self.topElement,self.version,self.geoField = self.updateLayer(layer,response.content)
+            self.formKey,self.topElement,self.version,self.geoField = self.updateLayerXML(layer,response.content)
             layer.setName(self.formKey)
             self.collectData(layer,self.formKey,True,self.topElement,self.version,self.geoField)
         else:
@@ -232,7 +276,7 @@ class aggregate (QTableWidget):
             fieldsModel.append(fieldDef)
             i+=1
         return fieldsModel
-    def updateLayer(self,layer,xml):
+    def updateLayerXML(self,layer,xml):
         ns='{http://www.w3.org/2002/xforms}'
         root= ET.fromstring(xml)
         #key= root[0][1][0][0].attrib['id']
@@ -270,12 +314,13 @@ class aggregate (QTableWidget):
                 geoField=fieldName
         return key,topElement,version,geoField
     def prepareForm(self,layer,out):
+        version= str(datetime.date.today())
         fieldDict= self.getFieldsModel(layer)
         print ('fieldDict',fieldDict)
         surveyDict= {"name":layer.name(),"title":layer.name(),'VERSION':version,"instance_name": 'uuid()',"submission_url": '',
         "default_language":'default','id_string':layer.name(),'type':'survey','children':fieldDict }
         survey=create_survey_element_from_dict(surveyDict)
-        xml=survey.to_xml(validate=None, warnings=warnings)
+        xml=survey.to_xml(validate=None, warnings='warnings')
         os.chdir(os.path.expanduser('~'))
         with open(out,'w') as xForm:
             xForm.write(xml)    
@@ -367,8 +412,9 @@ class aggregate (QTableWidget):
         fieldError = None
         print('geofield is',geoField)
         for odkFeature in dataDict:
+            id=None
             try:
-                id=odkFeature['ODKUUID']
+                id= odkFeature['ODKUUID']
             except:
                 print('error in reading ODKUUID')
             try:
@@ -390,8 +436,8 @@ class aggregate (QTableWidget):
                                 fieldError = fieldName
                             
                     newQgisFeatures.append(qgisFeature)
-            except:
-                    print('unable to create',fielderror)
+            except Exception as e:
+                    print('unable to create',e)
                 
         if fieldError:
             self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"), self.tr("Can't find '%s' field") % fieldError)

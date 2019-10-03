@@ -36,7 +36,6 @@ import unicodedata
 import re
 import json
 from qgis.PyQt.QtCore import QTimer
-import datetime
 import requests
 import xml.etree.ElementTree as ET
 import subprocess
@@ -45,21 +44,6 @@ tag='QRealTime'
 def print(text,opt=''):
     """ to redirect print to MessageLog"""
     QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
-try:
-	from pyxform.builder import create_survey_element_from_dict
-	print('package already installed')
-except ImportError:
-    try:
-        subprocess.call(['python3', '-m', 'pip', 'install','pyxform'])
-        from pyxform.builder import create_survey_element_from_dict
-        print('package is installed after python3')
-    except:
-        subprocess.call(['python3', '-m', 'pip', 'install','pyxform','--user'])
-        print ("after python3 --user call")
-        try:
-            from pyxform.builder import create_survey_element_from_dict
-        except:
-            print('not able to install pyxform, install mannually')
 import six
 
 def getProxiesConf():
@@ -78,36 +62,7 @@ def getProxiesConf():
         return proxyDict
     else:
         return None
-    
-def QVariantToODKtype(q_type):
-        if  q_type == QVariant.String:
-            return 'text'
-        elif q_type == QVariant.Date:
-            return 'datetime'
-        elif q_type in [2,3,4,32,33,35,36]:
-            return 'integer'
-        elif q_type in [6,38]:
-            return 'decimal'
-        else:
-            raise AttributeError("Can't cast QVariant to ODKType: " + q_type)
 
-def qtype(odktype):
-    if odktype == 'binary':
-        return QVariant.String,{'DocumentViewer': 2, 'DocumentViewerHeight': 0, 'DocumentViewerWidth': 0, 'FileWidget': True, 'FileWidgetButton': True, 'FileWidgetFilter': '', 'PropertyCollection': {'name': None, 'properties': {}, 'type': 'collection'}, 'RelativeStorage': 0, 'StorageMode': 0}
-    elif odktype=='string':
-        return QVariant.String,{}
-    elif odktype[:3] == 'sel' :
-        return QVariant.String,{}
-    elif odktype[:3] == 'int':
-        return QVariant.Int, {}
-    elif odktype[:3]=='dat':
-        return QVariant.Date, {}
-    elif odktype[:3]=='ima':
-        return QVariant.String,{'DocumentViewer': 2, 'DocumentViewerHeight': 0, 'DocumentViewerWidth': 0, 'FileWidget': True, 'FileWidgetButton': True, 'FileWidgetFilter': '', 'PropertyCollection': {'name': None, 'properties': {}, 'type': 'collection'}, 'RelativeStorage': 0, 'StorageMode': 0}
-    elif odktype == 'Hidden':
-        return 'Hidden'
-    else:
-        return (QVariant.String),{}
     
 class QRealTime:
     """QGIS Plugin Implementation."""
@@ -293,7 +248,7 @@ class QRealTime:
                 url=service.getValue('url')+'//formXml?formId='+layer.name()
                 response= requests.request('GET',url,proxies=getProxiesConf(),auth=service.getAuth(),verify=False)
                 if response.status_code==200:
-                    self.formKey,self.topElement,self.version,self.geoField = self.updateLayer(layer,response.content)
+                    self.formKey,self.topElement,self.version,self.geoField = service.updateLayerXML(layer,response.content)
             service.collectData(layer,layer.name(),False,self.topElement,self.version,self.geoField)
         self.timer.timeout.connect(timeEvent)
 
@@ -341,12 +296,10 @@ class QRealTime:
         
     def sendForm(self):
 #        get the fields model like name , widget type, options etc.
-        version= str(datetime.date.today())
-        print('version is'+ version)
         layer=self.getLayer()
         service=self.dlg.getCurrentService()
         service.updateFields(layer)
-        service.prepareForm(self,layer,'Xform.xml') 
+        service.prepareForm(layer,'Xform.xml') 
         service.sendForm(layer.name(),'Xform.xml')
     def download(self,checked=False):
         if checked==True:
