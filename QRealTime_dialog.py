@@ -606,6 +606,9 @@ class Kobo (Aggregate):
     def getFormList(self):
         print("under development")
         #from kobo branch
+    def importData(self,layer,selectedForm,importData):
+        print("under development")
+        #from kobo branchQH
     def getTable(self,XFormKey,lastID,topElement,version= 'null'):
         print("under development")
         # from kobo branch
