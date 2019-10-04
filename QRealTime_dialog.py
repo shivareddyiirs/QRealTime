@@ -208,7 +208,7 @@ class aggregate (QTableWidget):
         root=ET.fromstring(response.content)
         keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
         return keylist,response
-    def importData(self,layer,selectedForm):
+    def importData(self,layer,selectedForm,importData):
         url=self.getValue('url')+'//formXml?formId='+selectedForm
         response= requests.request('GET',url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
         if response.status_code==200:
@@ -216,7 +216,7 @@ class aggregate (QTableWidget):
             #     importForm.write(response.content)
             self.formKey,self.topElement,self.version,self.geoField = self.updateLayerXML(layer,response.content)
             layer.setName(self.formKey)
-            self.collectData(layer,self.formKey,True,self.topElement,self.version,self.geoField)
+            self.collectData(layer,self.formKey,importData,self.topElement,self.version,self.geoField)
         else:
             print("unable to connect to server")
     def getFieldsModel(self,currentLayer):
@@ -313,7 +313,8 @@ class aggregate (QTableWidget):
             else:
                 geoField=fieldName
         return key,topElement,version,geoField
-    def prepareForm(self,layer,out):
+    def prepareSendForm(self,layer):
+        self.updateFields(layer)
         version= str(datetime.date.today())
         fieldDict= self.getFieldsModel(layer)
         print ('fieldDict',fieldDict)
@@ -322,12 +323,11 @@ class aggregate (QTableWidget):
         survey=create_survey_element_from_dict(surveyDict)
         xml=survey.to_xml(validate=None, warnings='warnings')
         os.chdir(os.path.expanduser('~'))
-        with open(out,'w') as xForm:
-            xForm.write(xml)    
-    def sendForm(self,xForm_id,xForm):
+        self.sendForm(layer.name(),xml)  
+    def sendForm(self,xForm_id,xml):
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
-        form_key=xForm_id in formList
+        form_key = xForm_id in formList
         if response.status_code != requests.codes.ok:
             return response
         message =''
@@ -342,8 +342,10 @@ class aggregate (QTableWidget):
 #        method = 'POST'
 #        url = self.getValue('url')+'//formUpload'
         #step2 - upload form
-        files = open(xForm,'r')
-        files = {'form_def_file':files }
+        with open('xForm.xml','w')as xForm:
+            xForm.write(xml)
+        file = open('xForm.xml','r')
+        files = {'form_def_file':file}
         response = requests.request(method, url,files = files, proxies = getProxiesConf(),auth=self.getAuth(),verify=False )
         if response.status_code== 201:
             self.iface.messageBar().pushSuccess(self.tr("QRealTime plugin"),
@@ -352,6 +354,7 @@ class aggregate (QTableWidget):
             self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"),self.tr("Form exist and can not be updated"))
         else:
             self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Form is not sent "))
+        file.close()
         return response
         
     def collectData(self,layer,xFormKey,importData=False,topElement='',version='null',geoField=''):
@@ -390,8 +393,8 @@ class aggregate (QTableWidget):
                 print('setting hidden widget')
                 layer.setEditorWidgetSetup( fId, QgsEditorWidgetSetup( "Hidden" ,config ) )
                 return
-        except:
-            print('exception')
+        except Exception as e:
+            print(e)
         if config=={}:
             return
         print('now setting exernal resource widgt')
@@ -539,14 +542,14 @@ class aggregate (QTableWidget):
                     response=requests.request(method,url,params=para,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
                     if not response.status_code == 200:
                         return response,table
-                    print('xml downloaded is',response.content)
+                    #print('xml downloaded is',response.content)
                     root1=ET.fromstring(response.content)
-                    print('downloaded data is',root1)
+                    #print('downloaded data is',root1)
                     data=root1[0].findall(ns+topElement)
-                    print('data is',data[0])
+                    #print('data is',data[0])
                     dict={child.tag.split('}')[-1]:child.text for child in data[0]}
                     dict['ODKUUID']=id
-                    print('dictionary is',dict)
+                    #print('dictionary is',dict)
                     dict2= dict.copy()
                     for key,value in six.iteritems(dict2):
                                 if value is None:
@@ -571,7 +574,7 @@ class aggregate (QTableWidget):
                                         dict[key]= murl
                     table.append(dict)
             self.getValue('lastID',lastReturnedURI)
-            print ('table is:',table)
+            #print ('table is:',table)
             return response, table
         except Exception as e:
             print ('not able to fetch',e)

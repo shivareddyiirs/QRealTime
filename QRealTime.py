@@ -243,13 +243,7 @@ class QRealTime:
         def timeEvent():
             print ('calling collect data')
             layer=self.getLayer()
-            print(layer)
-            if (not self.topElement):
-                url=service.getValue('url')+'//formXml?formId='+layer.name()
-                response= requests.request('GET',url,proxies=getProxiesConf(),auth=service.getAuth(),verify=False)
-                if response.status_code==200:
-                    self.formKey,self.topElement,self.version,self.geoField = service.updateLayerXML(layer,response.content)
-            service.collectData(layer,layer.name(),False,self.topElement,self.version,self.geoField)
+            service.importData(layer,layer.name(),False)
         self.timer.timeout.connect(timeEvent)
 
 
@@ -290,7 +284,7 @@ class QRealTime:
             result=self.ImportData.exec_()
             if result:
                 selectedForm= self.ImportData.comboBox.currentText()
-                service.importData(layer,selectedForm)            
+                service.importData(layer,selectedForm,True)            
     def getLayer(self):
         return self.iface.activeLayer()
         
@@ -298,9 +292,7 @@ class QRealTime:
 #        get the fields model like name , widget type, options etc.
         layer=self.getLayer()
         service=self.dlg.getCurrentService()
-        service.updateFields(layer)
-        service.prepareForm(layer,'Xform.xml') 
-        service.sendForm(layer.name(),'Xform.xml')
+        service.prepareSendForm(layer) 
     def download(self,checked=False):
         if checked==True:
             self.layer= self.getLayer()
