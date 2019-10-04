@@ -23,7 +23,7 @@
 import os
 from PyQt5 import QtGui, uic
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QTableWidget,QTableWidgetItem
+from PyQt5.QtWidgets import QWidget,QTableWidget,QTableWidgetItem
 from PyQt5.QtCore import Qt, QSettings, QSize,QVariant
 import xml.etree.ElementTree as ET
 import requests
@@ -100,6 +100,7 @@ def QVariantToODKtype(q_type):
         else:
             raise AttributeError("Can't cast QVariant to ODKType: " + q_type)
 class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
+    services = ['Aggregate','Kobo']
     def __init__(self, caller,parent=None):
         """Constructor."""
         super(QRealTimeDialog, self).__init__(parent)
@@ -109,18 +110,25 @@ class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
-        service='aggregate'
-        container = self.tabServices.widget(0)
-        serviceClass = globals()[service]
-        serviceClass(container,caller)
-        self.tabServices.setTabText(0, service)
+        i=0
+        for service in self.services:
+            if i>0:
+                container = QWidget()
+                container.resize(QSize(310,260))
+                self.tabServices.addTab(container,"")
+            container = self.tabServices.widget(i)
+            print (container)
+            serviceClass = globals()[service]
+            serviceClass(container,caller)
+            self.tabServices.setTabText(i, service)
+            i=i+1
     
     def getCurrentService(self):
         return self.tabServices.currentWidget().children()[0]
 
-class aggregate (QTableWidget):
+class Aggregate (QTableWidget):
     parameters = [
-        ["id","aggregate"],
+        ["id","Aggregate"],
         ["url",''],
         ["user", ''],
         ["password", ''],
@@ -129,7 +137,7 @@ class aggregate (QTableWidget):
         ]
      
     def __init__(self,parent,caller):
-        super(aggregate, self).__init__(parent)
+        super(Aggregate, self).__init__(parent)
         self.parent = parent
         self.iface=caller.iface
         self.resize(QSize(310,260))
@@ -579,3 +587,14 @@ class aggregate (QTableWidget):
         except Exception as e:
             print ('not able to fetch',e)
             return response,table
+class Kobo (Aggregate):
+    parameters = [
+        ["id","Kobo"],
+        ["url",''],
+        ["user", ''],
+        ["password", ''],
+        ["lastID",''],
+        ['sync time','']
+        ]
+    def __init__(self,parent,caller):
+        super(Kobo, self).__init__(parent,caller)
