@@ -598,3 +598,17 @@ class Kobo (Aggregate):
         ]
     def __init__(self,parent,caller):
         super(Kobo, self).__init__(parent,caller)
+    def prepareSendForm(self,layer):
+        print("under development")
+    def sendForm(self,xForm_id,json):
+        print("under development")
+        #from kobo branch
+    def getFormList(self):
+        print("under development")
+        #from kobo branch
+    def getTable(self,XFormKey,lastID,topElement,version= 'null'):
+        print("under development")
+        # from kobo branch
+    def getFieldsModel(self,layer):
+        print("under development")
+        #from kobo branch
