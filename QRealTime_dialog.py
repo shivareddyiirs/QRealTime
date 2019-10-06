@@ -648,9 +648,6 @@ class Kobo (Aggregate):
         else:
             self.iface.messageBar().pushCritical(self.tr("QRealTime-KoBo plugin"),self.tr(str(response.status_code)))
         return response
-    def sendForm(self,xForm_id,json):
-        print("under development")
-        #from kobo branch
     def getFormList(self):
         user=self.getValue('user')
         url=self.getValue('url')+'assets/'
