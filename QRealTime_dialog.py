@@ -591,7 +591,7 @@ class Aggregate (QTableWidget):
 class Kobo (Aggregate):
     parameters = [
         ["id","Kobo"],
-        ["url",''],
+        ["url",'https://kobo.humanitarianresponse.info/'],
         ["user", ''],
         ["password", ''],
         ["lastID",''],
@@ -600,19 +600,144 @@ class Kobo (Aggregate):
     def __init__(self,parent,caller):
         super(Kobo, self).__init__(parent,caller)
     def prepareSendForm(self,layer):
-        print("under development")
+        self.updateFields(layer)
+        fieldDict,choicesList= self.getFieldsModel(layer)
+        print ('fieldDict',fieldDict)
+        payload={"name":layer.name(),"asset_type":"survey","content":json.dumps({"survey":fieldDict,"choices":choicesList})}
+        print("Payload= ",payload)
+        self.sendForm('',layer.name(),payload)
+    def sendForm(self,xForm_id,xForm,payload):
+
+#        step1 - verify if form exists:
+        formList, response = self.getFormList()
+        form=''
+        for item in formList:
+            if formList[item]==xForm:
+                form=xForm
+                xForm_id=item
+        if response.status_code != requests.codes.ok:
+            print(status)
+            return status
+        message =''
+        if form:
+            message= 'Form Updated'
+            method = 'POST'
+            url = self.getValue('url')+'assets/'+xForm_id
+        else:
+            message= 'Created new form'
+            method = 'POST'
+            url = self.getValue('url')+'assets/'
+        para = {"format":"json"}
+        headers = {'Content-Type': "application/json",'Accept': "application/json"}
+        #creates form:
+        response = requests.request(method,url,json=payload,auth=(self.getValue('user'),self.getValue('password')),headers=headers,params=para)
+        responseJson=json.loads(response.text)
+        urlDeploy = self.getValue('url')+"assets/"+responseJson['uid']+"/deployment/"
+        payload2 = json.dumps({"active": True})
+        #deploys form:
+        response2 = requests.post(urlDeploy,data=payload2, auth=(self.getValue('user'),self.getValue('password')), headers=headers, params=para)
+        urlShare = self.getValue('url')+"permissions/"
+        permissions={"content_object":self.getValue('url')+"assets/"+responseJson['uid']+"/","permission": "view_submissions","deny": False,"inherited": False,"user": "https://kobo.humanitarianresponse.info/users/AnonymousUser/"}
+        #shares submissions publicly:
+        response3 = requests.post(urlShare, json=permissions, auth=(self.getValue('user'),self.getValue('password')),headers=headers)
+        if response.status_code== 201 or response.status_code == 200:
+            self.iface.messageBar().pushSuccess(self.tr("QRealTime-KoBo plugin"),
+                                                self.tr('Layer is online('+message+'), Collect data from App'))
+        elif response.status_code == 409:
+            self.iface.messageBar().pushWarning(self.tr("QRealTime-KoBo plugin"),self.tr("Form exist and can not be updated"))
+        else:
+            self.iface.messageBar().pushCritical(self.tr("QRealTime-KoBo plugin"),self.tr(str(response.status_code)))
+        return response
     def sendForm(self,xForm_id,json):
         print("under development")
         #from kobo branch
     def getFormList(self):
-        print("under development")
-        #from kobo branch
+        user=self.getValue('user')
+        url=self.getValue('url')+'assets/'
+#        print (url)
+        status='not able to download'
+        para={'format':'json'}
+        response= requests.get(url,auth=(self.getValue('user'), self.getValue('password')),params=para)
+        forms= response.json()
+        keyDict={}
+        questions=[]
+        
+        try:
+            for form in forms['results']:        
+                if form['asset_type']=='survey' and form['deployment__active']==True:
+                    keyDict[form['uid']]=form['name']
+#            print('keyDict is',keyDict)
+            return keyDict,response
+        except:
+            print ('getformList','not able to get the forms')
+            return {},response
     def importData(self,layer,selectedForm,importData):
         print("under development")
         #from kobo branchQH
     def getTable(self,XFormKey,lastID,topElement,version= 'null'):
         print("under development")
         # from kobo branch
-    def getFieldsModel(self,layer):
-        print("under development")
-        #from kobo branch
+    def getFieldsModel(self,currentLayer):
+        fieldsModel = []
+        choicesList = []
+        g_type= currentLayer.geometryType()
+        fieldDef={"type":"geopoint","required":True}
+#        fieldDef['Appearance']= 'maps'
+        if g_type==0:
+            fieldDef["label"]="Point Location"
+        elif g_type==1:
+            fieldDef["label"]="Draw Line"
+            fieldDef["type"]="geotrace"
+        else:
+            fieldDef["label"]="Draw Area"
+            fieldDef["type"]="geoshape"
+        fieldsModel.append(fieldDef)
+        i=0
+        j=0
+        for field in currentLayer.fields():
+            widget =currentLayer.editorWidgetSetup(i)
+            fwidget = widget.type()
+            if (fwidget=='Hidden'):
+                i+=1
+                continue
+                
+            fieldDef = {}
+            fieldDef["label"] = field.alias() or field.name()
+#            fieldDef['hint'] = ''
+            fieldDef["type"] = QVariantToODKtype(field.type())
+#            fieldDef['bind'] = {}
+#            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
+            fieldDef["fieldWidget"]=widget.type()
+            print("getFieldModel",fieldDef["fieldWidget"])
+            if fieldDef["fieldWidget"] in ("ValueMap","CheckBox","Photo","ExternalResource"):
+                if fieldDef["fieldWidget"] == "ValueMap":
+                    fieldDef["type"]="select_one"
+                    j+=1
+                    listName="select"+str(j)
+                    fieldDef["select_from_list_name"]=listName
+                    valueMap=widget.config()["map"]
+                    config={}
+                    for value in valueMap:
+                        for k,v in value.items():
+                                config[v]=k
+                    print('configuration is ',config)
+                    for name,label in config.items():
+                        choicesList.append({"name":name,"label":label,"list_name":listName})
+#                    fieldDef["choices"] = choicesList
+                elif fieldDef["fieldWidget"] == 'Photo' or fieldDef["fieldWidget"] == 'ExternalResource' :
+                    fieldDef["type"]="image"
+                    print('got an image type field')
+                
+#                fieldDef['choices'] = config
+#            else:
+#                fieldDef['choices'] = {}
+#            if fieldDef['name'] == 'ODKUUID':
+#                fieldDef["bind"] = {"readonly": "true()", "calculate": "concat('uuid:', uuid())"}
+            fieldDef.pop("fieldWidget")
+            for key, value in list(fieldDef.items()):
+                if value[:8]=="instance":
+                    fieldDef.pop(key)
+                    fieldDef.pop("type")
+            fieldsModel.append(fieldDef)
+            i+=1
+        return fieldsModel,choicesList
