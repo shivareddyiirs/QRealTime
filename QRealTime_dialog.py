@@ -33,6 +33,7 @@ import six
 from six.moves import range
 from qgis.core import QgsMessageLog, Qgis
 import datetime
+import subprocess
 try:
         from pyxform.builder import create_survey_element_from_dict
         print('package already installed')
