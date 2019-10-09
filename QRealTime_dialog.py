@@ -34,6 +34,7 @@ from six.moves import range
 from qgis.core import QgsMessageLog, Qgis
 import datetime
 import subprocess
+import json
 try:
         from pyxform.builder import create_survey_element_from_dict
         print('package already installed')
@@ -603,17 +604,17 @@ class Kobo (Aggregate):
         self.updateFields(layer)
         fieldDict,choicesList= self.getFieldsModel(layer)
         print ('fieldDict',fieldDict)
-        payload={"name":layer.name(),"asset_type":"survey","content":json.dumps({"survey":fieldDict,"choices":choicesList})}
+        payload={"uid":layer.name(),"name":layer.name(),"asset_type":"survey","content":json.dumps({"survey":fieldDict,"choices":choicesList})}
         print("Payload= ",payload)
-        self.sendForm('',layer.name(),payload)
-    def sendForm(self,xForm_id,xForm,payload):
+        self.sendForm(layer.name(),payload)
+    def sendForm(self,xForm_id,payload):
 
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
         form=''
         for item in formList:
-            if formList[item]==xForm:
-                form=xForm
+            if formList[item]==xForm_id:
+                form=xForm_id
                 xForm_id=item
         if response.status_code != requests.codes.ok:
             print(status)
@@ -641,12 +642,12 @@ class Kobo (Aggregate):
         #shares submissions publicly:
         response3 = requests.post(urlShare, json=permissions, auth=(self.getValue('user'),self.getValue('password')),headers=headers)
         if response.status_code== 201 or response.status_code == 200:
-            self.iface.messageBar().pushSuccess(self.tr("QRealTime-KoBo plugin"),
+            self.iface.messageBar().pushSuccess(self.tr("QRealTime-KoBo"),
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
-            self.iface.messageBar().pushWarning(self.tr("QRealTime-KoBo plugin"),self.tr("Form exist and can not be updated"))
+            self.iface.messageBar().pushWarning(self.tr("QRealTime-KoBo"),self.tr("Form exist and can not be updated"))
         else:
-            self.iface.messageBar().pushCritical(self.tr("QRealTime-KoBo plugin"),self.tr(str(response.status_code)))
+            self.iface.messageBar().pushCritical(self.tr("QRealTime-KoBo"),self.tr(str(response.status_code)))
         return response
     def getFormList(self):
         user=self.getValue('user')
@@ -662,7 +663,7 @@ class Kobo (Aggregate):
         try:
             for form in forms['results']:        
                 if form['asset_type']=='survey' and form['deployment__active']==True:
-                    keyDict[form['uid']]=form['name']
+                    keyDict[form['name']]=form['uid']
 #            print('keyDict is',keyDict)
             return keyDict,response
         except:

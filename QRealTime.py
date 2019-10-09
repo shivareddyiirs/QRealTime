@@ -283,7 +283,7 @@ class QRealTime:
             self.ImportData.show()
             result=self.ImportData.exec_()
             if result:
-                selectedForm= self.ImportData.comboBox.currentText()
+                selectedForm= self.ImportData.comboBox.currentData()
                 service.importData(layer,selectedForm,True)            
     def getLayer(self):
         return self.iface.activeLayer()
