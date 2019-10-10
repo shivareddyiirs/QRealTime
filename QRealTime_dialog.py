@@ -217,7 +217,8 @@ class Aggregate (QTableWidget):
         response= requests.request(method,url,auth=self.getAuth(),verify=False)
         root=ET.fromstring(response.content)
         keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
-        return keylist,response
+        forms= {key:key for key in keylist}
+        return forms,response
     def importData(self,layer,selectedForm,importData):
         url=self.getValue('url')+'//formXml?formId='+selectedForm
         response= requests.request('GET',url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)

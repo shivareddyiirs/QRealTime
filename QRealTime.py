@@ -279,7 +279,8 @@ class QRealTime:
         forms,response= service.getFormList()
         if response.status_code==200:
             self.ImportData=ImportData()
-            self.ImportData.comboBox.addItems(forms)
+            for name, uid in forms.items():
+            	self.ImportData.comboBox.addItem(name,uid)
             self.ImportData.show()
             result=self.ImportData.exec_()
             if result:
