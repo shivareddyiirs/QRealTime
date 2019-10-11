@@ -242,8 +242,7 @@ class QRealTime:
         self.timer=QTimer()
         def timeEvent():
             print ('calling collect data')
-            layer=self.getLayer()
-            service.importData(layer,layer.name(),False)
+            self.service.importData(self.layer,self.formID,False)
         self.timer.timeout.connect(timeEvent)
 
 
@@ -279,8 +278,8 @@ class QRealTime:
         forms,response= service.getFormList()
         if response.status_code==200:
             self.ImportData=ImportData()
-            for name, uid in forms.items():
-            	self.ImportData.comboBox.addItem(name,uid)
+            for name,key in forms.items():
+            	self.ImportData.comboBox.addItem(name,key)
             self.ImportData.show()
             result=self.ImportData.exec_()
             if result:
@@ -297,6 +296,9 @@ class QRealTime:
     def download(self,checked=False):
         if checked==True:
             self.layer= self.getLayer()
+            self.service=self.dlg.getCurrentService()
+            forms,response= self.service.getFormList()
+            self.formID= forms[self.layer.name()]
             self.time=int(self.service.getValue('sync time'))
             print('starting timer every'+ str(self.time)+'second')
             self.timer.start(1000*self.time)

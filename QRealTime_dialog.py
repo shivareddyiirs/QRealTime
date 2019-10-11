@@ -32,7 +32,7 @@ from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateR
 import six
 from six.moves import range
 from qgis.core import QgsMessageLog, Qgis
-import datetime
+from datetime import datetime
 import subprocess
 import json
 try:
@@ -51,9 +51,11 @@ except ImportError:
         except:
             print('not able to install pyxform, install mannually') 
 tag='QRealTime'
+debug=True
 def print(text,opt=None):
     """ to redirect print to MessageLog"""
-    QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
+    if debug:
+        QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'QRealTime_dialog_services.ui'))
 
@@ -188,25 +190,38 @@ class Aggregate (QTableWidget):
                     self.setup() #store to settings
                 return self.item(row,1).text()
         raise AttributeError("key not found: " + key)
-
-    def guessGeomType(self,geom):
-        coordinates = geom.split(';')
-        firstCoordinate = coordinates[0].strip().split(' ')
-        coordinatesList = []
+    def guessWKTGeomType(self,geom):
+        if geom:
+            coordinates = geom.split(';')
+        else:
+            return 'error'
+#        print ('coordinates are '+ coordinates)
+        firstCoordinate = coordinates[0].strip().split(" ")
         if len(firstCoordinate) < 2:
             return "invalid", None
+        coordinatesList = []
         for coordinate in coordinates:
-            decodeCoord = coordinate.strip().split(' ')
-            coordinatesList.append([decodeCoord[0],decodeCoord[1]])
+            decodeCoord = coordinate.strip().split(" ")
+#            print 'decordedCoord is'+ decodeCoord
+            try:
+                coordinatesList.append([decodeCoord[0],decodeCoord[1]])
+            except:
+                pass
         if len(coordinates) == 1:
-            return "Point", coordinatesList #geopoint
-        if coordinates[-1] == '' and coordinatesList[0][0] == coordinatesList[-2][0] and coordinatesList[0][1] == coordinatesList[-2][1]:
-            return "Polygon", coordinatesList #geoshape #geotrace
+            
+            reprojectedPoint = self.transformToLayerSRS(QgsPoint(float(coordinatesList[0][1]),float(coordinatesList[0][0])))
+            return "POINT(%s %s)" % (reprojectedPoint.x(), reprojectedPoint.y()) #geopoint
         else:
-            return "LineString", coordinatesList
-
-
-   
+            coordinateString = ""
+            for coordinate in coordinatesList:
+                reprojectedPoint = self.transformToLayerSRS(QgsPoint(float(coordinate[1]), float(coordinate[0])))
+                coordinateString += "%s %s," % (reprojectedPoint.x(), reprojectedPoint.y())
+            coordinateString = coordinateString[:-1]
+        if  coordinatesList[0][0] == coordinatesList[-1][0] and coordinatesList[0][1] == coordinatesList[-1][1]:
+            return "POLYGON((%s))" % coordinateString #geoshape #geotrace
+        else:
+            return "LINESTRING(%s)" % coordinateString
+     
 
 #    def getExportExtension(self):
 #        return 'xml'
@@ -376,7 +391,7 @@ class Aggregate (QTableWidget):
         if importData:
             response, remoteTable = self.getTable(xFormKey,"",topElement,version)
         else:
-            response, remoteTable = self.getTable(xFormKey,self.getValue('lastID'),topElement,version)
+            response, remoteTable = self.getTable(xFormKey,importData,topElement,version)
         if response.status_code == 200:
             print ('before Update Layer')
             if remoteTable:
@@ -426,23 +441,27 @@ class Aggregate (QTableWidget):
         fieldError = None
         print('geofield is',geoField)
         for odkFeature in dataDict:
+            print(odkFeature)
             id=None
             try:
                 id= odkFeature['ODKUUID']
+                print('odk id is',id)
             except:
                 print('error in reading ODKUUID')
             try:
                 if not id in uuidList:
                     qgisFeature = QgsFeature()
+                    print(odkFeature)
                     wktGeom = self.guessWKTGeomType(odkFeature[geoField])
                     print (wktGeom)
                     if wktGeom[:3] != layerGeo[:3]:
+                        print(wktGeom,'is not matching'+layerGeo)
                         continue
                     qgisGeom = QgsGeometry.fromWkt(wktGeom)
                     print('geom is',qgisGeom)
                     qgisFeature.setGeometry(qgisGeom)
                     qgisFeature.initAttributes(len(QgisFieldsList))
-                    for fieldName, fieldValue in six.iteritems(odkFeature):
+                    for fieldName, fieldValue in odkFeature.items():
                         if fieldName != geoField:
                             try:
                                 qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
@@ -462,48 +481,17 @@ class Aggregate (QTableWidget):
         
     def getUUIDList(self,lyr):
         uuidList = []
-        if lyr:
-            uuidFieldName = None
-            for field in lyr.fields():
-                if 'UUID' in field.name().upper():
-                    uuidFieldName = field.name()
-            if uuidFieldName:
-                for qgisFeature in lyr.getFeatures():
-                    uuidList.append(qgisFeature[uuidFieldName])
+        uuidFieldName=None
+        QgisFieldsList = [field.name() for field in lyr.fields()]
+        for field in QgisFieldsList:
+            if 'UUID' in field:
+                uuidFieldName =field
+        if uuidFieldName:
+            print(uuidFieldName)
+            for qgisFeature in lyr.getFeatures():
+                uuidList.append(qgisFeature[uuidFieldName])
+        print (uuidList)
         return uuidList
-
-    def guessWKTGeomType(self,geom):
-        if geom:
-            coordinates = geom.split(';')
-        else:
-            return 'error'
-#        print ('coordinates are '+ coordinates)
-        firstCoordinate = coordinates[0].strip().split(" ")
-#        print ('first Coordinate is '+  firstCoordinate)
-        if len(firstCoordinate) < 2:
-            return "invalid", None
-        coordinatesList = []
-        for coordinate in coordinates:
-            decodeCoord = coordinate.strip().split(" ")
-#            print 'decordedCoord is'+ decodeCoord
-            try:
-                coordinatesList.append([decodeCoord[0],decodeCoord[1]])
-            except:
-                pass
-        if len(coordinates) == 1:
-            
-            reprojectedPoint = self.transformToLayerSRS(QgsPoint(float(coordinatesList[0][1]),float(coordinatesList[0][0])))
-            return "POINT(%s %s)" % (reprojectedPoint.x(), reprojectedPoint.y()) #geopoint
-        else:
-            coordinateString = ""
-            for coordinate in coordinatesList:
-                reprojectedPoint = self.transformToLayerSRS(QgsPoint(float(coordinate[1]), float(coordinate[0])))
-                coordinateString += "%s %s," % (reprojectedPoint.x(), reprojectedPoint.y())
-            coordinateString = coordinateString[:-1]
-        if  coordinatesList[0][0] == coordinatesList[-1][0] and coordinatesList[0][1] == coordinatesList[-1][1]:
-            return "POLYGON((%s))" % coordinateString #geoshape #geotrace
-        else:
-            return "LINESTRING(%s)" % coordinateString
             
     def transformToLayerSRS(self, pPoint):
         # transformation from the current SRS to WGS84
@@ -518,10 +506,13 @@ class Aggregate (QTableWidget):
 
         
                                                 
-    def getTable(self,XFormKey,lastID,topElement,version= 'null'):
+    def getTable(self,XFormKey,importData,topElement,version= 'null'):
         url=self.getValue('url')+'/view/submissionList?formId='+XFormKey
         method='GET'
         table=[]
+        lastID=""
+        if not importData:
+            lastID=self.getValue('lastID')
         response = requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
         if not response.status_code == 200:
                 return response, table
@@ -562,7 +553,7 @@ class Aggregate (QTableWidget):
                     dict['ODKUUID']=id
                     #print('dictionary is',dict)
                     dict2= dict.copy()
-                    for key,value in six.iteritems(dict2):
+                    for key,value in dict2.items():
                                 if value is None:
                                     grEle=data[0].findall(ns+key)
                                     try:
@@ -596,7 +587,7 @@ class Kobo (Aggregate):
         ["url",'https://kobo.humanitarianresponse.info/'],
         ["user", ''],
         ["password", ''],
-        ["lastID",''],
+        ["last Submission",''],
         ['sync time','']
         ]
     def __init__(self,parent,caller):
@@ -624,22 +615,22 @@ class Kobo (Aggregate):
         if form:
             message= 'Form Updated'
             method = 'POST'
-            url = self.getValue('url')+'assets/'+xForm_id
+            url = self.getValue('url')+'/assets/'+xForm_id
         else:
             message= 'Created new form'
             method = 'POST'
-            url = self.getValue('url')+'assets/'
+            url = self.getValue('url')+'/assets/'
         para = {"format":"json"}
         headers = {'Content-Type': "application/json",'Accept': "application/json"}
         #creates form:
         response = requests.request(method,url,json=payload,auth=(self.getValue('user'),self.getValue('password')),headers=headers,params=para)
         responseJson=json.loads(response.text)
-        urlDeploy = self.getValue('url')+"assets/"+responseJson['uid']+"/deployment/"
+        urlDeploy = self.getValue('url')+"/assets/"+responseJson['uid']+"/deployment/"
         payload2 = json.dumps({"active": True})
         #deploys form:
         response2 = requests.post(urlDeploy,data=payload2, auth=(self.getValue('user'),self.getValue('password')), headers=headers, params=para)
         urlShare = self.getValue('url')+"permissions/"
-        permissions={"content_object":self.getValue('url')+"assets/"+responseJson['uid']+"/","permission": "view_submissions","deny": False,"inherited": False,"user": "https://kobo.humanitarianresponse.info/users/AnonymousUser/"}
+        permissions={"content_object":self.getValue('url')+"/assets/"+responseJson['uid']+"/","permission": "view_submissions","deny": False,"inherited": False,"user": "https://kobo.humanitarianresponse.info/users/AnonymousUser/"}
         #shares submissions publicly:
         response3 = requests.post(urlShare, json=permissions, auth=(self.getValue('user'),self.getValue('password')),headers=headers)
         if response.status_code== 201 or response.status_code == 200:
@@ -652,7 +643,7 @@ class Kobo (Aggregate):
         return response
     def getFormList(self):
         user=self.getValue('user')
-        url=self.getValue('url')+'assets/'
+        url=self.getValue('url')+'/assets/'
 #        print (url)
         status='not able to download'
         para={'format':'json'}
@@ -670,12 +661,107 @@ class Kobo (Aggregate):
         except:
             print ('getformList','not able to get the forms')
             return {},response
-    def importData(self,layer,selectedForm,importData):
-        print("under development")
+    def importData(self,layer,selectedForm,importData=True):
         #from kobo branchQH
-    def getTable(self,XFormKey,lastID,topElement,version= 'null'):
-        print("under development")
-        # from kobo branch
+        url=self.getValue('url')+'/assets/'+selectedForm
+        para={'format':'xml'}
+        requests.packages.urllib3.disable_warnings()
+        response= requests.request('GET',url,proxies=getProxiesConf(),auth=(self.getValue('user'), self.getValue('password')),verify=False,params=para)
+        if response.status_code==200:
+            xml=response.content
+            # with open('importForm.xml','w') as importForm:
+            #     importForm.write(response.content)
+            self.layer_name,self.version, self.geoField,self.fields= self.updateLayerXML(layer,xml)
+            layer.setName(self.layer_name)
+            self.collectData(layer,selectedForm,importData,self.layer_name,self.version,self.geoField)
+        else:
+            print("unable to connect to KOBO server")
+    def updateLayerXML(self,layer,xml):
+        geoField=''
+        ns='{http://www.w3.org/2002/xforms}'
+        nsh='{http://www.w3.org/1999/xhtml}'
+        root= ET.fromstring(xml)
+        #key= root[0][1][0][0].attrib['id']
+        layer_name=root[0].find(nsh+'title').text
+        instance=root[0][1].find(ns+'instance')
+        fields={}
+        #topElement=root[0][1][0][0].tag.split('}')[1]
+        try:
+            version=instance[0].attrib['version']
+        except:
+            version='null'
+#        print('form name is '+ layer_name)
+#        print (root[0][1].findall(ns+'bind'))
+        for bind in root[0][1].findall(ns+'bind'):
+            attrib=bind.attrib
+            print (attrib)
+            fieldName= attrib['nodeset'].split('/')[-1]
+            fieldType=attrib['type']
+            fields[fieldName]=fieldType
+#            print('attrib type is',attrib['type'])
+            qgstype,config = qtype(attrib['type'])
+#            print ('first attribute'+ fieldName)
+            inputs=root[1].findall('.//*[@ref]')
+            if fieldType[:3]!='geo':
+                #print('creating new field:'+ fieldName)
+                isHidden= True
+                for input in inputs:
+                    if fieldName == input.attrib['ref'].split('/')[-1]:
+                        isHidden= False
+                        break
+                if isHidden:
+                    print('Reached Hidden')
+                    config['type']='Hidden'
+            else:
+                geoField=fieldName
+                print('geometry field is =',fieldName)
+            self.updateFields(layer,fieldName,qgstype,config)
+        return layer_name,version,geoField,fields
+    def getTable(self,XFormKey,importData,topElement,layer,version= 'null'):
+        requests.packages.urllib3.disable_warnings()
+        # kobo or custom url not working hence hard coded url is being used
+        url='https://kc.humanitarianresponse.info/'
+        print(url)
+        lastSub=""
+        try:
+            lastSub=self.getValue('last Submission')
+        except:
+            print("error")
+        response = requests.get(url+'/api/v1/data',auth=(self.getValue('user'),self.getValue('password')),verify=False)
+        if not response.status_code == 200:
+                print (response.status_code)
+        responseJSON=json.loads(response.text)
+        formID=''
+        subTimeList=[]
+        geoField=''
+        table=[]
+        for form in responseJSON:
+            if str(form['id_string'])==XFormKey:
+                formID=str(form['id'])
+        para={"query":json.dumps({"_submission_time": {"$gt": lastSub}}) }
+        urlData=url+'/api/v1/data/'+formID
+        response = requests.get(urlData,auth=(self.getValue('user'),self.getValue('password')),params=para,verify=False)
+        data=json.loads(response.text)
+        for submission in data:
+            submission['ODKUUID']=submission['meta/instanceID']
+            subTime=submission['_submission_time']
+            subTime_datetime=datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
+            subTimeList.append(subTime_datetime)
+            for key in list(submission):
+                if key == self.geoField:
+                    print (self.geoField)
+                    continue
+                if key not in self.fields:
+                    submission.pop(key)
+                else:
+                    if self.fields[key]=="binary":
+                        submission[key]=url+'/attachment/original?media_file='+self.getValue('user')+'/attachments/'+submission[item]
+            table.append(submission)
+        if subTimeList:
+            lastSubmission=max(subTimeList)
+            lastSubmission=datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
+            self.getValue('last Submission',lastSubmission)
+        return response, table
     def getFieldsModel(self,currentLayer):
         fieldsModel = []
         choicesList = []
@@ -734,7 +820,7 @@ class Kobo (Aggregate):
 #                fieldDef["bind"] = {"readonly": "true()", "calculate": "concat('uuid:', uuid())"}
             fieldDef.pop("fieldWidget")
             for key, value in list(fieldDef.items()):
-                if value[:8]=="instance":
+                if value=="ODKUUID":
                     fieldDef.pop(key)
                     fieldDef.pop("type")
             fieldsModel.append(fieldDef)
