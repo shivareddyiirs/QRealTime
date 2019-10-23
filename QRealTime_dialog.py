@@ -251,7 +251,7 @@ class Aggregate (QTableWidget):
             furl=url+'//formXml?formId='+selectedForm
         else:
             self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Enter url in settings"))
-            return {},None
+            return
         try:
             response= requests.request('GET',furl,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
         except:
@@ -527,13 +527,22 @@ class Aggregate (QTableWidget):
         
                                                 
     def getTable(self,XFormKey,importData,topElement,version= 'null'):
-        url=self.getValue('url')+'/view/submissionList?formId='+XFormKey
-        method='GET'
+        turl=self.getValue('url')
         table=[]
+        if turl:
+            url=turl+'/view/submissionList?formId='+XFormKey
+        else:
+            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Enter url in settings"))
+            return None,table
+        method='GET'
         lastID=""
         if not importData:
             lastID=self.getValue('lastID')
-        response = requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
+        try:
+            response = requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
+        except:
+            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Not able to connect to server"))
+            return response, table
         if not response.status_code == 200:
                 return response, table
         try:
