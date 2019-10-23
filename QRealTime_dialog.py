@@ -246,8 +246,17 @@ class Aggregate (QTableWidget):
             forms= {key:key for key in keylist}
             return forms,response
     def importData(self,layer,selectedForm,importData):
-        url=self.getValue('url')+'//formXml?formId='+selectedForm
-        response= requests.request('GET',url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
+        url=self.getValue('url')
+        if url:
+            furl=url+'//formXml?formId='+selectedForm
+        else:
+            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Enter url in settings"))
+            return {},None
+        try:
+            response= requests.request('GET',furl,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
+        except:
+            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Not able to connect to server"))
+            return
         if response.status_code==200:
             # with open('importForm.xml','w') as importForm:
             #     importForm.write(response.content)
@@ -255,7 +264,7 @@ class Aggregate (QTableWidget):
             layer.setName(self.formKey)
             self.collectData(layer,self.formKey,importData,self.topElement,self.version,self.geoField)
         else:
-            print("unable to connect to server")
+            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Not able to coleect data from server"))
     def getFieldsModel(self,currentLayer):
         fieldsModel = []
         g_type= currentLayer.geometryType()
