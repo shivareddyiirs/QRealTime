@@ -276,15 +276,16 @@ class QRealTime:
         service=self.dlg.getCurrentService()
         layer=self.getLayer()
         forms,response= service.getFormList()
-        if response.status_code==200:
-            self.ImportData=ImportData()
-            for name,key in forms.items():
-            	self.ImportData.comboBox.addItem(name,key)
-            self.ImportData.show()
-            result=self.ImportData.exec_()
-            if result:
-                selectedForm= self.ImportData.comboBox.currentData()
-                service.importData(layer,selectedForm,True)            
+        if response:
+	        if response.status_code==200:
+	            self.ImportData=ImportData()
+	            for name,key in forms.items():
+	            	self.ImportData.comboBox.addItem(name,key)
+	            self.ImportData.show()
+	            result=self.ImportData.exec_()
+	            if result:
+	                selectedForm= self.ImportData.comboBox.currentData()
+	                service.importData(layer,selectedForm,True)            
     def getLayer(self):
         return self.iface.activeLayer()
         

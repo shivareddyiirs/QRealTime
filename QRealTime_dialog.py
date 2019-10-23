@@ -50,8 +50,8 @@ except ImportError:
             from pyxform.builder import create_survey_element_from_dict
         except:
             print('not able to install pyxform, install mannually') 
-tag='QRealTime'
 debug=True
+tag="QRealTime"
 def print(text,opt=None):
     """ to redirect print to MessageLog"""
     if debug:
@@ -139,7 +139,7 @@ class Aggregate (QTableWidget):
         ["lastID",''],
         ['sync time','']
         ]
-     
+    tag='ODK Aggregate'
     def __init__(self,parent,caller):
         super(Aggregate, self).__init__(parent)
         self.parent = parent
@@ -188,8 +188,9 @@ class Aggregate (QTableWidget):
                 if newValue:
                     self.item(row, 1).setText(newValue)
                     self.setup() #store to settings
-                return self.item(row,1).text().strip()
-        raise AttributeError("key not found: " + key)
+                value=self.item(row,1).text().strip()
+                if value:
+                    return value
     def guessWKTGeomType(self,geom):
         if geom:
             coordinates = geom.split(';')
@@ -228,12 +229,22 @@ class Aggregate (QTableWidget):
         
     def getFormList(self):
         method='GET'
-        url=self.getValue('url')+'//formList'
-        response= requests.request(method,url,auth=self.getAuth(),verify=False)
-        root=ET.fromstring(response.content)
-        keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
-        forms= {key:key for key in keylist}
-        return forms,response
+        url=self.getValue('url')
+        if url:
+            furl=url+'//formList'
+        else:
+            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Enter url in settings"))
+            return {},None
+        try:
+            response= requests.request(method,furl,auth=self.getAuth(),verify=False)
+        except:
+            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Not able to connect to server"))
+            return {},None
+        if response.status_code==200:
+            root=ET.fromstring(response.content)
+            keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
+            forms= {key:key for key in keylist}
+            return forms,response
     def importData(self,layer,selectedForm,importData):
         url=self.getValue('url')+'//formXml?formId='+selectedForm
         response= requests.request('GET',url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
@@ -374,12 +385,12 @@ class Aggregate (QTableWidget):
         files = {'form_def_file':file}
         response = requests.request(method, url,files = files, proxies = getProxiesConf(),auth=self.getAuth(),verify=False )
         if response.status_code== 201:
-            self.iface.messageBar().pushSuccess(self.tr("QRealTime plugin"),
+            self.iface.messageBar().pushSuccess(self.tr(self.tag),
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
-            self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"),self.tr("Form exist and can not be updated"))
+            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Form exist and can not be updated"))
         else:
-            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Form is not sent "))
+            self.iface.messageBar().pushCritical(self.tr(self.tag),self.tr("Form is not sent "))
         file.close()
         return response
         
@@ -398,7 +409,7 @@ class Aggregate (QTableWidget):
                 print ('table have some data')
                 self.updateLayer(layer,remoteTable,geoField)
         else:
-            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Not able to collect data from Aggregate"))
+            self.iface.messageBar().pushCritical(self.tr(self.tag),self.tr("Not able to collect data from Aggregate"))
     
     def updateFields(self,layer,text='ODKUUID',q_type=QVariant.String,config={}):
         flag=True
@@ -473,7 +484,7 @@ class Aggregate (QTableWidget):
                     print('unable to create',e)
                 
         if fieldError:
-            self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"), self.tr("Can't find '%s' field") % fieldError)
+            self.iface.messageBar().pushWarning(self.tr(self.tag), self.tr("Can't find '%s' field") % fieldError)
         
         with edit(layer):
             layer.addFeatures(newQgisFeatures)
@@ -590,6 +601,7 @@ class Kobo (Aggregate):
         ["last Submission",''],
         ['sync time','']
         ]
+    tag="KoboToobox"
     def __init__(self,parent,caller):
         super(Kobo, self).__init__(parent,caller)
     def prepareSendForm(self,layer):
@@ -634,12 +646,12 @@ class Kobo (Aggregate):
         #shares submissions publicly:
         response3 = requests.post(urlShare, json=permissions, auth=(self.getValue('user'),self.getValue('password')),headers=headers)
         if response.status_code== 201 or response.status_code == 200:
-            self.iface.messageBar().pushSuccess(self.tr("QRealTime-KoBo"),
+            self.iface.messageBar().pushSuccess(self.tr(self.tag),
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
-            self.iface.messageBar().pushWarning(self.tr("QRealTime-KoBo"),self.tr("Form exist and can not be updated"))
+            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Form exist and can not be updated"))
         else:
-            self.iface.messageBar().pushCritical(self.tr("QRealTime-KoBo"),self.tr(str(response.status_code)))
+            self.iface.messageBar().pushCritical(self.tr(self.tag),self.tr(str(response.status_code)))
         return response
     def getFormList(self):
         user=self.getValue('user')
