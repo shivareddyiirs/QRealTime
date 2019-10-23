@@ -188,7 +188,7 @@ class Aggregate (QTableWidget):
                 if newValue:
                     self.item(row, 1).setText(newValue)
                     self.setup() #store to settings
-                return self.item(row,1).text()
+                return self.item(row,1).text().strip()
         raise AttributeError("key not found: " + key)
     def guessWKTGeomType(self,geom):
         if geom:
