@@ -541,7 +541,7 @@ class Aggregate (QTableWidget):
         try:
             response = requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
         except:
-            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Not able to connect to server"))
+            self.iface.messageBar().pushCritical(self.tr(self.tag),self.tr("Not able to connect to server"))
             return response, table
         if not response.status_code == 200:
                 return response, table
@@ -673,30 +673,40 @@ class Kobo (Aggregate):
         return response
     def getFormList(self):
         user=self.getValue('user')
-        url=self.getValue('url')+'/assets/'
+        turl=self.getValue('url')
+        if turl:
+            url=turl+'/assets/'
+        else:
+            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Enter url in settings"))
+            return {},None
 #        print (url)
-        status='not able to download'
         para={'format':'json'}
-        response= requests.get(url,auth=(self.getValue('user'), self.getValue('password')),params=para)
-        forms= response.json()
         keyDict={}
         questions=[]
-        
         try:
+            response= requests.get(url,auth=(self.getValue('user'), self.getValue('password')),params=para)
+            forms= response.json()
             for form in forms['results']:        
                 if form['asset_type']=='survey' and form['deployment__active']==True:
                     keyDict[form['name']]=form['uid']
 #            print('keyDict is',keyDict)
             return keyDict,response
         except:
-            print ('getformList','not able to get the forms')
+            self.iface.messageBar().pushCritical(self.tr(self.tag),self.tr("Invalid url username or password"))
             return {},response
     def importData(self,layer,selectedForm,importData=True):
         #from kobo branchQH
-        url=self.getValue('url')+'/assets/'+selectedForm
+        turl=self.getValue('url')
+        if turl:
+            url=turl+'/assets/'+selectedForm
+        else:
+            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Enter url in settings"))
         para={'format':'xml'}
         requests.packages.urllib3.disable_warnings()
-        response= requests.request('GET',url,proxies=getProxiesConf(),auth=(self.getValue('user'), self.getValue('password')),verify=False,params=para)
+        try:
+            response= requests.request('GET',url,proxies=getProxiesConf(),auth=(self.getValue('user'), self.getValue('password')),verify=False,params=para)
+        except:
+            self.iface.messageBar().pushCritical(self.tr(self.tag),self.tr("Invalid url,username or password"))
         if response.status_code==200:
             xml=response.content
             # with open('importForm.xml','w') as importForm:
@@ -705,7 +715,7 @@ class Kobo (Aggregate):
             layer.setName(self.layer_name)
             self.collectData(layer,selectedForm,importData,self.layer_name,self.version,self.geoField)
         else:
-            print("unable to connect to KOBO server")
+            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("not able to connect to server"))
     def updateLayerXML(self,layer,xml):
         geoField=''
         ns='{http://www.w3.org/2002/xforms}'
