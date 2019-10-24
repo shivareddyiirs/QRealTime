@@ -32,7 +32,7 @@ from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateR
 import six
 from six.moves import range
 from qgis.core import QgsMessageLog, Qgis
-from datetime import datetime
+import datetime
 import subprocess
 import json
 try:
