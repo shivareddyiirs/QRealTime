@@ -235,7 +235,7 @@ class QRealTime:
         self.topElement= None
         self.version=''
         try:
-            self.time=1
+            self.time=3600
             self.time=int(service.getValue('sync time'))
         except:
             print ('can not read time')
@@ -300,7 +300,6 @@ class QRealTime:
             self.service=self.dlg.getCurrentService()
             forms,response= self.service.getFormList()
             self.formID= forms[self.layer.name()]
-            self.time=int(self.service.getValue('sync time'))
             print('starting timer every'+ str(self.time)+'second')
             self.timer.start(1000*self.time)
         elif checked==False:

@@ -137,7 +137,7 @@ class Aggregate (QTableWidget):
         ["user", ''],
         ["password", ''],
         ["lastID",''],
-        ['sync time','']
+        ['sync time',3600]
         ]
     tag='ODK Aggregate'
     def __init__(self,parent,caller):

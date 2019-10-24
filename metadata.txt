@@ -10,7 +10,7 @@
 name=QRealTime
 qgisMinimumVersion=3.00
 description=This plugin connects you to ODK Server and do autoupdation of data to and from aggregate
-version=3.9.1
+version=3.9.2
 author=Shiva Reddy Koti, Prabhakar Alok Verma
 email=kotishiva@gmail.com
 
