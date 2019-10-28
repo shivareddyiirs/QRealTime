@@ -408,10 +408,7 @@ class Aggregate (QTableWidget):
 #            print("layer is not present or not valid")
 #            return
         self.updateFields(layer)
-        if importData:
-            response, remoteTable = self.getTable(xFormKey,"",topElement,version)
-        else:
-            response, remoteTable = self.getTable(xFormKey,importData,topElement,version)
+        response, remoteTable = self.getTable(xFormKey,importData,topElement,version)
         if response.status_code == 200:
             print ('before Update Layer')
             if remoteTable:
@@ -763,10 +760,11 @@ class Kobo (Aggregate):
         url='https://kc.humanitarianresponse.info/'
         print(url)
         lastSub=""
-        try:
-            lastSub=self.getValue('last Submission')
-        except:
-            print("error")
+        if not importData:
+            try:
+                lastSub=self.getValue('last Submission')
+            except:
+                print("error")
         response = requests.get(url+'/api/v1/data',auth=(self.getValue('user'),self.getValue('password')),verify=False)
         if not response.status_code == 200:
                 print (response.status_code)
@@ -778,6 +776,7 @@ class Kobo (Aggregate):
         for form in responseJSON:
             if str(form['id_string'])==XFormKey:
                 formID=str(form['id'])
+                print("found the form"+XFormKey+"with id"+formID)
         para={"query":json.dumps({"_submission_time": {"$gt": lastSub}}) }
         urlData=url+'/api/v1/data/'+formID
         response = requests.get(urlData,auth=(self.getValue('user'),self.getValue('password')),params=para,verify=False)
@@ -785,9 +784,10 @@ class Kobo (Aggregate):
         for submission in data:
             submission['ODKUUID']=submission['meta/instanceID']
             subTime=submission['_submission_time']
-            subTime_datetime=datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
+            subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
             subTimeList.append(subTime_datetime)
             for key in list(submission):
+                print(key)
                 if key == self.geoField:
                     print (self.geoField)
                     continue
@@ -795,11 +795,11 @@ class Kobo (Aggregate):
                     submission.pop(key)
                 else:
                     if self.fields[key]=="binary":
-                        submission[key]=url+'/attachment/original?media_file='+self.getValue('user')+'/attachments/'+submission[item]
+                        submission[key]=url+'/attachment/original?media_file='+self.getValue('user')+'/attachments/'+submission[key]
             table.append(submission)
         if subTimeList:
             lastSubmission=max(subTimeList)
-            lastSubmission=datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
+            lastSubmission=datetime.datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
             self.getValue('last Submission',lastSubmission)
         return response, table
     def getFieldsModel(self,currentLayer):
