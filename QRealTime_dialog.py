@@ -765,7 +765,8 @@ class Kobo (Aggregate):
                 lastSub=self.getValue('last Submission')
             except:
                 print("error")
-        response = requests.get(url+'/api/v1/data',auth=(self.getValue('user'),self.getValue('password')),verify=False)
+        requrl=url+'/api/v1/data'
+        response = requests.get(requrl,auth=(self.getValue('user'),self.getValue('password')),verify=False)
         if not response.status_code == 200:
                 print (response.status_code)
         responseJSON=json.loads(response.text)
