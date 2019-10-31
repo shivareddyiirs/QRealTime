@@ -33,7 +33,7 @@ You can create free account in <a href="https://www.kobotoolbox.org/">KoboToolbo
 
 
 <br/>
-Right click over any existing layer --> QRealTIme and choose desired option: 
+Right click over any existing layer --> QRealTime and choose desired option: 
 <br/>Make Online (To Create new form), import (to import data of existing form), sync(to automatically update your layer)
 <br/>If you want to import data from already existing form (created without using our plugin) do ensure that the name of the geometry field is 'GEOMETRY','location' or 'gps. Other geometry field names are currently not supported.
 <br/>
