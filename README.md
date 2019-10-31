@@ -4,8 +4,8 @@
 QRealTime Plugin allows you to:
 <ul>
 <li> Create new survey form directly from GIS layers in QGIS </li>
-<li> Synchronise data from ODK Aggregate server </li>
-<li> Import data from ODK Aggregate server </li>
+<li> Synchronise data from ODK Aggregate server or KoboToobox server</li>
+<li> Import data from  server </li>
 </ul>
 
 <h2>Getting Started</h2>
@@ -24,11 +24,10 @@ Installation steps:
 <h3>Configuration:</h3>
 
 From the main menu choose **Plugins --> QRealTime --> QRealTime Setting**
+<br/> Here you have two tabs one for Aggregate and another for KoboToolbox
+Choose one of the tab and Enter url (required). Other fields are optional.
 <br/>
-Enter ODK aggregate url (required). Other fields are optional. _Sync time_ is also required in case of data sync.
-<br/>
-If you don't have ODK Aggregate server access, you can use demo server https://opendatakit.appspot.com or if you want to install your own aggregate server,  <a href="http://docs.opendatakit.org/aggregate-guide/"> then visit </a>
-
+You can create free account in <a href="https://www.kobotoolbox.org/">KoboToolbox server </a> and if you want to install your own aggregate server, <a href="http://docs.opendatakit.org/aggregate-guide/"> then visit </a>
 <br/>
 <img src="https://user-images.githubusercontent.com/5653512/45092573-7a69c280-b133-11e8-9b01-6b8c9f48a8c6.png" alt="settings">
 
