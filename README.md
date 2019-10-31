@@ -19,16 +19,6 @@ Installation steps:
 <ol>
 <li>Open Plugin Manager and search for QRealTime plugin and install it.</li>
 <li>And restart QGIS so that changes in environment take effect.</li>
-<li>If after restarting QGIS still there is problem related to PyXForm then manually install pyxform library to python3 by using following:
-<br/> 3a. Open command prompt/terminal and go to installation directory of QGIS.
-<br/> 3b. Run <code>osgeo4w.bat</code>
-<br/> 3c. Run <code>py3_env</code>
-<br/> 3d. Run following:
-<br/> &nbsp;&nbsp; - Windows: <code>python3 -m pip install pyxform --user</code>.
-<br/> &nbsp;&nbsp; - MacOS: <code>sudo pip3 install pyxform</code>
-<br/> Note: If <code>pip</code> in not recognised (as in the case of QGIS 3.4) use <code>easy_install</code> instead.
-<br/> 3e. And restart QGIS so that changes in environment take effect.
-</li>
 </ol>
 
 <h3>Configuration:</h3>
@@ -62,6 +52,23 @@ The following video demonstrates, how to use the QRealTime Plugin:
 <br/>
 <iframe width="560" height="315" src="https://www.youtube.com/embed/zmr2CC5G-m4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 <br/>
+
+Troubleshooting:
+<ol>
+<li>If after restarting QGIS still there is problem related to PyXForm then manually install pyxform library to python3 by using following:
+  <ol>
+<li>Open command prompt/terminal and go to installation directory of QGIS</li>
+<li>Run <code>osgeo4w.bat</code></li>
+    <li>Run <code>py3_env</code></li>
+<li>Run following:
+  <ol>
+<li>Windows: <code>python3 -m pip install pyxform --user</code></li>
+<li>MacOS: <code>sudo pip3 install pyxform</code></li>
+    </ol>
+  </li>
+ <li>And restart QGIS so that changes in environment take effect</li>
+</li>
+ </ol>
 <h2> Please cite us: </h2>
 <a href="https://zenodo.org/badge/latestdoi/99995529"><img src="https://zenodo.org/badge/99995529.svg" alt="DOI"></a></li>
 
