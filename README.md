@@ -29,7 +29,7 @@ Choose one of the tab and Enter url (required). Other fields are optional.
 <br/>
 You can create free account in <a href="https://www.kobotoolbox.org/">KoboToolbox server </a> and if you want to install your own aggregate server, <a href="http://docs.opendatakit.org/aggregate-guide/"> then visit </a>
 <br/>
-<img src="https://user-images.githubusercontent.com/5653512/45092573-7a69c280-b133-11e8-9b01-6b8c9f48a8c6.png" alt="settings">
+<img src="https://user-images.githubusercontent.com/5653512/67921427-aa90e200-fbcd-11e9-874b-fc1fae692fe0.png" alt="settings">
 
 
 <br/>
