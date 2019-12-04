@@ -25,7 +25,6 @@
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMenu,QAction, QFileDialog
-# import for XML reading writing
 # Import the code for the dialog
 from .QRealTime_dialog import QRealTimeDialog
 from .QRealTime_dialog_import import ImportData
@@ -39,29 +38,15 @@ from qgis.PyQt.QtCore import QTimer
 import datetime
 import requests
 import xml.etree.ElementTree as ET
-import subprocess
+import site
 from qgis.core import QgsMessageLog, Qgis
+site.addsitedir(os.path.dirname(__file__))
+from pyxform.builder import create_survey_element_from_dict
 tag='QRealTime'
 def print(text,opt=''):
     """ to redirect print to MessageLog"""
     QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
-try:
-	from pyxform.builder import create_survey_element_from_dict
-	print('package already installed')
-except ImportError:
-    try:
-        subprocess.call(['python3', '-m', 'pip', 'install','pyxform'])
-        from pyxform.builder import create_survey_element_from_dict
-        print('package is installed after python3')
-    except:
-        subprocess.call(['python3', '-m', 'pip', 'install','pyxform','--user'])
-        print ("after python3 --user call")
-        try:
-            from pyxform.builder import create_survey_element_from_dict
-        except:
-            print('not able to install pyxform, install mannually')
-import six
-
+print('package already installed')
 def getProxiesConf():
     s = QSettings() #getting proxy from qgis options settings
     proxyEnabled = s.value("proxy/proxyEnabled", "")
