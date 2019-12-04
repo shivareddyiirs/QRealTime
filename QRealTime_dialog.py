@@ -33,23 +33,10 @@ import six
 from six.moves import range
 from qgis.core import QgsMessageLog, Qgis
 import datetime
-import subprocess
+import site
 import json
-try:
-        from pyxform.builder import create_survey_element_from_dict
-        print('package already installed')
-except ImportError:
-    try:
-        subprocess.call(['python3', '-m', 'pip', 'install','pyxform'])
-        from pyxform.builder import create_survey_element_from_dict
-        print('package is installed after python3')
-    except:
-        subprocess.call(['python3', '-m', 'pip', 'install','pyxform','--user'])
-        print ("after python3 --user call")
-        try:
-            from pyxform.builder import create_survey_element_from_dict
-        except:
-            print('not able to install pyxform, install mannually') 
+site.addsitedir(os.path.dirname(__file__))
+from pyxform.builder import create_survey_element_from_dict
 debug=True
 tag="QRealTime"
 def print(text,opt=None):
