@@ -37,10 +37,7 @@ import json
 from qgis.PyQt.QtCore import QTimer
 import requests
 import xml.etree.ElementTree as ET
-import site
 from qgis.core import QgsMessageLog, Qgis
-site.addsitedir(os.path.dirname(__file__))
-from pyxform.builder import create_survey_element_from_dict
 tag='QRealTime'
 def print(text,opt=''):
     """ to redirect print to MessageLog"""
