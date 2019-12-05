@@ -123,8 +123,8 @@ class aggregate (QTableWidget):
         print('session url is test', url)
         value= """
   {
-    "email": "kotishiva@gmail.com",
-    "password": "Shivram@9"
+    "email": "",
+    "password": ""
   }
 """
         print('payload is',value)
