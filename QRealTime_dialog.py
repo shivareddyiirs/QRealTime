@@ -21,10 +21,11 @@
  ***************************************************************************/
 """
 import os
+from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
 from PyQt5 import QtGui, uic
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget,QTableWidget,QTableWidgetItem
-from PyQt5.QtCore import Qt, QSettings, QSize,QVariant
+from PyQt5.QtCore import Qt, QSettings, QSize,QVariant, QTranslator, qVersion, QCoreApplication
 import xml.etree.ElementTree as ET
 import requests
 from qgis.gui import QgsMessageBar
@@ -118,20 +119,32 @@ class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
         return self.tabServices.currentWidget().children()[0]
 
 class Aggregate (QTableWidget):
-    parameters = [
-        ["id","Aggregate"],
-        ["url",''],
-        ["user", ''],
-        ["password", ''],
-        ["lastID",''],
-        ['sync time',3600]
-        ]
+    def tr(self, message):
+        """Get the translation for a string using Qt translation API.
+
+            We implement this ourselves since we do not inherit QObject.
+
+            :param message: String for translation.
+            :type message: str, QString
+
+            :returns: Translated version of message.
+            :rtype: QString
+        """
+        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
+        return QCoreApplication.translate('QRealTime', message)
     tag='ODK Aggregate'
     def __init__(self,parent,caller):
         super(Aggregate, self).__init__(parent)
         self.parent = parent
         self.iface=caller.iface
         self.resize(QSize(310,260))
+        self.parameters =[
+        ["id","Aggregate"],
+        ["url",''],
+        [self.tr("user"), ''],
+        [self.tr("password"), ''],
+        [self.tr("lastID"),''],
+        [self.tr('sync time'),3600]]
         self.setColumnCount(2)
         self.setColumnWidth(0, 152)
         self.setColumnWidth(1, 152)
@@ -160,7 +173,7 @@ class Aggregate (QTableWidget):
         return self.service_id
      
     def getAuth(self):
-        auth = requests.auth.HTTPDigestAuth(self.getValue('user'),self.getValue('password'))
+        auth = requests.auth.HTTPDigestAuth(self.getValue(self.tr('user')),self.getValue(self.tr('password')))
         return auth
 
     def setup(self):
@@ -220,12 +233,12 @@ class Aggregate (QTableWidget):
         if url:
             furl=url+'//formList'
         else:
-            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Enter url in settings"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
             return {},None
         try:
             response= requests.request(method,furl,auth=self.getAuth(),verify=False)
         except:
-            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Not able to connect to server"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Not able to connect to server"))
             return {},None
         if response.status_code==200:
             root=ET.fromstring(response.content)
@@ -237,12 +250,12 @@ class Aggregate (QTableWidget):
         if url:
             furl=url+'//formXml?formId='+selectedForm
         else:
-            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Enter url in settings"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
             return
         try:
             response= requests.request('GET',furl,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
         except:
-            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Not able to connect to server"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Not able to connect to server"))
             return
         if response.status_code==200:
             # with open('importForm.xml','w') as importForm:
@@ -251,7 +264,7 @@ class Aggregate (QTableWidget):
             layer.setName(self.formKey)
             self.collectData(layer,self.formKey,importData,self.topElement,self.version,self.geoField)
         else:
-            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Not able to coleect data from server"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Not able to collect data from server"))
     def getFieldsModel(self,currentLayer):
         fieldsModel = []
         g_type= currentLayer.geometryType()
@@ -381,12 +394,12 @@ class Aggregate (QTableWidget):
         files = {'form_def_file':file}
         response = requests.request(method, url,files = files, proxies = getProxiesConf(),auth=self.getAuth(),verify=False )
         if response.status_code== 201:
-            self.iface.messageBar().pushSuccess(self.tr(self.tag),
+            self.iface.messageBar().pushSuccess(self.tag,
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
-            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Form exist and can not be updated"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Form exist and can not be updated"))
         else:
-            self.iface.messageBar().pushCritical(self.tr(self.tag),self.tr("Form is not sent "))
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Form is not sent "))
         file.close()
         return response
         
@@ -402,7 +415,7 @@ class Aggregate (QTableWidget):
                 print ('table have some data')
                 self.updateLayer(layer,remoteTable,geoField)
         else:
-            self.iface.messageBar().pushCritical(self.tr(self.tag),self.tr("Not able to collect data from Aggregate"))
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Not able to collect data from Aggregate"))
     
     def updateFields(self,layer,text='ODKUUID',q_type=QVariant.String,config={}):
         flag=True
@@ -477,7 +490,7 @@ class Aggregate (QTableWidget):
                     print('unable to create',e)
                 
         if fieldError:
-            self.iface.messageBar().pushWarning(self.tr(self.tag), self.tr("Can't find '%s' field") % fieldError)
+            self.iface.messageBar().pushWarning(self.tag, self.tr("Can't find '%s' field") % fieldError)
         
         with edit(layer):
             layer.addFeatures(newQgisFeatures)
@@ -516,7 +529,7 @@ class Aggregate (QTableWidget):
         if turl:
             url=turl+'/view/submissionList?formId='+XFormKey
         else:
-            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Enter url in settings"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
             return None,table
         method='GET'
         lastID=""
@@ -525,7 +538,7 @@ class Aggregate (QTableWidget):
         try:
             response = requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
         except:
-            self.iface.messageBar().pushCritical(self.tr(self.tag),self.tr("Not able to connect to server"))
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Not able to connect to server"))
             return response, table
         if not response.status_code == 200:
                 return response, table
@@ -648,12 +661,12 @@ class Kobo (Aggregate):
         #shares submissions publicly:
         response3 = requests.post(urlShare, json=permissions, auth=(self.getValue('user'),self.getValue('password')),headers=headers)
         if response.status_code== 201 or response.status_code == 200:
-            self.iface.messageBar().pushSuccess(self.tr(self.tag),
+            self.iface.messageBar().pushSuccess(self.tag,
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
-            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Form exist and can not be updated"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Form exist and can not be updated"))
         else:
-            self.iface.messageBar().pushCritical(self.tr(self.tag),self.tr(str(response.status_code)))
+            self.iface.messageBar().pushCritical(self.tag,self.tr(str(response.status_code)))
         return response
     def getFormList(self):
         user=self.getValue('user')
@@ -661,7 +674,7 @@ class Kobo (Aggregate):
         if turl:
             url=turl+'/assets/'
         else:
-            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Enter url in settings"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
             return {},None
 #        print (url)
         para={'format':'json'}
@@ -676,7 +689,7 @@ class Kobo (Aggregate):
 #            print('keyDict is',keyDict)
             return keyDict,response
         except:
-            self.iface.messageBar().pushCritical(self.tr(self.tag),self.tr("Invalid url username or password"))
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url username or password"))
             return {},response
     def importData(self,layer,selectedForm,importData=True):
         #from kobo branchQH
@@ -684,13 +697,13 @@ class Kobo (Aggregate):
         if turl:
             url=turl+'/assets/'+selectedForm
         else:
-            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("Enter url in settings"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
         para={'format':'xml'}
         requests.packages.urllib3.disable_warnings()
         try:
             response= requests.request('GET',url,proxies=getProxiesConf(),auth=(self.getValue('user'), self.getValue('password')),verify=False,params=para)
         except:
-            self.iface.messageBar().pushCritical(self.tr(self.tag),self.tr("Invalid url,username or password"))
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url,username or password"))
         if response.status_code==200:
             xml=response.content
             # with open('importForm.xml','w') as importForm:
@@ -699,7 +712,7 @@ class Kobo (Aggregate):
             layer.setName(self.layer_name)
             self.collectData(layer,selectedForm,importData,self.layer_name,self.version,self.geoField)
         else:
-            self.iface.messageBar().pushWarning(self.tr(self.tag),self.tr("not able to connect to server"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("not able to connect to server"))
     def updateLayerXML(self,layer,xml):
         geoField=''
         ns='{http://www.w3.org/2002/xforms}'
