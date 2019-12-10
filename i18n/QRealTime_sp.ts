@@ -66,52 +66,52 @@
 <context>
     <name>Kobo</name>
     <message>
-        <location filename="../QRealTime_dialog.py" line="681"/>
+        <location filename="../QRealTime_dialog.py" line="673"/>
         <source>Layer is online(</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="684"/>
+        <location filename="../QRealTime_dialog.py" line="676"/>
         <source>Form exist and can not be updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="717"/>
+        <location filename="../QRealTime_dialog.py" line="709"/>
         <source>Enter url in settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="709"/>
+        <location filename="../QRealTime_dialog.py" line="701"/>
         <source>Invalid url username or password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="723"/>
+        <location filename="../QRealTime_dialog.py" line="715"/>
         <source>Invalid url,username or password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="732"/>
+        <location filename="../QRealTime_dialog.py" line="724"/>
         <source>not able to connect to server</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="632"/>
+        <location filename="../QRealTime_dialog.py" line="624"/>
         <source>user</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="633"/>
+        <location filename="../QRealTime_dialog.py" line="625"/>
         <source>password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="634"/>
+        <location filename="../QRealTime_dialog.py" line="626"/>
         <source>last Submission</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="635"/>
+        <location filename="../QRealTime_dialog.py" line="627"/>
         <source>sync time</source>
         <translation type="unfinished"></translation>
     </message>
@@ -141,6 +141,11 @@
     <message>
         <location filename="../QRealTime.py" line="222"/>
         <source>Make Online</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../QRealTime.py" line="236"/>
+        <source>sync time</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

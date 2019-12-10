@@ -610,14 +610,6 @@ class Aggregate (QTableWidget):
             print ('not able to fetch',e)
             return response,table
 class Kobo (Aggregate):
-    parameters = [
-        ["id","Kobo"],
-        ["url",'https://kobo.humanitarianresponse.info/'],
-        ["user", ''],
-        ["password", ''],
-        ["last Submission",''],
-        ['sync time','']
-        ]
     tag="KoboToobox"
     def __init__(self,parent,caller):
         super(Kobo, self).__init__(parent,caller)

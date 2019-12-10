@@ -232,7 +232,7 @@ class QRealTime:
         self.version=''
         try:
             self.time=3600
-            self.time=int(service.getValue('sync time'))
+            self.time=int(service.getValue(self.tr('sync time')))
         except:
             print ('can not read time')
         self.timer=QTimer()
