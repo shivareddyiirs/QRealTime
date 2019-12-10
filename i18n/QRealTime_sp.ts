@@ -3,62 +3,62 @@
 <context>
     <name>Aggregate</name>
     <message>
-        <location filename="../QRealTime_dialog.py" line="535"/>
+        <location filename="../QRealTime_dialog.py" line="537"/>
         <source>Enter url in settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="545"/>
+        <location filename="../QRealTime_dialog.py" line="547"/>
         <source>Not able to connect to server</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="400"/>
+        <location filename="../QRealTime_dialog.py" line="402"/>
         <source>Layer is online(</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="403"/>
+        <location filename="../QRealTime_dialog.py" line="405"/>
         <source>Form exist and can not be updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="405"/>
+        <location filename="../QRealTime_dialog.py" line="407"/>
         <source>Form is not sent </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="421"/>
+        <location filename="../QRealTime_dialog.py" line="423"/>
         <source>Not able to collect data from Aggregate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="496"/>
+        <location filename="../QRealTime_dialog.py" line="498"/>
         <source>Can&apos;t find &apos;%s&apos; field</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="176"/>
+        <location filename="../QRealTime_dialog.py" line="178"/>
         <source>user</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="176"/>
+        <location filename="../QRealTime_dialog.py" line="178"/>
         <source>password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="146"/>
+        <location filename="../QRealTime_dialog.py" line="171"/>
         <source>lastID</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="147"/>
+        <location filename="../QRealTime_dialog.py" line="172"/>
         <source>sync time</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="268"/>
+        <location filename="../QRealTime_dialog.py" line="270"/>
         <source>Not able to collect data from server</source>
         <translation type="unfinished"></translation>
     </message>
@@ -66,33 +66,53 @@
 <context>
     <name>Kobo</name>
     <message>
-        <location filename="../QRealTime_dialog.py" line="670"/>
+        <location filename="../QRealTime_dialog.py" line="681"/>
         <source>Layer is online(</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="673"/>
+        <location filename="../QRealTime_dialog.py" line="684"/>
         <source>Form exist and can not be updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="706"/>
+        <location filename="../QRealTime_dialog.py" line="717"/>
         <source>Enter url in settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="698"/>
+        <location filename="../QRealTime_dialog.py" line="709"/>
         <source>Invalid url username or password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="712"/>
+        <location filename="../QRealTime_dialog.py" line="723"/>
         <source>Invalid url,username or password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="721"/>
+        <location filename="../QRealTime_dialog.py" line="732"/>
         <source>not able to connect to server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../QRealTime_dialog.py" line="632"/>
+        <source>user</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../QRealTime_dialog.py" line="633"/>
+        <source>password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../QRealTime_dialog.py" line="634"/>
+        <source>last Submission</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../QRealTime_dialog.py" line="635"/>
+        <source>sync time</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

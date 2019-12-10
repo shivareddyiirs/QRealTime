@@ -138,13 +138,7 @@ class Aggregate (QTableWidget):
         self.parent = parent
         self.iface=caller.iface
         self.resize(QSize(310,260))
-        self.parameters =[
-        ["id","Aggregate"],
-        ["url",''],
-        [self.tr("user"), ''],
-        [self.tr("password"), ''],
-        [self.tr("lastID"),''],
-        [self.tr('sync time'),3600]]
+        self.setParameters()
         self.setColumnCount(2)
         self.setColumnWidth(0, 152)
         self.setColumnWidth(1, 152)
@@ -168,7 +162,15 @@ class Aggregate (QTableWidget):
                 S.setValue("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()),parameter[1])
             else:
                 self.setItem(row,1,QTableWidgetItem (valueFromSettings))
-
+    def setParameters(self):
+        self.parameters =[
+        ["id","Aggregate"],
+        ["url",''],
+        [self.tr("user"), ''],
+        [self.tr("password"), ''],
+        [self.tr("lastID"),''],
+        [self.tr('sync time'),3600]
+        ]
     def getServiceName(self):
         return self.service_id
      
@@ -619,6 +621,15 @@ class Kobo (Aggregate):
     tag="KoboToobox"
     def __init__(self,parent,caller):
         super(Kobo, self).__init__(parent,caller)
+    def setParameters(self):
+        self.parameters =[
+        ["id","Kobo"],
+        ["url",'https://kobo.humanitarianresponse.info/'],
+        [self.tr("user"), ''],
+        [self.tr("password"), ''],
+        [self.tr("last Submission"),''],
+        [self.tr('sync time'),'']
+        ]
     def prepareSendForm(self,layer):
         self.updateFields(layer)
         fieldDict,choicesList= self.getFieldsModel(layer)
