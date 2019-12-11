@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS><TS version="2.0">
+<!DOCTYPE TS><TS version="2.0" language="es" sourcelanguage="en">
 <context>
     <name>Aggregate</name>
     <message>
         <location filename="../QRealTime_dialog.py" line="537"/>
         <source>Enter url in settings</source>
-        <translation>Ingrese la url en la configuraci&oacute;n</translation>
+        <translation>Ingrese la url en la configuracin</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="547"/>
@@ -15,17 +15,17 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="402"/>
         <source>Layer is online(</source>
-        <translation>Capa esta en l&iacute;nea</translation>
+        <translation>Capa esta en lnea</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="405"/>
         <source>Form exists and can not be updated</source>
-        <translation>El formulario existe y no puede ser actualizado</translation>
+        <translation type="obsolete">El formulario existe y no puede ser actualizado</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="407"/>
         <source>Form is not sent </source>
-        <translation>Formulario no enviado</translation>
+        <translation type="obsolete">Formulario no enviado</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="423"/>
@@ -45,7 +45,7 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="178"/>
         <source>password</source>
-        <translation>contrase&ntilde;a</translation>
+        <translation>contrasea</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="171"/>
@@ -55,12 +55,22 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="172"/>
         <source>sync time</source>
-        <translation type="unfinished">tiempo de sincronizaci&oacute;n</translation>
+        <translation>tiempo de sincronizacin</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="270"/>
         <source>Not able to collect data from server</source>
         <translation>No se puede colectar datos del servidor</translation>
+    </message>
+    <message>
+        <location filename="../QRealTime_dialog.py" line="405"/>
+        <source>Form exist and can not be updated</source>
+        <translation>El formulario existe y no puede ser actualizado</translation>
+    </message>
+    <message>
+        <location filename="../QRealTime_dialog.py" line="407"/>
+        <source>Form is not sent</source>
+        <translation></translation>
     </message>
 </context>
 <context>
@@ -68,27 +78,27 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="673"/>
         <source>Layer is online(</source>
-        <translation>Capa esta en l&iacute;nea</translation>
+        <translation>Capa esta en lnea</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="676"/>
         <source>Form exists and can not be updated</source>
-        <translation>El formulario existe y no puede ser actualizado</translation>
+        <translation type="unfinished">El formulario existe y no puede ser actualizado</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="709"/>
         <source>Enter url in settings</source>
-        <translation>Ingrese la url en la configuraci&oacute;n</translation>
+        <translation>Ingrese la url en la configuracin</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="701"/>
         <source>Invalid url username or password</source>
-        <translation>Url, usuario o contrase&ntilde;a inv&aacute;lido</translation>
+        <translation>Url, usuario o contrasea invlido</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="715"/>
         <source>Invalid url,username or password</source>
-        <translation>Url, usuario o contrase&ntilde;a inv&aacute;lido</translation>
+        <translation>Url, usuario o contrasea invlido</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="724"/>
@@ -103,35 +113,35 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="625"/>
         <source>password</source>
-        <translation>contrase&ntilde;a</translation>
+        <translation>contrasea</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="626"/>
         <source>last Submission</source>
-        <translation>&Uacute;ltimo env&iacute;o</translation>
+        <translation>ltimo envo</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="627"/>
         <source>sync time</source>
-        <translation>tiempo de sincronizaci&oacute;n</translation>
+        <translation>tiempo de sincronizacin</translation>
+    </message>
+    <message>
+        <location filename="../QRealTime_dialog.py" line="676"/>
+        <source>Form exist and can not be updated</source>
+        <translation type="obsolete">El formulario existe y no puede ser actualizado</translation>
     </message>
 </context>
 <context>
     <name>QRealTime</name>
     <message>
-        <location filename="../QRealTime.py" line="96"/>
-        <source>&amp;QRealTime</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../QRealTime.py" line="197"/>
         <source>QRealTime Setting</source>
-        <translation>Configuraci&oacute;n de QRealTime</translation>
+        <translation>Configuracin de QRealTime</translation>
     </message>
     <message>
         <location filename="../QRealTime.py" line="204"/>
         <source>sync</source>
-        <translation>sincronizaci&oacute;n</translation>
+        <translation>sincronizacin</translation>
     </message>
     <message>
         <location filename="../QRealTime.py" line="215"/>
@@ -146,7 +156,7 @@
     <message>
         <location filename="../QRealTime.py" line="236"/>
         <source>sync time</source>
-        <translation>tiempo de sincronizaci&oacute;n</translation>
+        <translation>tiempo de sincronizacin</translation>
     </message>
 </context>
 <context>
@@ -169,7 +179,7 @@
     <message>
         <location filename="../QRealTime_dialog_base.ui" line="73"/>
         <source>Password</source>
-        <translation>contrase&ntilde;a</translation>
+        <translation>contrasea</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog_base.ui" line="85"/>
@@ -187,7 +197,7 @@
     <message>
         <location filename="../QRealTime_dialog_services.ui" line="14"/>
         <source>QRealTime Setting</source>
-        <translation>Configuraci&oacute;n de QRealTime</translation>
+        <translation>Configuracin de QRealTime</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog_services.ui" line="51"/>
