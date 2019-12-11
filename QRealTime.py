@@ -93,10 +93,10 @@ class QRealTime:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&QRealTime')
+        self.menu = 'QRealTime'
         # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'QRealTime')
-        self.toolbar.setObjectName(u'QRealTime')
+        self.toolbar = self.iface.addToolBar('QRealTime')
+        self.toolbar.setObjectName('QRealTime')
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):

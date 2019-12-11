@@ -401,7 +401,7 @@ class Aggregate (QTableWidget):
         elif response.status_code == 409:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Form exist and can not be updated"))
         else:
-            self.iface.messageBar().pushCritical(self.tag,self.tr("Form is not sent "))
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Form is not sent"))
         file.close()
         return response
         
@@ -667,7 +667,7 @@ class Kobo (Aggregate):
             self.iface.messageBar().pushSuccess(self.tag,
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
-            self.iface.messageBar().pushWarning(self.tag,self.tr("Form exist and can not be updated"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Form exists and can not be updated"))
         else:
             self.iface.messageBar().pushCritical(self.tag,self.tr(str(response.status_code)))
         return response
