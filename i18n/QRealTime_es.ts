@@ -64,7 +64,7 @@
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="379"/>
-        <source>Survey form can be created, check layer name</source>
+        <source>Survey form can&apos;t be created, check layer name</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

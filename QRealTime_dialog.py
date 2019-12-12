@@ -374,7 +374,7 @@ class Aggregate (QTableWidget):
             os.chdir(os.path.expanduser('~'))
             self.sendForm(layer.name(),xml)
         except:
-            self.iface.messageBar().pushCritical(self.tag,self.tr("Survey form can be created, check layer name"))
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Survey form can't be created, check layer name"))
     def sendForm(self,xForm_id,xml):
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
