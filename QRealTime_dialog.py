@@ -131,7 +131,7 @@ class Aggregate (QTableWidget):
             :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate('QRealTime', message)
+        return QCoreApplication.translate(self.__class__.__name__, message)
     tag='ODK Aggregate'
     def __init__(self,parent,caller):
         super(Aggregate, self).__init__(parent)
@@ -369,9 +369,12 @@ class Aggregate (QTableWidget):
         surveyDict= {"name":layer.name(),"title":layer.name(),'VERSION':version,"instance_name": 'uuid()',"submission_url": '',
         "default_language":'default','id_string':layer.name(),'type':'survey','children':fieldDict }
         survey=create_survey_element_from_dict(surveyDict)
-        xml=survey.to_xml(validate=None, warnings='warnings')
-        os.chdir(os.path.expanduser('~'))
-        self.sendForm(layer.name(),xml)  
+        try:
+            xml=survey.to_xml(validate=None, warnings='warnings')
+            os.chdir(os.path.expanduser('~'))
+            self.sendForm(layer.name(),xml)
+        except:
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Survey form can be created, check layer name"))
     def sendForm(self,xForm_id,xml):
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
@@ -399,7 +402,7 @@ class Aggregate (QTableWidget):
             self.iface.messageBar().pushSuccess(self.tag,
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
         elif response.status_code == 409:
-            self.iface.messageBar().pushWarning(self.tag,self.tr("Form exist and can not be updated"))
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Form exists and can not be updated"))
         else:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Form is not sent"))
         file.close()
@@ -638,9 +641,8 @@ class Kobo (Aggregate):
             if formList[item]==xForm_id:
                 form=xForm_id
                 xForm_id=item
-        if response.status_code != requests.codes.ok:
-            print(status)
-            return status
+        if not response:
+            return response
         message =''
         if form:
             message= 'Form Updated'
