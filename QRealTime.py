@@ -185,47 +185,38 @@ class QRealTime:
             self.iface.addPluginToMenu(
                 self.menu,
                 action)
-
+        self.actions.append(action)
+        return action
+    
+    def add_layer_action( self,icon_path,text,callback,icon_enabled=True,add_to_vLayer=True,enabled_flag=True,parent=None):
+        icon = QIcon(icon_path)
+        if icon_enabled:
+            action = QAction(icon, text,parent)
+        else:
+            action = QAction(text,parent)
+        action.triggered.connect(callback)
+        action.setEnabled(enabled_flag)
+        if add_to_vLayer:
+            self.iface.addCustomActionForLayerType(action,'QRealTime',
+                                                   QgsMapLayer.VectorLayer,True)
         self.actions.append(action)
 
         return action
-
+    
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = os.path.join(self.plugin_dir,'icon.png')
-        self.add_action(
-            icon_path,
-            text=self.tr(u'QRealTime Setting'),
-            callback=self.run,
-            parent=self.iface.mainWindow())
-        self.ODKMenu = QMenu('QRealTime')
-        icon = QIcon(icon_path)
-        self.sync= QAction(self.tr(u'sync'),self.ODKMenu)
+        self.add_action(icon_path,text=self.tr(u'QRealTime Setting'),callback=self.run,parent=self.iface.mainWindow())
+        """add sync action"""
+        self.sync= self.add_layer_action(icon_path,self.tr(u'sync'),self.download,False)
+	# make sync action checkable and default to unchecked
         self.sync.setCheckable(True)
         self.sync.setChecked(False)
-        self.sync.triggered.connect(self.download)
-        self.sync.setChecked(False)
-        self.iface.addCustomActionForLayerType(
-                self.sync,
-                'QRealTime',
-                QgsMapLayer.VectorLayer,
-                True)
-
-        self.Import = QAction(icon,self.tr(u'import'),self.ODKMenu)
-        self.Import.triggered.connect(self.importData)
-        self.iface.addCustomActionForLayerType(
-                self.Import,
-                'QRealTime',
-                QgsMapLayer.VectorLayer,
-                True)
-        self.makeOnline=QAction(icon,self.tr(u'Make Online'),self.ODKMenu)
-        self.makeOnline.triggered.connect(self.sendForm)
-        self.iface.addCustomActionForLayerType(
-            self.makeOnline,
-            'QRealTime',
-            QgsMapLayer.VectorLayer,
-            True)
+        """add import action """
+        self.Import=self.add_layer_action(icon_path,self.tr(u'import'),self.importData)
+        """add makeonline action """
+        self.makeOnline=self.add_layer_action(icon_path,self.tr(u'Make Online'),self.sendForm)
         service=self.dlg.getCurrentService()
         self.service=service
         self.topElement= None
@@ -254,7 +245,6 @@ class QRealTime:
         self.iface.removeCustomActionForLayerType(self.makeOnline)
         self.iface.removeCustomActionForLayerType(self.Import)
         del self.toolbar
-
 
     def run(self):
         """Run method that performs all the real work"""
@@ -289,7 +279,8 @@ class QRealTime:
 #        get the fields model like name , widget type, options etc.
         layer=self.getLayer()
         service=self.dlg.getCurrentService()
-        service.prepareSendForm(layer) 
+        service.prepareSendForm(layer)
+        
     def download(self,checked=False):
         if checked==True:
             self.layer= self.getLayer()
