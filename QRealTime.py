@@ -239,11 +239,9 @@ class QRealTime:
             self.iface.removePluginMenu(
                 'QRealTime',
                 action)
+            self.iface.removeCustomActionForLayerType(action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
-        self.iface.removeCustomActionForLayerType(self.sync)
-        self.iface.removeCustomActionForLayerType(self.makeOnline)
-        self.iface.removeCustomActionForLayerType(self.Import)
         del self.toolbar
 
     def run(self):
