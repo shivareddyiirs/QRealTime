@@ -3,8 +3,8 @@ import re
 import codecs
 import json
 import copy
-import unicodecsv as csv
-import xlrd
+#import unicodecsv as csv
+#import xlrd
 import os
 
 try:
