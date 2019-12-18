@@ -702,7 +702,7 @@ class Kobo (Aggregate):
             return keyDict,response
         except:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url username or password"))
-            return None,response
+            return None,None
     def importData(self,layer,selectedForm,importData=True):
         #from kobo branchQH
         user=self.getValue(self.tr("user"))
