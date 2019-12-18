@@ -236,17 +236,21 @@ class Aggregate (QTableWidget):
             furl=url+'//formList'
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
-            return {},None
+            return None,None
         try:
-            response= requests.request(method,furl,auth=self.getAuth(),verify=False)
+            response= requests.request(method,furl,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
         except:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Not able to connect to server"))
-            return {},None
-        if response.status_code==200:
-            root=ET.fromstring(response.content)
-            keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
-            forms= {key:key for key in keylist}
-            return forms,response
+            return None,None
+        if response:
+            try:
+                root=ET.fromstring(response.content)
+                keylist=[form.attrib['url'].split('=')[1] for form in root.findall('form')]
+                forms= {key:key for key in keylist}
+                return forms,response
+            except:
+                self.iface.messageBar().pushWarning(self.tag,self.tr("Not able to parse form list"))
+        return None,None
     def importData(self,layer,selectedForm,importData):
         url=self.getValue('url')
         if url:
@@ -379,9 +383,9 @@ class Aggregate (QTableWidget):
     def sendForm(self,xForm_id,xml):
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
+        if not response or not formlist:
+            return
         form_key = xForm_id in formList
-        if response.status_code != requests.codes.ok:
-            return response
         message =''
         if form_key:
             message= 'Form Updated'
@@ -637,13 +641,13 @@ class Kobo (Aggregate):
 
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
+        if not response or not formList:
+            return
         form=''
         for item in formList:
             if formList[item]==xForm_id:
                 form=xForm_id
                 xForm_id=item
-        if not response:
-            return response
         message =''
         if form:
             message= 'Form Updated'
@@ -681,13 +685,13 @@ class Kobo (Aggregate):
             url=turl+'/assets/'
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
-            return {},None
+            return None,None
 #        print (url)
         para={'format':'json'}
         keyDict={}
         questions=[]
         try:
-            response= requests.get(url,auth=(self.getValue('user'), self.getValue('password')),params=para)
+            response= requests.get(url,proxies=getProxiesConf(),auth=(self.getValue('user'), self.getValue('password')),params=para)
             forms= response.json()
             for form in forms['results']:        
                 if form['asset_type']=='survey' and form['deployment__active']==True:
@@ -696,7 +700,7 @@ class Kobo (Aggregate):
             return keyDict,response
         except:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url username or password"))
-            return {},response
+            return None,response
     def importData(self,layer,selectedForm,importData=True):
         #from kobo branchQH
         turl=self.getValue('url')
