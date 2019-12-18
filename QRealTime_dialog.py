@@ -638,7 +638,6 @@ class Kobo (Aggregate):
         print("Payload= ",payload)
         self.sendForm(layer.name(),payload)
     def sendForm(self,xForm_id,payload):
-
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
         if not response or not formList:
@@ -657,19 +656,21 @@ class Kobo (Aggregate):
             message= 'Created new form'
             method = 'POST'
             url = self.getValue('url')+'/assets/'
+        user=self.getValue(self.tr("user"))
+        password=self.getValue(self.tr("password"))
         para = {"format":"json"}
         headers = {'Content-Type': "application/json",'Accept': "application/json"}
         #creates form:
-        response = requests.request(method,url,json=payload,auth=(self.getValue('user'),self.getValue('password')),headers=headers,params=para)
+        response = requests.request(method,url,json=payload,auth=(user,password),headers=headers,params=para)
         responseJson=json.loads(response.text)
         urlDeploy = self.getValue('url')+"/assets/"+responseJson['uid']+"/deployment/"
         payload2 = json.dumps({"active": True})
         #deploys form:
-        response2 = requests.post(urlDeploy,data=payload2, auth=(self.getValue('user'),self.getValue('password')), headers=headers, params=para)
+        response2 = requests.post(urlDeploy,data=payload2, auth=(user,password), headers=headers, params=para)
         urlShare = self.getValue('url')+"permissions/"
         permissions={"content_object":self.getValue('url')+"/assets/"+responseJson['uid']+"/","permission": "view_submissions","deny": False,"inherited": False,"user": "https://kobo.humanitarianresponse.info/users/AnonymousUser/"}
         #shares submissions publicly:
-        response3 = requests.post(urlShare, json=permissions, auth=(self.getValue('user'),self.getValue('password')),headers=headers)
+        response3 = requests.post(urlShare, json=permissions, auth=(user,password),headers=headers)
         if response.status_code== 201 or response.status_code == 200:
             self.iface.messageBar().pushSuccess(self.tag,
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
@@ -679,7 +680,8 @@ class Kobo (Aggregate):
             self.iface.messageBar().pushCritical(self.tag,self.tr(str(response.status_code)))
         return response
     def getFormList(self):
-        user=self.getValue('user')
+        user=self.getValue(self.tr("user"))
+        password=self.getValue(self.tr("password"))
         turl=self.getValue('url')
         if turl:
             url=turl+'/assets/'
@@ -691,7 +693,7 @@ class Kobo (Aggregate):
         keyDict={}
         questions=[]
         try:
-            response= requests.get(url,proxies=getProxiesConf(),auth=(self.getValue('user'), self.getValue('password')),params=para)
+            response= requests.get(url,proxies=getProxiesConf(),auth=(user,password),params=para)
             forms= response.json()
             for form in forms['results']:        
                 if form['asset_type']=='survey' and form['deployment__active']==True:
@@ -703,6 +705,8 @@ class Kobo (Aggregate):
             return None,response
     def importData(self,layer,selectedForm,importData=True):
         #from kobo branchQH
+        user=self.getValue(self.tr("user"))
+        password=self.getValue(self.tr("password"))
         turl=self.getValue('url')
         if turl:
             url=turl+'/assets/'+selectedForm
@@ -711,7 +715,7 @@ class Kobo (Aggregate):
         para={'format':'xml'}
         requests.packages.urllib3.disable_warnings()
         try:
-            response= requests.request('GET',url,proxies=getProxiesConf(),auth=(self.getValue('user'), self.getValue('password')),verify=False,params=para)
+            response= requests.request('GET',url,proxies=getProxiesConf(),auth=(user,password),verify=False,params=para)
         except:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url,username or password"))
         if response.status_code==200:
@@ -765,6 +769,8 @@ class Kobo (Aggregate):
             self.updateFields(layer,fieldName,qgstype,config)
         return layer_name,version,geoField,fields
     def getTable(self,XFormKey,importData,topElement,layer,version= 'null'):
+        user=self.getValue(self.tr("user"))
+        password=self.getValue(self.tr("password"))
         requests.packages.urllib3.disable_warnings()
         # kobo or custom url not working hence hard coded url is being used
         url='https://kc.humanitarianresponse.info/'
@@ -772,11 +778,11 @@ class Kobo (Aggregate):
         lastSub=""
         if not importData:
             try:
-                lastSub=self.getValue('last Submission')
+                lastSub=self.getValue(self.tr('last Submission'))
             except:
                 print("error")
         requrl=url+'/api/v1/data'
-        response = requests.get(requrl,auth=(self.getValue('user'),self.getValue('password')),verify=False)
+        response = requests.get(requrl,proxies=getProxiesConf(),auth=(user,password),verify=False)
         if not response.status_code == 200:
                 print (response.status_code)
         responseJSON=json.loads(response.text)
@@ -790,7 +796,7 @@ class Kobo (Aggregate):
                 print("found the form"+XFormKey+"with id"+formID)
         para={"query":json.dumps({"_submission_time": {"$gt": lastSub}}) }
         urlData=url+'/api/v1/data/'+formID
-        response = requests.get(urlData,auth=(self.getValue('user'),self.getValue('password')),params=para,verify=False)
+        response = requests.get(urlData,proxies=getProxiesConf(),auth=(user,password),params=para,verify=False)
         data=json.loads(response.text)
         for submission in data:
             submission['ODKUUID']=submission['meta/instanceID']
@@ -806,12 +812,12 @@ class Kobo (Aggregate):
                     submission.pop(key)
                 else:
                     if self.fields[key]=="binary":
-                        submission[key]=url+'/attachment/original?media_file='+self.getValue('user')+'/attachments/'+submission[key]
+                        submission[key]=url+'/attachment/original?media_file='+user+'/attachments/'+submission[key]
             table.append(submission)
         if subTimeList:
             lastSubmission=max(subTimeList)
             lastSubmission=datetime.datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
-            self.getValue('last Submission',lastSubmission)
+            self.getValue(self.tr('last Submission'),lastSubmission)
         return response, table
     def getFieldsModel(self,currentLayer):
         fieldsModel = []
