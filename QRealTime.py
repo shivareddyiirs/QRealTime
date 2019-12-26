@@ -286,6 +286,7 @@ class QRealTime:
             forms,response= self.service.getFormList()
             if response:
                 self.formID= forms[self.layer.name()]
+                self.time=int(self.service.getValue(self.tr('sync time')))
                 print('starting timer every'+ str(self.time)+'second')
                 self.timer.start(1000*self.time)
         elif checked==False:

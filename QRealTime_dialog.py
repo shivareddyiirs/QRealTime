@@ -377,13 +377,13 @@ class Aggregate (QTableWidget):
             xml=survey.to_xml(validate=None, warnings='warnings')
             os.chdir(os.path.expanduser('~'))
             self.sendForm(layer.name(),xml)
-        except:
-            print("error in creating xform xml")
+        except Exception as e:
+            print("error in creating xform xml",e)
             self.iface.messageBar().pushCritical(self.tag,self.tr("Survey form can't be created, check layer name"))
     def sendForm(self,xForm_id,xml):
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
-        if not response or not formlist:
+        if not response or not formList:
             return
         form_key = xForm_id in formList
         message =''
