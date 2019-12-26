@@ -10,7 +10,7 @@
 name=QRealTime
 qgisMinimumVersion=3.00
 description=This plugin connects you to ODK Server and do autoupdation of data to and from aggregate
-version=3.9.9
+version=3.9.8.1
 author=Shiva Reddy Koti, Prabhakar Alok Verma
 email=kotishiva@gmail.com
 
@@ -23,7 +23,7 @@ repository=https://github.com/shivareddyiirs/QRealTime/
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog= 3.9.8:Removed bug: runtime error when not able to connect to server 3.9.7: Removed dependency on third party library 3.9.6: Added support for spanish translation. early adopter are requested to  raise issues if any 3.9.5: Removed requirement of pip install pyxform3.9.4: added support for spanish translation 3.9.1: only recommended for advanced user for testing purpose only,experimental support for koboToolbox server, currently tested with humanatarian instance hosted by UNOCHA,url validation 3.8:Bug fixed causing no import when trying to import from password protected forms. Support for date-time field is also added. 3.6: this version has major bug fixings for sync functionality. User are highly recommended to update. 3.5.2: Improved geometry field detection: Now field is choosen based on its type rather than name. Url encoding to avoid 400 error 3.5.1: Removed unnecesary import pip.3.5: Now installing package 'pyxform' automatically. Tested in Mac and Windows. 3.4: Changes Major refactoring to replace 'print' statements with QgsMessageLog: It avoids QGIS crashes and make it thread safe.Now user can see all print statement outputs in log messages under 'QRealTime' tag. Some UI Improvements and minor bug fixes.
+changelog= 3.9.9: Bug fixing for sync time and make online 3.9.8:Removed bug: runtime error when not able to connect to server 3.9.7: Removed dependency on third party library 3.9.6: Added support for spanish translation. early adopter are requested to  raise issues if any 3.9.5: Removed requirement of pip install pyxform3.9.4: added support for spanish translation 3.9.1: only recommended for advanced user for testing purpose only,experimental support for koboToolbox server, currently tested with humanatarian instance hosted by UNOCHA,url validation 3.8:Bug fixed causing no import when trying to import from password protected forms. Support for date-time field is also added. 3.6: this version has major bug fixings for sync functionality. User are highly recommended to update. 3.5.2: Improved geometry field detection: Now field is choosen based on its type rather than name. Url encoding to avoid 400 error 3.5.1: Removed unnecesary import pip.3.5: Now installing package 'pyxform' automatically. Tested in Mac and Windows. 3.4: Changes Major refactoring to replace 'print' statements with QgsMessageLog: It avoids QGIS crashes and make it thread safe.Now user can see all print statement outputs in log messages under 'QRealTime' tag. Some UI Improvements and minor bug fixes.
 # Tags are comma separated with spaces allowed
 tags= ODK,Kobo,KoboToolbox,Forms,XForms, Data Collection, Mobile GIS
 homepage=https://shivareddyiirs.github.io/QRealTime/
