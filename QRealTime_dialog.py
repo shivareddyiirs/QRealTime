@@ -785,7 +785,7 @@ class Kobo (Aggregate):
         response = requests.get(requrl,proxies=getProxiesConf(),auth=(user,password),verify=False)
         if not response.status_code == 200:
                 print (response.status_code)
-        responseJSON=json.loads(json.dumps(response.text))
+        responseJSON=json.loads(response.text)
         formID=''
         subTimeList=[]
         geoField=''
