@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.1" language="mn_MN">
+<!DOCTYPE TS><TS version="2.0" language="mn" sourcelanguage="">
 <context>
     <name>Aggregate</name>
     <message>
@@ -130,27 +129,27 @@
 <context>
     <name>QRealTime</name>
     <message>
-        <location filename="../QRealTime.py" line="210"/>
+        <location filename="../QRealTime.py" line="213"/>
         <source>QRealTime Setting</source>
         <translation>QRealTime тохиргоо</translation>
     </message>
     <message>
-        <location filename="../QRealTime.py" line="212"/>
+        <location filename="../QRealTime.py" line="215"/>
         <source>sync</source>
         <translation>вэб холбоос</translation>
     </message>
     <message>
-        <location filename="../QRealTime.py" line="217"/>
+        <location filename="../QRealTime.py" line="220"/>
         <source>import</source>
         <translation>импорт</translation>
     </message>
     <message>
-        <location filename="../QRealTime.py" line="219"/>
+        <location filename="../QRealTime.py" line="222"/>
         <source>Make Online</source>
         <translation>Онлайн болгох</translation>
     </message>
     <message>
-        <location filename="../QRealTime.py" line="290"/>
+        <location filename="../QRealTime.py" line="293"/>
         <source>sync time</source>
         <translation>дахин холбогдох хугацаа</translation>
     </message>

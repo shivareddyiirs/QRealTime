@@ -85,7 +85,7 @@ class QRealTime:
             self.plugin_dir,
             'i18n',
             'QRealTime_{}.qm'.format(locale))
-
+        print(locale_path)
         if os.path.exists(locale_path):
             self.translator = QTranslator()
             self.translator.load(locale_path)
