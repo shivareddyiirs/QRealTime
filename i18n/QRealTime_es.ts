@@ -134,27 +134,27 @@
 <context>
     <name>QRealTime</name>
     <message>
-        <location filename="../QRealTime.py" line="213"/>
+        <location filename="../QRealTime.py" line="216"/>
         <source>QRealTime Setting</source>
         <translation>Configuracin de QRealTime</translation>
     </message>
     <message>
-        <location filename="../QRealTime.py" line="215"/>
+        <location filename="../QRealTime.py" line="218"/>
         <source>sync</source>
         <translation>sincronizacin</translation>
     </message>
     <message>
-        <location filename="../QRealTime.py" line="220"/>
+        <location filename="../QRealTime.py" line="223"/>
         <source>import</source>
         <translation>importar</translation>
     </message>
     <message>
-        <location filename="../QRealTime.py" line="222"/>
+        <location filename="../QRealTime.py" line="225"/>
         <source>Make Online</source>
         <translation>Publicar</translation>
     </message>
     <message>
-        <location filename="../QRealTime.py" line="293"/>
+        <location filename="../QRealTime.py" line="296"/>
         <source>sync time</source>
         <translation>tiempo de sincronizacin</translation>
     </message>

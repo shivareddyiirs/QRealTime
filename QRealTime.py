@@ -77,10 +77,13 @@ class QRealTime:
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
-        if QSettings().value('locale//overrideFlag'):
-            locale = QSettings().value('locale//globalLocale')[0:2]
-        else:
-            locale = QSettings().value('locale//userLocale')[0:2]
+        try:
+            if QSettings().value('locale//overrideFlag'):
+                locale = QSettings().value('locale//globalLocale')[0:2]
+            else:
+                locale = QSettings().value('locale//userLocale')[0:2]
+        except:
+            locale='en'
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',

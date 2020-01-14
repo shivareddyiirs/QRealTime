@@ -129,27 +129,27 @@
 <context>
     <name>QRealTime</name>
     <message>
-        <location filename="../QRealTime.py" line="213"/>
+        <location filename="../QRealTime.py" line="216"/>
         <source>QRealTime Setting</source>
         <translation>QRealTime тохиргоо</translation>
     </message>
     <message>
-        <location filename="../QRealTime.py" line="215"/>
+        <location filename="../QRealTime.py" line="218"/>
         <source>sync</source>
         <translation>вэб холбоос</translation>
     </message>
     <message>
-        <location filename="../QRealTime.py" line="220"/>
+        <location filename="../QRealTime.py" line="223"/>
         <source>import</source>
         <translation>импорт</translation>
     </message>
     <message>
-        <location filename="../QRealTime.py" line="222"/>
+        <location filename="../QRealTime.py" line="225"/>
         <source>Make Online</source>
         <translation>Онлайн болгох</translation>
     </message>
     <message>
-        <location filename="../QRealTime.py" line="293"/>
+        <location filename="../QRealTime.py" line="296"/>
         <source>sync time</source>
         <translation>дахин холбогдох хугацаа</translation>
     </message>
