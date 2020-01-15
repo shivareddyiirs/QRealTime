@@ -384,7 +384,7 @@ class Aggregate (QTableWidget):
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
         if not response or not formList:
-            return
+            form_key=''
         form_key = xForm_id in formList
         message =''
         if form_key:
@@ -641,8 +641,7 @@ class Kobo (Aggregate):
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
         if not response or not formList:
-            return
-        form=''
+            form=''
         for item in formList:
             if formList[item]==xForm_id:
                 form=xForm_id
