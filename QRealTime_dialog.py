@@ -383,8 +383,9 @@ class Aggregate (QTableWidget):
     def sendForm(self,xForm_id,xml):
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
-        if not response or not formList:
-            form_key=''
+        if not response:
+           self.iface.messageBar().pushCritical(self.tag,self.tr("Can not connect to server"))
+           return response
         form_key = xForm_id in formList
         message =''
         if form_key:
@@ -640,8 +641,10 @@ class Kobo (Aggregate):
     def sendForm(self,xForm_id,payload):
 #        step1 - verify if form exists:
         formList, response = self.getFormList()
-        if not response or not formList:
-            form=''
+        form=''
+        if not response:
+            self.iface.messageBar().pushCritical(self.tag,self.tr(str('can not connect to server')))
+            return response
         for item in formList:
             if formList[item]==xForm_id:
                 form=xForm_id
@@ -755,6 +758,10 @@ class Kobo (Aggregate):
             if fieldType[:3]!='geo':
                 #print('creating new field:'+ fieldName)
                 isHidden= True
+                if fieldName=='instanceID':
+                    fieldName='ODKUUID'
+                    fields[fieldName]=fieldType
+                    isHidden= False
                 for input in inputs:
                     if fieldName == input.attrib['ref'].split('/')[-1]:
                         isHidden= False
@@ -765,6 +772,7 @@ class Kobo (Aggregate):
             else:
                 geoField=fieldName
                 print('geometry field is =',fieldName)
+                continue
             self.updateFields(layer,fieldName,qgstype,config)
         return layer_name,version,geoField,fields
     def getTable(self,XFormKey,importData,topElement,layer,version= 'null'):
