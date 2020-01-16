@@ -669,10 +669,13 @@ class Kobo (Aggregate):
         payload2 = json.dumps({"active": True})
         #deploys form:
         response2 = requests.post(urlDeploy,data=payload2, auth=(user,password), headers=headers, params=para)
-        urlShare = self.getValue('url')+"permissions/"
-        permissions={"content_object":self.getValue('url')+"/assets/"+responseJson['uid']+"/","permission": "view_submissions","deny": False,"inherited": False,"user": "https://kobo.humanitarianresponse.info/users/AnonymousUser/"}
+##        urlShare = self.getValue('url')+"permissions/"
+##        permissions={"content_object":self.getValue('url')+"/assets/"+responseJson['uid']+"/","permission": "view_submissions","deny": False,"inherited": False,"user": "https://kobo.humanitarianresponse.info/users/AnonymousUser/"}
+        urlShare = self.getValue('url')+"api/v2/assets/"+responseJson['uid']+"/permission-assignments/"
+        permissions={"user":self.getValue('url')+"api/v2/users/AnonymousUser/","permission":self.getValue('url')+"api/v2/permissions/view_submissions/"}
         #shares submissions publicly:
         response3 = requests.post(urlShare, json=permissions, auth=(user,password),headers=headers)
+        print(self.tag,response3.text)
         if response.status_code== 201 or response.status_code == 200:
             self.iface.messageBar().pushSuccess(self.tag,
                                                 self.tr('Layer is online('+message+'), Collect data from App'))
@@ -680,6 +683,8 @@ class Kobo (Aggregate):
             self.iface.messageBar().pushWarning(self.tag,self.tr("Form exists and can not be updated"))
         else:
             self.iface.messageBar().pushCritical(self.tag,self.tr(str(response.status_code)))
+        if not response3:
+            self.iface.messageBar().pushWarning(self.tag,self.tr('Submissions not shared publicly'))
         return response
     def getFormList(self):
         user=self.getValue(self.tr("user"))
