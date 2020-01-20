@@ -23,12 +23,12 @@
         <translation>дахин холбогдох хугацаа</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="545"/>
+        <location filename="../QRealTime_dialog.py" line="546"/>
         <source>Enter url in settings</source>
         <translation>URL-ийг тохируул</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="555"/>
+        <location filename="../QRealTime_dialog.py" line="556"/>
         <source>Not able to connect to server</source>
         <translation>Сервер лүү холбогдсонгүй</translation>
     </message>
@@ -48,82 +48,92 @@
         <translation>Судалгааны маягтыг үүсгэж чадаагүй,давхаргын нэрийг шалгана уу</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="410"/>
+        <location filename="../QRealTime_dialog.py" line="411"/>
         <source>Layer is online(</source>
         <translation>Сүлжээнд давхаргыг оруул</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="413"/>
+        <location filename="../QRealTime_dialog.py" line="414"/>
         <source>Form exists and can not be updated</source>
         <translation>Маягт нээгдсэн ба шинэчлэж чадсангүй</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="415"/>
+        <location filename="../QRealTime_dialog.py" line="416"/>
         <source>Form is not sent</source>
         <translation>Маягтыг илгээгдээгүй</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="431"/>
+        <location filename="../QRealTime_dialog.py" line="432"/>
         <source>Not able to collect data from Aggregate</source>
         <translation>Aggregate-ээс цугласан өгөгдлийг татаагүй</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="506"/>
+        <location filename="../QRealTime_dialog.py" line="507"/>
         <source>Can&apos;t find &apos;%s&apos; field</source>
         <translation>&apos;%s&apos; талбар олдсонгүй</translation>
+    </message>
+    <message>
+        <location filename="../QRealTime_dialog.py" line="389"/>
+        <source>Can not connect to server</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>Kobo</name>
     <message>
-        <location filename="../QRealTime_dialog.py" line="779"/>
+        <location filename="../QRealTime_dialog.py" line="791"/>
         <source>user</source>
         <translation>хэрэглэгч</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="780"/>
+        <location filename="../QRealTime_dialog.py" line="792"/>
         <source>password</source>
         <translation>нууц үг</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="830"/>
+        <location filename="../QRealTime_dialog.py" line="842"/>
         <source>last Submission</source>
         <translation>Сүүлчийн ID</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="635"/>
+        <location filename="../QRealTime_dialog.py" line="636"/>
         <source>sync time</source>
         <translation>дахин холбогдох хугацаа</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="681"/>
+        <location filename="../QRealTime_dialog.py" line="686"/>
         <source>Layer is online(</source>
         <translation>Сүлжээнд давхарга байна</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="684"/>
+        <location filename="../QRealTime_dialog.py" line="689"/>
         <source>Form exists and can not be updated</source>
         <translation>Маягт нээгдсэн ба шинэчлэж чадсангүй</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="720"/>
+        <location filename="../QRealTime_dialog.py" line="727"/>
         <source>Enter url in settings</source>
         <translation>URL-ийг тохируул</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="710"/>
+        <location filename="../QRealTime_dialog.py" line="717"/>
         <source>Invalid url username or password</source>
         <translation>Вэб хаягт хэрэглэгчийн нэр нууц үг алга</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="726"/>
+        <location filename="../QRealTime_dialog.py" line="733"/>
         <source>Invalid url,username or password</source>
         <translation>Вэб хаяг хэрэглэгчийн нэр нууц үг алга</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="735"/>
+        <location filename="../QRealTime_dialog.py" line="742"/>
         <source>not able to connect to server</source>
         <translation>Сервер лүү холбогдсонгүй</translation>
+    </message>
+    <message>
+        <location filename="../QRealTime_dialog.py" line="693"/>
+        <source>Submissions not shared publicly</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

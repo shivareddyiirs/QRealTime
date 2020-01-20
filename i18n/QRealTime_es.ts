@@ -3,32 +3,32 @@
 <context>
     <name>Aggregate</name>
     <message>
-        <location filename="../QRealTime_dialog.py" line="545"/>
+        <location filename="../QRealTime_dialog.py" line="546"/>
         <source>Enter url in settings</source>
         <translation>Ingrese la url en la configuracin</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="555"/>
+        <location filename="../QRealTime_dialog.py" line="556"/>
         <source>Not able to connect to server</source>
         <translation>No se puede conectar al servidor</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="410"/>
+        <location filename="../QRealTime_dialog.py" line="411"/>
         <source>Layer is online(</source>
         <translation>Capa esta en lnea</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="413"/>
+        <location filename="../QRealTime_dialog.py" line="414"/>
         <source>Form exists and can not be updated</source>
         <translation>El formulario existe y no puede ser actualizado</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="431"/>
+        <location filename="../QRealTime_dialog.py" line="432"/>
         <source>Not able to collect data from Aggregate</source>
         <translation>No se puede recopilar datos de un agregado</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="506"/>
+        <location filename="../QRealTime_dialog.py" line="507"/>
         <source>Can&apos;t find &apos;%s&apos; field</source>
         <translation>No se puede encontrar campo</translation>
     </message>
@@ -58,7 +58,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="415"/>
+        <location filename="../QRealTime_dialog.py" line="416"/>
         <source>Form is not sent</source>
         <translation></translation>
     </message>
@@ -72,56 +72,61 @@
         <source>Not able to parse form list</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location filename="../QRealTime_dialog.py" line="389"/>
+        <source>Can not connect to server</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Kobo</name>
     <message>
-        <location filename="../QRealTime_dialog.py" line="681"/>
+        <location filename="../QRealTime_dialog.py" line="686"/>
         <source>Layer is online(</source>
         <translation>Capa esta en lnea</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="684"/>
+        <location filename="../QRealTime_dialog.py" line="689"/>
         <source>Form exists and can not be updated</source>
         <translation>El formulario existe y no puede ser actualizado</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="720"/>
+        <location filename="../QRealTime_dialog.py" line="727"/>
         <source>Enter url in settings</source>
         <translation>Ingrese la url en la configuracin</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="710"/>
+        <location filename="../QRealTime_dialog.py" line="717"/>
         <source>Invalid url username or password</source>
         <translation>Url, usuario o contrasea invlido</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="726"/>
+        <location filename="../QRealTime_dialog.py" line="733"/>
         <source>Invalid url,username or password</source>
         <translation>Url, usuario o contrasea invlido</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="735"/>
+        <location filename="../QRealTime_dialog.py" line="742"/>
         <source>not able to connect to server</source>
         <translation>No se puede conectar al servidor</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="779"/>
+        <location filename="../QRealTime_dialog.py" line="791"/>
         <source>user</source>
         <translation>usuario</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="780"/>
+        <location filename="../QRealTime_dialog.py" line="792"/>
         <source>password</source>
         <translation>contrasea</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="830"/>
+        <location filename="../QRealTime_dialog.py" line="842"/>
         <source>last Submission</source>
         <translation>ltimo envo</translation>
     </message>
     <message>
-        <location filename="../QRealTime_dialog.py" line="635"/>
+        <location filename="../QRealTime_dialog.py" line="636"/>
         <source>sync time</source>
         <translation>tiempo de sincronizacin</translation>
     </message>
@@ -129,6 +134,11 @@
         <location filename="." line="1767860079"/>
         <source>Form exist and can not be updated</source>
         <translation type="obsolete">El formulario existe y no puede ser actualizado</translation>
+    </message>
+    <message>
+        <location filename="../QRealTime_dialog.py" line="693"/>
+        <source>Submissions not shared publicly</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
