@@ -785,7 +785,7 @@ class Kobo (Aggregate):
         password=self.getValue(self.tr("password"))
         requests.packages.urllib3.disable_warnings()
         # kobo or custom url not working hence hard coded url is being used
-        url='https://kc.humanitarianresponse.info/'
+        url=self.getValue('url')
         print(url)
         lastSub=""
         if not importData:
@@ -793,24 +793,20 @@ class Kobo (Aggregate):
                 lastSub=self.getValue(self.tr('last Submission'))
             except:
                 print("error")
-        requrl=url+'/api/v1/data'
-        response = requests.get(requrl,proxies=getProxiesConf(),auth=(user,password),verify=False)
-        if not response.status_code == 200:
-                print (response.status_code)
-        responseJSON=json.loads(response.text)
-        formID=''
+        urlData=url+'/api/v2/assets/'+XFormKey+'/data/'
+        print('urldata is '+urlData)
+        if lastSub=="":
+            para={'format':'json'}
+            response = requests.get(urlData,proxies=getProxiesConf(),auth=(user,password),params=para,verify=False)
+        else:
+            para={"query":json.dumps({"_submission_time": {"$gt": lastSub}})}
+            print ('para is'+ str(para))
+            response = requests.get(urlData,proxies=getProxiesConf(),auth=(user,password),params=para,verify=False)
+        data=response.json()
+        print(data)
         subTimeList=[]
-        geoField=''
         table=[]
-        for form in responseJSON:
-            if str(form['id_string'])==XFormKey:
-                formID=str(form['id'])
-                print("found the form"+XFormKey+"with id"+formID)
-        para={"query":json.dumps({"_submission_time": {"$gt": lastSub}}) }
-        urlData=url+'/api/v1/data/'+formID
-        response = requests.get(urlData,proxies=getProxiesConf(),auth=(user,password),params=para,verify=False)
-        data=json.loads(response.text)
-        for submission in data:
+        for submission in data['results']:
             submission['ODKUUID']=submission['meta/instanceID']
             subTime=submission['_submission_time']
             subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
@@ -826,7 +822,7 @@ class Kobo (Aggregate):
                     if self.fields[key]=="binary":
                         submission[key]=url+'/attachment/original?media_file='+user+'/attachments/'+submission[key]
             table.append(submission)
-        if subTimeList:
+        if len(subTimeList)>0:
             lastSubmission=max(subTimeList)
             lastSubmission=datetime.datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
             self.getValue(self.tr('last Submission'),lastSubmission)
