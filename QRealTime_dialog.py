@@ -809,6 +809,8 @@ class Kobo (Aggregate):
         for submission in data['results']:
             submission['ODKUUID']=submission['meta/instanceID']
             subTime=submission['_submission_time']
+            for attachment in submission['_attachments']:
+                binar_url=attachment['download_small_url']
             subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
             subTimeList.append(subTime_datetime)
             for key in list(submission):
@@ -820,7 +822,7 @@ class Kobo (Aggregate):
                     submission.pop(key)
                 else:
                     if self.fields[key]=="binary":
-                        submission[key]=url+'/attachment/original?media_file='+user+'/attachments/'+submission[key]
+                        submission[key]=binar_url
             table.append(submission)
         if len(subTimeList)>0:
             lastSubmission=max(subTimeList)
