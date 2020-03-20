@@ -798,19 +798,24 @@ class Kobo (Aggregate):
         if lastSub=="":
             para={'format':'json'}
             response = requests.get(urlData,proxies=getProxiesConf(),auth=(user,password),params=para,verify=False)
+            print('requesting url is'+response.url)
         else:
-            para={"query":json.dumps({"_submission_time": {"$gt": lastSub}})}
-            print ('para is'+ str(para))
+            query_param={'_submission_time': {'$gt': lastSub}}
+            print('query_param is'+json.dumps(query_param))
+            para={'query=':query_param,'format':'json'}
             response = requests.get(urlData,proxies=getProxiesConf(),auth=(user,password),params=para,verify=False)
+            print('requesting url is'+response.url)
         data=response.json()
         print(data)
         subTimeList=[]
         table=[]
+        if data['count']==0:
+            return response, table
         for submission in data['results']:
             submission['ODKUUID']=submission['meta/instanceID']
             subTime=submission['_submission_time']
             for attachment in submission['_attachments']:
-                binar_url=attachment['download_small_url']
+                binar_url=attachment['download_url']
             subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
             subTimeList.append(subTime_datetime)
             for key in list(submission):
