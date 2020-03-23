@@ -228,7 +228,7 @@ class QRealTime:
         self.topElement= None
         self.version=''
         try:
-            self.time=3600
+            self.time=86400
             self.time=int(service.getValue(self.tr('sync time')))
         except:
             print ('can not read time')
