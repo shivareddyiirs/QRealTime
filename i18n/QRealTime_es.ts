@@ -5,7 +5,7 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="546"/>
         <source>Enter url in settings</source>
-        <translation>Ingrese la url en la configuracin</translation>
+        <translation>Ingrese la url en la configuración</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="556"/>
@@ -15,7 +15,7 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="411"/>
         <source>Layer is online(</source>
-        <translation>Capa esta en lnea</translation>
+        <translation>Capa en línea</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="414"/>
@@ -25,7 +25,7 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="432"/>
         <source>Not able to collect data from Aggregate</source>
-        <translation>No se puede recopilar datos de un agregado</translation>
+        <translation>No se puede recopilar datos desde el agregado</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="507"/>
@@ -40,42 +40,42 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="178"/>
         <source>password</source>
-        <translation>contrasea</translation>
+        <translation>contraseña</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="172"/>
         <source>sync time</source>
-        <translation>tiempo de sincronizacin</translation>
+        <translation>tiempo de sincronización</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="274"/>
         <source>Not able to collect data from server</source>
-        <translation>No se puede colectar datos del servidor</translation>
+        <translation>No se puede recolectar datos desde el servidor</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="171"/>
         <source>lastID</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">últimoID</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="416"/>
         <source>Form is not sent</source>
-        <translation></translation>
+        <translation>Formulario no enviado</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="384"/>
         <source>Survey form can&apos;t be created, check layer name</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">El formulario de encuesta no puede ser creado, revisar el nombre de la capa</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="253"/>
         <source>Not able to parse form list</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">No puede analizar la lista del formulario</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="389"/>
         <source>Can not connect to server</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">No se puede conectar al servidor</translation>
     </message>
 </context>
 <context>
@@ -83,7 +83,7 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="686"/>
         <source>Layer is online(</source>
-        <translation>Capa esta en lnea</translation>
+        <translation>Capa en línea</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="689"/>
@@ -93,22 +93,22 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="727"/>
         <source>Enter url in settings</source>
-        <translation>Ingrese la url en la configuracin</translation>
+        <translation>Ingrese la url en la configuración</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="717"/>
         <source>Invalid url username or password</source>
-        <translation>Url, usuario o contrasea invlido</translation>
+        <translation>Url, usuario o contraseña inválido</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="733"/>
         <source>Invalid url,username or password</source>
-        <translation>Url, usuario o contrasea invlido</translation>
+        <translation>Url, usuario o contraseña inválido</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="742"/>
         <source>not able to connect to server</source>
-        <translation>No se puede conectar al servidor</translation>
+        <translation>no se puede conectar al servidor</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="791"/>
@@ -118,17 +118,17 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="792"/>
         <source>password</source>
-        <translation>contrasea</translation>
+        <translation>contraseña</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="842"/>
         <source>last Submission</source>
-        <translation>ltimo envo</translation>
+        <translation>último envío</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog.py" line="636"/>
         <source>sync time</source>
-        <translation>tiempo de sincronizacin</translation>
+        <translation>tiempo de sincronización</translation>
     </message>
     <message>
         <location filename="." line="1767860079"/>
@@ -138,7 +138,7 @@
     <message>
         <location filename="../QRealTime_dialog.py" line="693"/>
         <source>Submissions not shared publicly</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Envíos no compartidos públicamente</translation>
     </message>
 </context>
 <context>
@@ -146,12 +146,12 @@
     <message>
         <location filename="../QRealTime.py" line="216"/>
         <source>QRealTime Setting</source>
-        <translation>Configuracin de QRealTime</translation>
+        <translation>Configuración de QRealTime</translation>
     </message>
     <message>
         <location filename="../QRealTime.py" line="218"/>
         <source>sync</source>
-        <translation>sincronizacin</translation>
+        <translation>sincronización</translation>
     </message>
     <message>
         <location filename="../QRealTime.py" line="223"/>
@@ -161,12 +161,12 @@
     <message>
         <location filename="../QRealTime.py" line="225"/>
         <source>Make Online</source>
-        <translation>Publicar</translation>
+        <translation>Exportar a servidor</translation>
     </message>
     <message>
         <location filename="../QRealTime.py" line="296"/>
         <source>sync time</source>
-        <translation>tiempo de sincronizacin</translation>
+        <translation>tiempo de sincronización</translation>
     </message>
 </context>
 <context>
@@ -189,7 +189,7 @@
     <message>
         <location filename="../QRealTime_dialog_base.ui" line="73"/>
         <source>Password</source>
-        <translation>contrasea</translation>
+        <translation>Contraseña</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog_base.ui" line="85"/>
@@ -202,12 +202,12 @@
     <message>
         <location filename="../QRealTime_dialog_import.ui" line="14"/>
         <source>QRealTime Import</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Importación de QRealTime</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog_services.ui" line="14"/>
         <source>QRealTime Setting</source>
-        <translation>Configuracin de QRealTime</translation>
+        <translation>Configuración de QRealTime</translation>
     </message>
     <message>
         <location filename="../QRealTime_dialog_services.ui" line="51"/>
