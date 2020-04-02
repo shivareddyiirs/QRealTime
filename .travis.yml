@@ -16,7 +16,7 @@ jobs:
         - docker pull qgis/qgis:release-3_10
 
       install:
-        - docker run -d --name qgis-testing-environment -v ${TRAVIS_BUILD_DIR} -e DISPLAY=:99 qgis/qgis:release-3_10
+        - docker run -d --name qgis-testing-environment -v ${TRAVIS_BUILD_DIR}/lizmap:/lizmap -e DISPLAY=:99 qgis/qgis:release-3_10
         - sleep 10
         - docker exec -it qgis-testing-environment "qgis_setup.sh QRealtime"
       script:
