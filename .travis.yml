@@ -6,7 +6,8 @@ python: 3.7
 
 services:
   - docker
-Jobs:
+
+jobs:
   include:
     - stage: Run tests Desktop
       name: QGIS Desktop 3.10
