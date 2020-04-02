@@ -13,7 +13,7 @@ jobs:
       name: QGIS Desktop 3.10
       
     before_install:
-      - docker pull qgis/qgis:release-3.10
+      - docker pull qgis/qgis:release-3_10
 
     install:
       - docker run -d --name qgis-testing-environment -v ${TRAVIS_BUILD_DIR} -e DISPLAY=:99 qgis/qgis:release-3_10
