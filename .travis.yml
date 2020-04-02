@@ -18,7 +18,7 @@ jobs:
       install:
         - docker run -d --name qgis-testing-environment -v ${TRAVIS_BUILD_DIR}/QRealTime:/QRealTime -e DISPLAY=:99 qgis/qgis:release-3_10
         - sleep 10
-        - docker exec -it qgis-testing-environment "qgis_setup.sh QRealTime"
+        - docker exec -it qgis-testing-environment sh -c "qgis_setup.sh QRealTime"
       script:
         - docker exec -it qgis-testing-environment sh -c "qgis_testrunner.sh ./test/test_QRealTime_dialog"
 
