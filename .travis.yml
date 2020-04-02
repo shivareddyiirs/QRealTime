@@ -20,6 +20,6 @@ jobs:
         - sleep 10
         - docker exec -it qgis-testing-environment sh -c "qgis_setup.sh QRealTime"
       script:
-        - docker exec -it qgis-testing-environment sh -c "qgis_testrunner.sh ./test/test_QRealTime_dialog"
+        - docker exec -it qgis-testing-environment sh -c "qgis_testrunner.sh test.test_QRealTime_dialog"
 
       
