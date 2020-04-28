@@ -90,7 +90,7 @@ def QVariantToODKtype(q_type):
         elif q_type in [6,38]:
             return 'decimal'
         else:
-            raise AttributeError("Can't cast QVariant to ODKType: " + q_type)
+            return 'text'
 class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
     services = ['Aggregate','Kobo']
     def __init__(self, caller,parent=None):
@@ -852,6 +852,8 @@ class Kobo (Aggregate):
         i=0
         j=0
         for field in currentLayer.fields():
+            if field.name()=='ODKUUID':
+                continue
             widget =currentLayer.editorWidgetSetup(i)
             fwidget = widget.type()
             if (fwidget=='Hidden'):
@@ -859,6 +861,7 @@ class Kobo (Aggregate):
                 continue
                 
             fieldDef = {}
+            fieldDef["name"]=field.name()
             fieldDef["label"] = field.alias() or field.name()
 #            fieldDef['hint'] = ''
             fieldDef["type"] = QVariantToODKtype(field.type())
@@ -891,10 +894,6 @@ class Kobo (Aggregate):
 #            if fieldDef['name'] == 'ODKUUID':
 #                fieldDef["bind"] = {"readonly": "true()", "calculate": "concat('uuid:', uuid())"}
             fieldDef.pop("fieldWidget")
-            for key, value in list(fieldDef.items()):
-                if value=="ODKUUID":
-                    fieldDef.pop(key)
-                    fieldDef.pop("type")
             fieldsModel.append(fieldDef)
             i+=1
         return fieldsModel,choicesList
