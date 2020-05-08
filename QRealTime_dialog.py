@@ -725,6 +725,7 @@ class Kobo (Aggregate):
             response= requests.request('GET',url,proxies=getProxiesConf(),auth=(user,password),verify=False,params=para)
         except:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url,username or password"))
+            return
         if response.status_code==200:
             xml=response.content
             # with open('importForm.xml','w') as importForm:
