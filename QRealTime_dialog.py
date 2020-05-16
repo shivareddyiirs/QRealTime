@@ -499,13 +499,14 @@ class Aggregate (QTableWidget):
                     newQgisFeatures.append(qgisFeature)
             except Exception as e:
                     print('unable to create',e)
-                
-        if fieldError:
-            self.iface.messageBar().pushWarning(self.tag, self.tr("Can't find '%s' field") % fieldError)
-        
         with edit(layer):
             layer.addFeatures(newQgisFeatures)
         self.processingLayer = None
+        if fieldError:
+            try:
+                self.iface.messageBar().pushWarning(self.tag, self.tr("Can't find {} field").format(fieldError))
+            except:
+                print('problem in display the warning',fielderror)
         
     def getUUIDList(self,lyr):
         uuidList = []
