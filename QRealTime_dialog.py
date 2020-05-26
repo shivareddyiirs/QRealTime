@@ -499,14 +499,13 @@ class Aggregate (QTableWidget):
                     newQgisFeatures.append(qgisFeature)
             except Exception as e:
                     print('unable to create',e)
-        with edit(layer):
-            layer.addFeatures(newQgisFeatures)
+        try:
+	        with edit(layer):
+	            layer.addFeatures(newQgisFeatures)
+        except:
+        	self.iface.messageBar().pushCritical(self.tag,"Stop layer editing and import again")
+        	return
         self.processingLayer = None
-        if fieldError:
-            try:
-                self.iface.messageBar().pushWarning(self.tag, self.tr("Can't find {} field").format(fieldError))
-            except:
-                print('problem in display the warning',fielderror)
         
     def getUUIDList(self,lyr):
         uuidList = []
@@ -855,7 +854,8 @@ class Kobo (Aggregate):
         j=0
         for field in currentLayer.fields():
             if field.name()=='ODKUUID':
-                continue
+            	i+=1
+            	continue
             widget =currentLayer.editorWidgetSetup(i)
             fwidget = widget.type()
             if (fwidget=='Hidden'):
