@@ -671,8 +671,8 @@ class Kobo (Aggregate):
         response2 = requests.post(urlDeploy,data=payload2, auth=(user,password), headers=headers, params=para)
 ##        urlShare = self.getValue('url')+"permissions/"
 ##        permissions={"content_object":self.getValue('url')+"/assets/"+responseJson['uid']+"/","permission": "view_submissions","deny": False,"inherited": False,"user": "https://kobo.humanitarianresponse.info/users/AnonymousUser/"}
-        urlShare = self.getValue('url')+"api/v2/assets/"+responseJson['uid']+"/permission-assignments/"
-        permissions={"user":self.getValue('url')+"api/v2/users/AnonymousUser/","permission":self.getValue('url')+"api/v2/permissions/view_submissions/"}
+        urlShare = self.getValue('url')+"/api/v2/assets/"+responseJson['uid']+"/permission-assignments/"
+        permissions={"user":self.getValue('url')+"/api/v2/users/AnonymousUser/","permission":self.getValue('url')+"/api/v2/permissions/view_submissions/"}
         #shares submissions publicly:
         response3 = requests.post(urlShare, json=permissions, auth=(user,password),headers=headers)
         print(self.tag,response3.text)
