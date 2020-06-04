@@ -192,6 +192,9 @@ class Aggregate (QTableWidget):
                     self.setup() #store to settings
                 value=self.item(row,1).text().strip()
                 if value:
+                    if key=='url':
+                        if not value.endswith('/'):
+                            value=value+'/'
                     return value
     def guessWKTGeomType(self,geom):
         if geom:
@@ -645,14 +648,13 @@ class Kobo (Aggregate):
         if not response:
             self.iface.messageBar().pushCritical(self.tag,self.tr(str('can not connect to server')))
             return response
-        for item in formList:
-            if formList[item]==xForm_id:
-                form=xForm_id
-                xForm_id=item
+        if xForm_id in formList:
+            form=xForm_id
+            xForm_id=formList[xForm_id]        
         message =''
         if form:
             message= 'Form Updated'
-            method = 'POST'
+            method = 'PATCH'
             url = self.getValue('url')+'/assets/'+xForm_id
         else:
             message= 'Created new form'
@@ -665,14 +667,14 @@ class Kobo (Aggregate):
         #creates form:
         response = requests.request(method,url,json=payload,auth=(user,password),headers=headers,params=para)
         responseJson=json.loads(response.text)
-        urlDeploy = self.getValue('url')+"/assets/"+responseJson['uid']+"/deployment/"
+        urlDeploy = self.getValue('url')+"assets/"+responseJson['uid']+"/deployment/"
         payload2 = json.dumps({"active": True})
         #deploys form:
         response2 = requests.post(urlDeploy,data=payload2, auth=(user,password), headers=headers, params=para)
 ##        urlShare = self.getValue('url')+"permissions/"
 ##        permissions={"content_object":self.getValue('url')+"/assets/"+responseJson['uid']+"/","permission": "view_submissions","deny": False,"inherited": False,"user": "https://kobo.humanitarianresponse.info/users/AnonymousUser/"}
-        urlShare = self.getValue('url')+"/api/v2/assets/"+responseJson['uid']+"/permission-assignments/"
-        permissions={"user":self.getValue('url')+"/api/v2/users/AnonymousUser/","permission":self.getValue('url')+"/api/v2/permissions/view_submissions/"}
+        urlShare = self.getValue('url')+"api/v2/assets/"+responseJson['uid']+"/permission-assignments/"
+        permissions={"user":self.getValue('url')+"api/v2/users/AnonymousUser/","permission":self.getValue('url')+"api/v2/permissions/view_submissions/"}
         #shares submissions publicly:
         response3 = requests.post(urlShare, json=permissions, auth=(user,password),headers=headers)
         print(self.tag,response3.text)
