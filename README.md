@@ -1,5 +1,6 @@
 <h1> Welcome to QRealTime plugin (Upcoming version integrating kobotoolbox support to QRealTime Plugin)</h1>
-<img src="https://user-images.githubusercontent.com/5653512/40710547-8e30b57c-6416-11e8-8c48-3075bd63e68b.jpg" alt="flowchart">
+<img src="https://user-images.githubusercontent.com/5653512/84229819-252cc300-ab08-11ea-8cc3-74f9f1d3f1df.png" alt="flowchart">
+
 
 QRealTime Plugin allows you to:
 <ul>
