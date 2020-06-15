@@ -349,7 +349,10 @@ class Aggregate (QTableWidget):
             attrib=bind.attrib
             print (attrib)
             fieldName= attrib['nodeset'].split('/')[-1]
-            fieldType=attrib['type']
+            try:
+                fieldType=attrib['type']
+            except:
+                continue
             print('attrib type is',attrib['type'])
             qgstype,config = qtype(attrib['type'])
             print ('first attribute'+ fieldName)
@@ -757,7 +760,10 @@ class Kobo (Aggregate):
             attrib=bind.attrib
             print (attrib)
             fieldName= attrib['nodeset'].split('/')[-1]
-            fieldType=attrib['type']
+            try:
+                fieldType=attrib['type']
+            except:
+                continue
             fields[fieldName]=fieldType
 #            print('attrib type is',attrib['type'])
             qgstype,config = qtype(attrib['type'])
