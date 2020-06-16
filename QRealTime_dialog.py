@@ -498,7 +498,7 @@ class Aggregate (QTableWidget):
                     for fieldName, fieldValue in odkFeature.items():
                         if fieldName != geoField:
                             try:
-                                qgisFeature.setAttribute(QgisFieldsList.index(fieldName),fieldValue)
+                                qgisFeature.setAttribute(QgisFieldsList.index(fieldName[:10]),fieldValue)
                             except:
                                 fieldError = fieldName
                             
