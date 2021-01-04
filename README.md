@@ -1,11 +1,12 @@
-<h1> Welcome to QRealTime plugin</h1>
-<img src="https://user-images.githubusercontent.com/5653512/40710547-8e30b57c-6416-11e8-8c48-3075bd63e68b.jpg" alt="flowchart">
+<h1> Welcome to QRealTime plugin (Upcoming version integrating kobotoolbox support to QRealTime Plugin)</h1>
+<img src="https://user-images.githubusercontent.com/5653512/84229819-252cc300-ab08-11ea-8cc3-74f9f1d3f1df.png" alt="flowchart">
+
 
 QRealTime Plugin allows you to:
 <ul>
 <li> Create new survey form directly from GIS layers in QGIS </li>
-<li> Synchronise data from ODK Aggregate server </li>
-<li> Import data from ODK Aggregate server </li>
+<li> Synchronise data from ODK Aggregate server or KoboToobox server</li>
+<li> Import data from  server </li>
 </ul>
 
 <h2>Getting Started</h2>
@@ -19,32 +20,21 @@ Installation steps:
 <ol>
 <li>Open Plugin Manager and search for QRealTime plugin and install it.</li>
 <li>And restart QGIS so that changes in environment take effect.</li>
-<li>If after restarting QGIS still there is problem related to PyXForm then manually install pyxform library to python3 by using following:
-<br/> 3a. Open command prompt/terminal and go to installation directory of QGIS.
-<br/> 3b. Run <code>osgeo4w.bat</code>
-<br/> 3c. Run <code>py3_env</code>
-<br/> 3d. Run following:
-<br/> &nbsp;&nbsp; - Windows: <code>python3 -m pip install pyxform --user</code>.
-<br/> &nbsp;&nbsp; - MacOS: <code>sudo pip3 install pyxform</code>
-<br/> Note: If <code>pip</code> in not recognised (as in the case of QGIS 3.4) use <code>easy_install</code> instead.
-<br/> 3e. And restart QGIS so that changes in environment take effect.
-</li>
 </ol>
 
 <h3>Configuration:</h3>
 
 From the main menu choose **Plugins --> QRealTime --> QRealTime Setting**
+<br/> Here you have two tabs one for Aggregate and another for KoboToolbox
+Choose one of the tab and Enter url (required). Other fields are optional.
 <br/>
-Enter ODK aggregate url (required). Other fields are optional. _Sync time_ is also required in case of data sync.
+You can create free account in <a href="https://www.kobotoolbox.org/">KoboToolbox server </a> and if you want to install your own aggregate server, <a href="http://docs.opendatakit.org/aggregate-guide/"> then visit </a>
 <br/>
-If you don't have ODK Aggregate server access, you can use demo server https://opendatakit.appspot.com or if you want to install your own aggregate server,  <a href="http://docs.opendatakit.org/aggregate-guide/"> then visit </a>
+<img src="https://user-images.githubusercontent.com/5653512/67921427-aa90e200-fbcd-11e9-874b-fc1fae692fe0.png" alt="settings">
+
 
 <br/>
-<img src="https://user-images.githubusercontent.com/5653512/45092573-7a69c280-b133-11e8-9b01-6b8c9f48a8c6.png" alt="settings">
-
-
-<br/>
-Right click over any existing layer --> QRealTIme and choose desired option: 
+Right click over any existing layer --> QRealTime and choose desired option: 
 <br/>Make Online (To Create new form), import (to import data of existing form), sync(to automatically update your layer)
 <br/>If you want to import data from already existing form (created without using our plugin) do ensure that the name of the geometry field is 'GEOMETRY','location' or 'gps. Other geometry field names are currently not supported.
 <br/>

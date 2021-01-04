@@ -1,7 +1,7 @@
 import json
 from pyxform import constants
 from pyxform.utils import is_valid_xml_tag, node, unicode
-from pyxform.xls2json import print_pyobj_to_json
+#from pyxform.xls2json import print_pyobj_to_json
 from pyxform.question_type_dictionary import QUESTION_TYPE_DICT
 from pyxform.errors import PyXFormError
 

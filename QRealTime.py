@@ -35,18 +35,13 @@ import unicodedata
 import re
 import json
 from qgis.PyQt.QtCore import QTimer
-import datetime
 import requests
 import xml.etree.ElementTree as ET
-import site
 from qgis.core import QgsMessageLog, Qgis
-site.addsitedir(os.path.dirname(__file__))
-from pyxform.builder import create_survey_element_from_dict
 tag='QRealTime'
 def print(text,opt=''):
     """ to redirect print to MessageLog"""
     QgsMessageLog.logMessage(str(text)+str(opt),tag=tag,level=Qgis.Info)
-print('package already installed')
 def getProxiesConf():
     s = QSettings() #getting proxy from qgis options settings
     proxyEnabled = s.value("proxy/proxyEnabled", "")
@@ -63,36 +58,7 @@ def getProxiesConf():
         return proxyDict
     else:
         return None
-    
-def QVariantToODKtype(q_type):
-        if  q_type == QVariant.String:
-            return 'text'
-        elif q_type == QVariant.Date:
-            return 'datetime'
-        elif q_type in [2,3,4,32,33,35,36]:
-            return 'integer'
-        elif q_type in [6,38]:
-            return 'decimal'
-        else:
-            raise AttributeError("Can't cast QVariant to ODKType: " + q_type)
 
-def qtype(odktype):
-    if odktype == 'binary':
-        return QVariant.String,{'DocumentViewer': 2, 'DocumentViewerHeight': 0, 'DocumentViewerWidth': 0, 'FileWidget': True, 'FileWidgetButton': True, 'FileWidgetFilter': '', 'PropertyCollection': {'name': None, 'properties': {}, 'type': 'collection'}, 'RelativeStorage': 0, 'StorageMode': 0}
-    elif odktype=='string':
-        return QVariant.String,{}
-    elif odktype[:3] == 'sel' :
-        return QVariant.String,{}
-    elif odktype[:3] == 'int':
-        return QVariant.Int, {}
-    elif odktype[:3]=='dat':
-        return QVariant.Date, {}
-    elif odktype[:3]=='ima':
-        return QVariant.String,{'DocumentViewer': 2, 'DocumentViewerHeight': 0, 'DocumentViewerWidth': 0, 'FileWidget': True, 'FileWidgetButton': True, 'FileWidgetFilter': '', 'PropertyCollection': {'name': None, 'properties': {}, 'type': 'collection'}, 'RelativeStorage': 0, 'StorageMode': 0}
-    elif odktype == 'Hidden':
-        return 'Hidden'
-    else:
-        return (QVariant.String),{}
     
 class QRealTime:
     """QGIS Plugin Implementation."""
@@ -111,12 +77,18 @@ class QRealTime:
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
-        locale = QSettings().value('locale//userLocale')[0:2]
+        try:
+            if QSettings().value('locale//overrideFlag'):
+                locale = QSettings().value('locale//globalLocale')[0:2]
+            else:
+                locale = QSettings().value('locale//userLocale')[0:2]
+        except:
+            locale='en'
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
             'QRealTime_{}.qm'.format(locale))
-
+        print(locale_path)
         if os.path.exists(locale_path):
             self.translator = QTranslator()
             self.translator.load(locale_path)
@@ -127,10 +99,10 @@ class QRealTime:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&QRealTime')
+        self.menu = 'QRealTime'
         # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'QRealTime')
-        self.toolbar.setObjectName(u'QRealTime')
+        self.toolbar = self.iface.addToolBar('QRealTime')
+        self.toolbar.setObjectName('QRealTime')
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -219,67 +191,51 @@ class QRealTime:
             self.iface.addPluginToMenu(
                 self.menu,
                 action)
-
+        self.actions.append(action)
+        return action
+    
+    def add_layer_action( self,icon_path,text,callback,icon_enabled=True,add_to_vLayer=True,enabled_flag=True,parent=None):
+        icon = QIcon(icon_path)
+        if icon_enabled:
+            action = QAction(icon, text,parent)
+        else:
+            action = QAction(text,parent)
+        action.triggered.connect(callback)
+        action.setEnabled(enabled_flag)
+        if add_to_vLayer:
+            self.iface.addCustomActionForLayerType(action,'QRealTime',
+                                                   QgsMapLayer.VectorLayer,True)
         self.actions.append(action)
 
         return action
-
+    
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = os.path.join(self.plugin_dir,'icon.png')
-        self.add_action(
-            icon_path,
-            text=self.tr(u'QRealTime Setting'),
-            callback=self.run,
-            parent=self.iface.mainWindow())
-        self.ODKMenu = QMenu('QRealTime')
-        icon = QIcon(icon_path)
-        self.sync= QAction(self.tr(u'sync'),self.ODKMenu)
+        self.add_action(icon_path,text=self.tr(u'QRealTime Setting'),callback=self.run,parent=self.iface.mainWindow())
+        """add sync action"""
+        self.sync= self.add_layer_action(icon_path,self.tr(u'sync'),self.download,False)
+	# make sync action checkable and default to unchecked
         self.sync.setCheckable(True)
         self.sync.setChecked(False)
-        self.sync.triggered.connect(self.download)
-        self.sync.setChecked(False)
-        self.iface.addCustomActionForLayerType(
-                self.sync,
-                'QRealTime',
-                QgsMapLayer.VectorLayer,
-                True)
-
-        self.Import = QAction(icon,self.tr(u'import'),self.ODKMenu)
-        self.Import.triggered.connect(self.importData)
-        self.iface.addCustomActionForLayerType(
-                self.Import,
-                'QRealTime',
-                QgsMapLayer.VectorLayer,
-                True)
-        self.makeOnline=QAction(icon,self.tr(u'Make Online'),self.ODKMenu)
-        self.makeOnline.triggered.connect(self.sendForm)
-        self.iface.addCustomActionForLayerType(
-            self.makeOnline,
-            'QRealTime',
-            QgsMapLayer.VectorLayer,
-            True)
+        """add import action """
+        self.Import=self.add_layer_action(icon_path,self.tr(u'import'),self.importData)
+        """add makeonline action """
+        self.makeOnline=self.add_layer_action(icon_path,self.tr(u'Make Online'),self.sendForm)
         service=self.dlg.getCurrentService()
         self.service=service
         self.topElement= None
         self.version=''
         try:
-            self.time=1
-            self.time=int(service.getValue('sync time'))
+            self.time=86400
+            self.time=int(service.getValue(self.tr('sync time')))
         except:
             print ('can not read time')
         self.timer=QTimer()
         def timeEvent():
             print ('calling collect data')
-            layer=self.getLayer()
-            print(layer)
-            if (not self.topElement):
-                url=service.getValue('url')+'//formXml?formId='+layer.name()
-                response= requests.request('GET',url,proxies=getProxiesConf(),auth=service.getAuth(),verify=False)
-                if response.status_code==200:
-                    self.formKey,self.topElement,self.version,self.geoField = self.updateLayer(layer,response.content)
-            service.collectData(layer,layer.name(),False,self.topElement,self.version,self.geoField)
+            self.service.importData(self.layer,self.formID,False)
         self.timer.timeout.connect(timeEvent)
 
 
@@ -287,15 +243,12 @@ class QRealTime:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'QRealTime'),
+                'QRealTime',
                 action)
+            self.iface.removeCustomActionForLayerType(action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
-        self.iface.removeCustomActionForLayerType(self.sync)
-        self.iface.removeCustomActionForLayerType(self.makeOnline)
-        self.iface.removeCustomActionForLayerType(self.Import)
         del self.toolbar
-
 
     def run(self):
         """Run method that performs all the real work"""
@@ -313,148 +266,36 @@ class QRealTime:
         service=self.dlg.getCurrentService()
         layer=self.getLayer()
         forms,response= service.getFormList()
-        if response.status_code==200:
-            self.ImportData=ImportData()
-            self.ImportData.comboBox.addItems(forms)
-            self.ImportData.show()
-            result=self.ImportData.exec_()
-            if result:
-                selectedForm= self.ImportData.comboBox.currentText()
-                url=service.getValue('url')+'//formXml?formId='+selectedForm
-                response= requests.request('GET',url,proxies=getProxiesConf(),auth=service.getAuth(),verify=False)
-                if response.status_code==200:
-                    # with open('importForm.xml','w') as importForm:
-                    #     importForm.write(response.content)
-                    self.formKey,self.topElement,self.version,self.geoField = self.updateLayer(layer,response.content)
-                    layer.setName(self.formKey)
-                    service.collectData(layer,self.formKey,True,self.topElement,self.version,self.geoField)
-                else:
-                    print("unable to connect to server")
-
-                
-                        
-    def updateLayer(self,layer,xml):
-        ns='{http://www.w3.org/2002/xforms}'
-        root= ET.fromstring(xml)
-        #key= root[0][1][0][0].attrib['id']
-        instance=root[0][1].find(ns+'instance')
-        key=instance[0].attrib['id']
-        #topElement=root[0][1][0][0].tag.split('}')[1]
-        topElement=instance[0].tag.split('}')[1]
-        try:
-            version=instance[0].attrib['version']
-        except:
-            version='null'
-        print('key captured'+ key)
-        print (root[0][1].findall(ns+'bind'))
-        for bind in root[0][1].findall(ns+'bind'):
-            attrib=bind.attrib
-            print (attrib)
-            fieldName= attrib['nodeset'].split('/')[-1]
-            fieldType=attrib['type']
-            print('attrib type is',attrib['type'])
-            qgstype,config = qtype(attrib['type'])
-            print ('first attribute'+ fieldName)
-            inputs=root[1].findall('.//*[@ref]')
-            if fieldType[:3]!='geo':
-                print('creating new field:'+ fieldName)
-                isHidden= True
-                for input in inputs:
-                    if fieldName == input.attrib['ref'].split('/')[-1]:
-                        isHidden= False
-                        break
-                if isHidden:
-                    print('Reached Hidden')
-                    config['type']='Hidden'
-                self.dlg.getCurrentService().updateFields(layer,fieldName,qgstype,config)
-            else:
-                geoField=fieldName
-        return key,topElement,version,geoField
-
-
+        if response:
+	        if response.status_code==200:
+	            self.ImportData=ImportData()
+	            for name,key in forms.items():
+	            	self.ImportData.comboBox.addItem(name,key)
+	            self.ImportData.show()
+	            result=self.ImportData.exec_()
+	            if result:
+	                selectedForm= self.ImportData.comboBox.currentData()
+	                service.importData(layer,selectedForm,True)            
     def getLayer(self):
         return self.iface.activeLayer()
         
     def sendForm(self):
 #        get the fields model like name , widget type, options etc.
-        version= str(datetime.date.today())
-        print('version is'+ version)
         layer=self.getLayer()
-        self.dlg.getCurrentService().updateFields(layer)
-        fieldDict= self.getFieldsModel(layer)
-        print ('fieldDict',fieldDict)
-        surveyDict= {"name":layer.name(),"title":layer.name(),'VERSION':version,"instance_name": 'uuid()',"submission_url": '',
-        "default_language":'default','id_string':layer.name(),'type':'survey','children':fieldDict }
-        survey=create_survey_element_from_dict(surveyDict)
-        xml=survey.to_xml(validate=None, warnings=warnings)
-        os.chdir(os.path.expanduser('~'))
-        with open('Xform.xml','w') as xForm:
-            xForm.write(xml)
-        self.dlg.getCurrentService().sendForm(layer.name(),'Xform.xml')
+        service=self.dlg.getCurrentService()
+        service.prepareSendForm(layer)
         
     def download(self,checked=False):
         if checked==True:
             self.layer= self.getLayer()
-            self.time=int(self.service.getValue('sync time'))
-            print('starting timer every'+ str(self.time)+'second')
-            self.timer.start(1000*self.time)
+            self.service=self.dlg.getCurrentService()
+            forms,response= self.service.getFormList()
+            if response:
+                self.formID= forms[self.layer.name()]
+                self.time=int(self.service.getValue(self.tr('sync time')))
+                print('starting timer every'+ str(self.time)+'second')
+                self.timer.start(1000*self.time)
         elif checked==False:
             self.timer.stop()
             
-    def getFieldsModel(self,currentLayer):
-        fieldsModel = []
-        g_type= currentLayer.geometryType()
-        fieldDef={'name':'GEOMETRY','type':'geopoint','bind':{'required':'true()'}}
-        fieldDef['Appearance']= 'maps'
-        if g_type==0:
-            fieldDef['label']='add point location'
-        elif g_type==1:
-            fieldDef['label']='Draw Line'
-            fieldDef['type']='geotrace'
-        else:
-            fieldDef['label']='Draw Area'
-            fieldDef['type']='geoshape'
-        fieldsModel.append(fieldDef)
-        i=0
-        for field in currentLayer.fields():
-            widget =currentLayer.editorWidgetSetup(i)
-            fwidget = widget.type()
-            if (fwidget=='Hidden'):
-                i+=1
-                continue
-                
-            fieldDef = {}
-            fieldDef['name'] = field.name()
-            fieldDef['map'] = field.name()
-            fieldDef['label'] = field.alias() or field.name()
-            fieldDef['hint'] = ''
-            fieldDef['type'] = QVariantToODKtype(field.type())
-            fieldDef['bind'] = {}
-#            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
-            fieldDef['fieldWidget']=widget.type()
-            print('getFieldModel',fieldDef['fieldWidget'])
-            if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','ExternalResource'):
-                if fieldDef['fieldWidget'] == 'ValueMap':
-                    fieldDef['type']='select one'
-                    valueMap=widget.config()['map']
-                    config={}
-                    for value in valueMap:
-                        for k,v in value.items():
-                                config[v]=k
-                    print('configuration is ',config)
-                    choicesList=[{'name':name,'label':label} for name,label in config.items()]
-                    fieldDef["choices"] = choicesList
-                elif fieldDef['fieldWidget'] == 'Photo' or fieldDef['fieldWidget'] == 'ExternalResource' :
-                    fieldDef['type']='image'
-                    print('got an image type field')
-                
-#                fieldDef['choices'] = config
-            else:
-                fieldDef['choices'] = {}
-            if fieldDef['name'] == 'ODKUUID':
-                fieldDef["bind"] = {"readonly": "true()", "calculate": "concat('uuid:', uuid())"}
-            if fieldDef['fieldWidget'] == 'DateTime':
-                fieldDef["type"] = 'date'
-            fieldsModel.append(fieldDef)
-            i+=1
-        return fieldsModel
+    

@@ -1,17 +1,17 @@
 import copy
 import os
 
-from pyxform import file_utils, utils
+#from pyxform import file_utils, utils
 from pyxform.errors import PyXFormError
-from pyxform.external_instance import ExternalInstance
+#from pyxform.external_instance import ExternalInstance
 from pyxform.question import (InputQuestion, MultipleChoiceQuestion,
                               OsmUploadQuestion, Question, RangeQuestion,
                               TriggerQuestion, UploadQuestion)
 from pyxform.question_type_dictionary import QUESTION_TYPE_DICT
 from pyxform.section import GroupedSection, RepeatingSection
 from pyxform.survey import Survey
-from pyxform.utils import unicode
-from pyxform.xls2json import SurveyReader
+#from pyxform.utils import unicode
+#from pyxform.xls2json import SurveyReader
 
 
 def copy_json_dict(json_dict):
@@ -286,83 +286,83 @@ def create_survey_element_from_dict(d, sections=None):
     return builder.create_survey_element_from_dict(d)
 
 
-def create_survey_element_from_json(str_or_path):
-    d = utils.get_pyobj_from_json(str_or_path)
-    return create_survey_element_from_dict(d)
-
-
-def create_survey_from_xls(path_or_file):
-    excel_reader = SurveyReader(path_or_file)
-    d = excel_reader.to_json_dict()
-    survey = create_survey_element_from_dict(d)
-    if not survey.id_string:
-        survey.id_string = excel_reader._name
-    return survey
-
-
-def create_survey(
-        name_of_main_section=None, sections=None,
-        main_section=None,
-        id_string=None,
-        title=None,
-        default_language=None,
-        ):
-    """
-    name_of_main_section -- a string key used to find the main section in the
-                            sections dict if it is not supplied in the
-                            main_section arg
-    main_section -- a json dict that represents a survey
-    sections -- a dictionary of sections that can be drawn from to build the
-                survey
-    This function uses the builder class to create and return a survey.
-    """
-    if sections is None:
-        sections = {}
-    if main_section is None:
-        main_section = sections[name_of_main_section]
-    builder = SurveyElementBuilder()
-    builder.set_sections(sections)
-
-    # assert name_of_main_section in sections, name_of_main_section
-    if u"id_string" not in main_section:
-        main_section[u"id_string"] = name_of_main_section \
-            if id_string is None else name_of_main_section
-    survey = builder.create_survey_element_from_dict(main_section)
-
-    # not sure where to do this without repeating ourselves,
-    # but it's needed to pass xls2xform tests
-    # TODO: I would assume that the json-dict is valid
-    # (i.e. that it has a id string), then throw an error here.
-    #        We can set the id to whatever we want in xls2json.
-    #        Although to be totally modular, maybe we do need to repeat a lot
-    #       of the validation and setting default value stuff from xls2json
-    if id_string is not None:
-        survey.id_string = id_string
-
-    if title is not None:
-        survey.title = title
-    survey.def_lang = default_language
-
-    return survey
-
-
-def create_survey_from_path(path, include_directory=False):
-    """
-    include_directory -- Switch to indicate that all the survey forms in the
-                         same directory as the specified file should be read
-                         so they can be included through include types.
-    @see: create_survey
-    """
-    directory, file_name = os.path.split(path)
-    if include_directory:
-        main_section_name = file_utils._section_name(file_name)
-        sections = file_utils.collect_compatible_files_in_directory(directory)
-    else:
-        main_section_name, section = file_utils.load_file_to_dict(path)
-        sections = {main_section_name: section}
-    pkg = {
-        u'name_of_main_section': main_section_name,
-        u'sections': sections
-        }
-
-    return create_survey(**pkg)
+##def create_survey_element_from_json(str_or_path):
+##    d = utils.get_pyobj_from_json(str_or_path)
+##    return create_survey_element_from_dict(d)
+##
+##
+##def create_survey_from_xls(path_or_file):
+##    excel_reader = SurveyReader(path_or_file)
+##    d = excel_reader.to_json_dict()
+##    survey = create_survey_element_from_dict(d)
+##    if not survey.id_string:
+##        survey.id_string = excel_reader._name
+##    return survey
+##
+##
+##def create_survey(
+##        name_of_main_section=None, sections=None,
+##        main_section=None,
+##        id_string=None,
+##        title=None,
+##        default_language=None,
+##        ):
+##    """
+##    name_of_main_section -- a string key used to find the main section in the
+##                            sections dict if it is not supplied in the
+##                            main_section arg
+##    main_section -- a json dict that represents a survey
+##    sections -- a dictionary of sections that can be drawn from to build the
+##                survey
+##    This function uses the builder class to create and return a survey.
+##    """
+##    if sections is None:
+##        sections = {}
+##    if main_section is None:
+##        main_section = sections[name_of_main_section]
+##    builder = SurveyElementBuilder()
+##    builder.set_sections(sections)
+##
+##    # assert name_of_main_section in sections, name_of_main_section
+##    if u"id_string" not in main_section:
+##        main_section[u"id_string"] = name_of_main_section \
+##            if id_string is None else name_of_main_section
+##    survey = builder.create_survey_element_from_dict(main_section)
+##
+##    # not sure where to do this without repeating ourselves,
+##    # but it's needed to pass xls2xform tests
+##    # TODO: I would assume that the json-dict is valid
+##    # (i.e. that it has a id string), then throw an error here.
+##    #        We can set the id to whatever we want in xls2json.
+##    #        Although to be totally modular, maybe we do need to repeat a lot
+##    #       of the validation and setting default value stuff from xls2json
+##    if id_string is not None:
+##        survey.id_string = id_string
+##
+##    if title is not None:
+##        survey.title = title
+##    survey.def_lang = default_language
+##
+##    return survey
+##
+##
+##def create_survey_from_path(path, include_directory=False):
+##    """
+##    include_directory -- Switch to indicate that all the survey forms in the
+##                         same directory as the specified file should be read
+##                         so they can be included through include types.
+##    @see: create_survey
+##    """
+##    directory, file_name = os.path.split(path)
+##    if include_directory:
+##        main_section_name = file_utils._section_name(file_name)
+##        sections = file_utils.collect_compatible_files_in_directory(directory)
+##    else:
+##        main_section_name, section = file_utils.load_file_to_dict(path)
+##        sections = {main_section_name: section}
+##    pkg = {
+##        u'name_of_main_section': main_section_name,
+##        u'sections': sections
+##        }
+##
+##    return create_survey(**pkg)
