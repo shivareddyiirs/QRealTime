@@ -10,7 +10,6 @@
         copyright            : (C) 2017 by IIRS
         email                : kotishiva@gmail.com
  ***************************************************************************/
-
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -92,7 +91,7 @@ def QVariantToODKtype(q_type):
         else:
             return 'text'
 class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
-    services = ['Aggregate','Kobo']
+    services = ['Aggregate','Kobo', 'Central']
     def __init__(self, caller,parent=None):
         """Constructor."""
         super(QRealTimeDialog, self).__init__(parent)
@@ -121,12 +120,9 @@ class QRealTimeDialog(QtWidgets.QDialog, FORM_CLASS):
 class Aggregate (QTableWidget):
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
-
             We implement this ourselves since we do not inherit QObject.
-
             :param message: String for translation.
             :type message: str, QString
-
             :returns: Translated version of message.
             :rtype: QString
         """
@@ -506,11 +502,11 @@ class Aggregate (QTableWidget):
             except Exception as e:
                     print('unable to create',e)
         try:
-	        with edit(layer):
-	            layer.addFeatures(newQgisFeatures)
+            with edit(layer):
+                layer.addFeatures(newQgisFeatures)
         except:
-        	self.iface.messageBar().pushCritical(self.tag,"Stop layer editing and import again")
-        	return
+            self.iface.messageBar().pushCritical(self.tag,"Stop layer editing and import again")
+            return
         self.processingLayer = None
         
     def getUUIDList(self,lyr):
@@ -624,6 +620,82 @@ class Aggregate (QTableWidget):
         except Exception as e:
             print ('not able to fetch',e)
             return response,table
+
+class Central (Aggregate):
+    tag="ODK Central"
+    # user auth token
+    usertoken = ""
+
+    def __init__(self,parent,caller):
+        super(Central, self).__init__(parent,caller)
+        
+    def setParameters(self):
+        self.parameters =[
+        ["id","Central"],
+        ["url",'https://sandbox.getodk.cloud'],
+        [self.tr("user"), ''],
+        [self.tr("password"), ''],
+        [self.tr("last Submission"),''],
+        [self.tr('sync time'),''],
+        [self.tr('project name'),'']
+        ]
+        
+    def getFormList(self):
+        user=self.getValue(self.tr("user"))
+        password=self.getValue(self.tr("password"))
+        c_url=self.getValue('url')
+        data = {'email': user, 'password' : password}
+        # todo: add check to see if url exists
+        headers = {"Content-Type": "application/json"}
+        projects = {}
+        forms = {}
+        project_name =self.getValue(self.tr("project name"))
+        project_id = 0
+        try:
+            x  = requests.post(c_url + "v1/sessions", json = data, headers = headers)
+            token = x.json()["token"]
+            global usertoken
+            usertoken = token
+            projects_response = requests.get(c_url + "v1/projects/", headers={"Authorization": "Bearer " + token})
+            # todo: add check to see if project name was entered
+            for p in projects_response.json():
+                if p["name"] == project_name:
+                    project_id = p["id"]
+            # todo: add message to say project name doesn't exist
+            form_response = requests.get(c_url + "v1/projects/"+ str(project_id)+"/forms/", headers={"Authorization": "Bearer " + token})
+            for form in form_response.json():
+                forms[form["name"]] = form["enketoOnceId"]
+            return forms, x
+        except:
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url username or password"))
+            return None,None
+
+    def importData(self,layer,selectedForm,importData=True):
+        #from central 
+        user=self.getValue(self.tr("user"))
+        password=self.getValue(self.tr("password"))
+        c_url=self.getValue('url')
+        # todo: add check to see if url exists
+        para={'format':'xml'}
+        data = {'email': user, 'password' : password}
+        headers = {"Content-Type": "application/json"}
+        requests.packages.urllib3.disable_warnings()
+        try:
+            response = requests.get(c_url+'v1/projects/4/forms/geopoint-form.xml', headers ={"Authorization": "Bearer " + usertoken})
+        except:
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url,username or password"))
+            return
+        if response.status_code==200:
+            xml=response.content
+            self.iface.messageBar().pushCritical(self.tag,self.tr(str(xml)))
+            self.layer_name,self.version, self.geoField,self.fields= self.updateLayerXML(layer,xml)
+            layer.setName(self.layer_name)
+            self.iface.messageBar().pushCritical(self.tag,self.tr("succesfull response from xml form file"))
+            self.collectData(layer,selectedForm,importData,self.layer_name,self.version,self.geoField)
+        else:
+            self.iface.messageBar().pushWarning(self.tag,self.tr("not able to connect to server"))
+
+
 class Kobo (Aggregate):
     tag="KoboToobox"
     def __init__(self,parent,caller):
@@ -862,8 +934,8 @@ class Kobo (Aggregate):
         j=0
         for field in currentLayer.fields():
             if field.name()=='ODKUUID':
-            	i+=1
-            	continue
+                i+=1
+                continue
             widget =currentLayer.editorWidgetSetup(i)
             fwidget = widget.type()
             if (fwidget=='Hidden'):
@@ -907,3 +979,4 @@ class Kobo (Aggregate):
             fieldsModel.append(fieldDef)
             i+=1
         return fieldsModel,choicesList
+
