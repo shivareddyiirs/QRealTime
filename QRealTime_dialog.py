@@ -621,10 +621,11 @@ class Aggregate (QTableWidget):
             print ('not able to fetch',e)
             return response,table
 
-class Central (Aggregate):
+class Central (Kobo):
     tag="ODK Central"
     # user auth token
     usertoken = ""
+    project_id = 0
 
     def __init__(self,parent,caller):
         super(Central, self).__init__(parent,caller)
@@ -650,7 +651,6 @@ class Central (Aggregate):
         projects = {}
         forms = {}
         project_name =self.getValue(self.tr("project name"))
-        project_id = 0
         try:
             x  = requests.post(c_url + "v1/sessions", json = data, headers = headers)
             token = x.json()["token"]
@@ -658,6 +658,7 @@ class Central (Aggregate):
             usertoken = token
             projects_response = requests.get(c_url + "v1/projects/", headers={"Authorization": "Bearer " + token})
             # todo: add check to see if project name was entered
+            global project_id
             for p in projects_response.json():
                 if p["name"] == project_name:
                     project_id = p["id"]
@@ -676,21 +677,25 @@ class Central (Aggregate):
         password=self.getValue(self.tr("password"))
         c_url=self.getValue('url')
         # todo: add check to see if url exists
-        para={'format':'xml'}
         data = {'email': user, 'password' : password}
         headers = {"Content-Type": "application/json"}
         requests.packages.urllib3.disable_warnings()
+        selectedFormName = ""
+        form_response = requests.get(c_url + "v1/projects/"+ str(project_id)+"/forms/", headers={"Authorization": "Bearer " + usertoken})
+        for form in form_response.json():
+            if form ["enketoOnceId"] == selectedForm:
+                selectedFormName = form["name"]
         try:
-            response = requests.get(c_url+'v1/projects/4/forms/geopoint-form.xml', headers ={"Authorization": "Bearer " + usertoken})
+            self.iface.messageBar().pushCritical(self.tag,self.tr(str(selectedForm)))
+            response = requests.get(c_url+'v1/projects/'+str(project_id)+'/forms/'+ selectedFormName+'.xml', headers ={"Authorization": "Bearer " + usertoken})
         except:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url,username or password"))
             return
         if response.status_code==200:
             xml=response.content
-            self.iface.messageBar().pushCritical(self.tag,self.tr(str(xml)))
             self.layer_name,self.version, self.geoField,self.fields= self.updateLayerXML(layer,xml)
             layer.setName(self.layer_name)
-            self.iface.messageBar().pushCritical(self.tag,self.tr("succesfull response from xml form file"))
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Succesfull response from xml form file"))
             self.collectData(layer,selectedForm,importData,self.layer_name,self.version,self.geoField)
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("not able to connect to server"))
