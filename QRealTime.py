@@ -288,11 +288,12 @@ class QRealTime:
     def download(self,checked=False):
         if checked==True:
             self.layer= self.getLayer()
-            self.service=self.dlg.getCurrentService()
             forms,response= self.service.getFormList()
             if response:
                 self.formID= forms[self.layer.name()]
-                self.time=int(self.service.getValue(self.tr('sync time')))
+		service=self.dlg.getCurrentService()
+                self.service=service
+                self.time=int(service.getValue(self.tr('sync time')))
                 print('starting timer every'+ str(self.time)+'second')
                 self.timer.start(1000*self.time)
         elif checked==False:
