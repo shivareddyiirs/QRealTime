@@ -35,7 +35,6 @@ from qgis.core import QgsMessageLog, Qgis
 import datetime
 import site
 import json
-from collections.abc import MutableMapping 
 site.addsitedir(os.path.dirname(__file__))
 from pyxform.builder import create_survey_element_from_dict
 debug=True
@@ -535,8 +534,6 @@ class Aggregate (QTableWidget):
             return QgsPoint(xform.transform(QgsPointXY(pPoint)))
 
 
-        
-                                                
     def getTable(self,XFormKey,importData,topElement,version= 'null'):
         turl=self.getValue('url')
         table=[]
@@ -974,7 +971,7 @@ class Central (Kobo):
 
     def importData(self,layer,selectedForm,importData=True):
         """Imports user selected form from server """
-
+        
         #from central 
         user=self.getValue(self.tr("user"))
         project_id = Central.project_id
@@ -1006,7 +1003,7 @@ class Central (Kobo):
             self.iface.messageBar().pushWarning(self.tag,self.tr("not able to connect to server"))
 
 
-    def flattenValues(self, d,  items, parent_key ='', sep ='_'): 
+    def flattenValues(self, nestedDict): 
         """Reformats a nested dictionary into a flattened dictionary
 
         If the argument parent_key and sep aren't passed in, the default underscore is used
@@ -1022,13 +1019,15 @@ class Central (Kobo):
             ex. {'type': 'LineString', 'coordinates': [[-98.318627, 38.548165, 0]}
         """
 
-        for k, v in d.items(): 
-            new_key =  k 
-            if isinstance(v, MutableMapping): 
-                items.extend(self.flattenValues(v, items, new_key, sep = sep).items()) 
+        new_dict = {}
+        for rkey,val in nestedDict.items():
+            key = rkey
+            if isinstance(val, dict):
+                new_dict.update(self.flattenValues(val))
             else:
-                items.append((new_key, v)) 
-        return dict(items)
+                new_dict[key] = val
+        return new_dict
+
 
 
     def getTable(self,XFormKey,importData,topElement,layer,version= 'null'):
@@ -1070,7 +1069,7 @@ class Central (Kobo):
         if submissionHistory['submissions']==0:
             return response1, table
         for submission in data['value']:
-            formattedData = self.flattenValues(submission, [])
+            formattedData = self.flattenValues(submission)
             formattedData[storedGeoField] = formattedData.pop('coordinates')
             formattedData['ODKUUID'] = formattedData.pop('__id')
             subTime = formattedData['submissionDate']
