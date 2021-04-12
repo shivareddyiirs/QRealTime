@@ -502,11 +502,11 @@ class Aggregate (QTableWidget):
             except Exception as e:
                     print('unable to create',e)
         try:
-            with edit(layer):
-                layer.addFeatures(newQgisFeatures)
+	        with edit(layer):
+	            layer.addFeatures(newQgisFeatures)
         except:
-            self.iface.messageBar().pushCritical(self.tag,"Stop layer editing and import again")
-            return
+        	self.iface.messageBar().pushCritical(self.tag,"Stop layer editing and import again")
+        	return
         self.processingLayer = None
         
     def getUUIDList(self,lyr):
@@ -534,8 +534,6 @@ class Aggregate (QTableWidget):
             return QgsPoint(xform.transform(QgsPointXY(pPoint)))
 
 
-        
-                                                
     def getTable(self,XFormKey,importData,topElement,version= 'null'):
         turl=self.getValue('url')
         table=[]
@@ -620,85 +618,6 @@ class Aggregate (QTableWidget):
         except Exception as e:
             print ('not able to fetch',e)
             return response,table
-
-class Central (Kobo):
-    tag="ODK Central"
-    # user auth token
-    usertoken = ""
-    project_id = 0
-
-    def __init__(self,parent,caller):
-        super(Central, self).__init__(parent,caller)
-        
-    def setParameters(self):
-        self.parameters =[
-        ["id","Central"],
-        ["url",'https://sandbox.getodk.cloud'],
-        [self.tr("user"), ''],
-        [self.tr("password"), ''],
-        [self.tr("last Submission"),''],
-        [self.tr('sync time'),''],
-        [self.tr('project name'),'']
-        ]
-        
-    def getFormList(self):
-        user=self.getValue(self.tr("user"))
-        password=self.getValue(self.tr("password"))
-        c_url=self.getValue('url')
-        data = {'email': user, 'password' : password}
-        # todo: add check to see if url exists
-        headers = {"Content-Type": "application/json"}
-        projects = {}
-        forms = {}
-        project_name =self.getValue(self.tr("project name"))
-        try:
-            x  = requests.post(c_url + "v1/sessions", json = data, headers = headers)
-            token = x.json()["token"]
-            global usertoken
-            usertoken = token
-            projects_response = requests.get(c_url + "v1/projects/", headers={"Authorization": "Bearer " + token})
-            # todo: add check to see if project name was entered
-            global project_id
-            for p in projects_response.json():
-                if p["name"] == project_name:
-                    project_id = p["id"]
-            # todo: add message to say project name doesn't exist
-            form_response = requests.get(c_url + "v1/projects/"+ str(project_id)+"/forms/", headers={"Authorization": "Bearer " + token})
-            for form in form_response.json():
-                forms[form["name"]] = form["enketoOnceId"]
-            return forms, x
-        except:
-            self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url username or password"))
-            return None,None
-
-    def importData(self,layer,selectedForm,importData=True):
-        #from central 
-        user=self.getValue(self.tr("user"))
-        password=self.getValue(self.tr("password"))
-        c_url=self.getValue('url')
-        # todo: add check to see if url exists
-        data = {'email': user, 'password' : password}
-        headers = {"Content-Type": "application/json"}
-        requests.packages.urllib3.disable_warnings()
-        selectedFormName = ""
-        form_response = requests.get(c_url + "v1/projects/"+ str(project_id)+"/forms/", headers={"Authorization": "Bearer " + usertoken})
-        for form in form_response.json():
-            if form ["enketoOnceId"] == selectedForm:
-                selectedFormName = form["name"]
-        try:
-            self.iface.messageBar().pushCritical(self.tag,self.tr(str(selectedForm)))
-            response = requests.get(c_url+'v1/projects/'+str(project_id)+'/forms/'+ selectedFormName+'.xml', headers ={"Authorization": "Bearer " + usertoken})
-        except:
-            self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url,username or password"))
-            return
-        if response.status_code==200:
-            xml=response.content
-            self.layer_name,self.version, self.geoField,self.fields= self.updateLayerXML(layer,xml)
-            layer.setName(self.layer_name)
-            self.iface.messageBar().pushCritical(self.tag,self.tr("Succesfull response from xml form file"))
-            self.collectData(layer,selectedForm,importData,self.layer_name,self.version,self.geoField)
-        else:
-            self.iface.messageBar().pushWarning(self.tag,self.tr("not able to connect to server"))
 
 
 class Kobo (Aggregate):
@@ -810,6 +729,7 @@ class Kobo (Aggregate):
             return
         if response.status_code==200:
             xml=response.content
+            self.iface.messageBar().pushCritical(self.tag,self.tr(str(xml)))
             # with open('importForm.xml','w') as importForm:
             #     importForm.write(response.content)
             self.layer_name,self.version, self.geoField,self.fields= self.updateLayerXML(layer,xml)
@@ -817,6 +737,7 @@ class Kobo (Aggregate):
             self.collectData(layer,selectedForm,importData,self.layer_name,self.version,self.geoField)
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("not able to connect to server"))
+
     def updateLayerXML(self,layer,xml):
         geoField=''
         ns='{http://www.w3.org/2002/xforms}'
@@ -866,6 +787,7 @@ class Kobo (Aggregate):
                 continue
             self.updateFields(layer,fieldName,qgstype,config)
         return layer_name,version,geoField,fields
+
     def getTable(self,XFormKey,importData,topElement,layer,version= 'null'):
         user=self.getValue(self.tr("user"))
         password=self.getValue(self.tr("password"))
@@ -920,6 +842,7 @@ class Kobo (Aggregate):
             lastSubmission=datetime.datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
             self.getValue(self.tr('last Submission'),lastSubmission)
         return response, table
+
     def getFieldsModel(self,currentLayer):
         fieldsModel = []
         choicesList = []
@@ -939,8 +862,8 @@ class Kobo (Aggregate):
         j=0
         for field in currentLayer.fields():
             if field.name()=='ODKUUID':
-                i+=1
-                continue
+            	i+=1
+            	continue
             widget =currentLayer.editorWidgetSetup(i)
             fwidget = widget.type()
             if (fwidget=='Hidden'):
@@ -985,3 +908,217 @@ class Kobo (Aggregate):
             i+=1
         return fieldsModel,choicesList
 
+class Central (Kobo):
+    tag="ODK Central"
+
+    def __init__(self,parent,caller):
+        super(Central, self).__init__(parent,caller)
+        # user auth token
+        self.usertoken = ""
+        # corresponding id for entered project name
+        self.project_id = 0
+        # name of selected form 
+        self.form_name = ""
+        
+    def setParameters(self):
+        self.parameters =[
+        ["id","Central"],
+        ["url",'https://sandbox.getodk.cloud'],
+        [self.tr("user"), ''],
+        [self.tr("password"), ''],
+        [self.tr("last Submission"),''],
+        [self.tr('sync time'),''],
+        [self.tr('project name'),'']
+        ]
+        
+    def getFormList(self):
+        """Retrieves list of all forms using user entered credentials
+
+        Returns
+        ------
+        forms - dictionary
+            contains all forms in user's account
+        x - HTTP response
+            authentication response 
+        """
+
+        user=self.getValue(self.tr("user"))
+        password=self.getValue(self.tr("password"))
+        c_url=self.getValue('url')
+        data = {'email': user, 'password' : password}
+        if not c_url:
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
+            return None,None
+        headers = {"Content-Type": "application/json"}
+        projects = {}
+        forms = {}
+        project_name =self.getValue(self.tr("project name"))
+        try:
+            x  = requests.post(c_url + "v1/sessions", json = data, headers = headers)
+            token = x.json()["token"]
+            Central.usertoken = token
+            projects_response = requests.get(c_url + "v1/projects/", headers={"Authorization": "Bearer " + token})
+            for p in projects_response.json():
+                if p["name"] == project_name:
+                    Central.project_id = p["id"]
+            form_response = requests.get(c_url + "v1/projects/"+ str(Central.project_id)+"/forms/", headers={"Authorization": "Bearer " + token})
+            for form in form_response.json():
+                forms[form["name"]] = form["enketoOnceId"]
+            return forms, x
+        except:
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url, username, project name or password"))
+            return None,None
+
+    def importData(self,layer,selectedForm,importData=True):
+        """Imports user selected form from server """
+        
+        #from central 
+        user=self.getValue(self.tr("user"))
+        project_id = Central.project_id
+        password=self.getValue(self.tr("password"))
+        c_url=self.getValue('url')
+        if not c_url:
+            self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
+            return None,None
+        data = {'email': user, 'password' : password}
+        headers = {"Content-Type": "application/json"}
+        requests.packages.urllib3.disable_warnings()
+        selectedFormName = ""
+        form_response = requests.get(c_url + "v1/projects/"+ str(project_id)+"/forms/", headers={"Authorization": "Bearer " + Central.usertoken})
+        for form in form_response.json():
+            if form ["enketoOnceId"] == selectedForm:
+                selectedFormName = form["name"]
+                Central.form_name = selectedFormName
+        try:
+            response = requests.get(c_url+'v1/projects/'+str(project_id)+'/forms/'+ selectedFormName+'.xml', headers ={"Authorization": "Bearer " + Central.usertoken})
+        except:
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url,username or password"))
+            return
+        if response.status_code==200:
+            xml=response.content
+            self.layer_name,self.version, self.geoField,self.fields= self.updateLayerXML(layer,xml)
+            layer.setName(self.layer_name)
+            self.collectData(layer,selectedForm,importData,self.layer_name,self.version,self.geoField)
+        else:
+            self.iface.messageBar().pushWarning(self.tag,self.tr("not able to connect to server"))
+
+
+    def flattenValues(self, nestedDict): 
+        """Reformats a nested dictionary into a flattened dictionary
+
+        If the argument parent_key and sep aren't passed in, the default underscore is used
+
+        Parameters
+        ----------
+        d: nested dictionary
+            ex. {'geotrace_example': {'type': 'LineString', 'coordinates': [[-98.318627, 38.548165, 0]}}
+
+        Returns
+        ------
+        dict(items) - dictionary
+            ex. {'type': 'LineString', 'coordinates': [[-98.318627, 38.548165, 0]}
+        """
+
+        new_dict = {}
+        for rkey,val in nestedDict.items():
+            key = rkey
+            if isinstance(val, dict):
+                new_dict.update(self.flattenValues(val))
+            else:
+                new_dict[key] = val
+        return new_dict
+
+
+
+    def getTable(self,XFormKey,importData,topElement,layer,version= 'null'):
+        """Retrieves data from form table, and filters out only the necessary fields
+
+        Returns
+        ------
+        response, list
+            response1 - HTTP response
+                response containing original form table data
+            table - list
+                contains filtered fields
+        """
+
+        user=self.getValue(self.tr("user"))
+        password=self.getValue(self.tr("password"))
+        requests.packages.urllib3.disable_warnings()
+        # hard coded url is being used
+        url=self.getValue('url')
+        print(url)
+        storedGeoField = self.geoField
+        lastSub=""
+        if not importData:
+            try:
+                lastSub=self.getValue(self.tr('last Submission'))
+            except:
+                print("error")
+        url_submissions=url + "v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name
+        url_data=url + "v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name + ".svc/Submissions"
+        #print('urldata is '+url_data)
+        response = requests.get(url_submissions, headers={"Authorization": "Bearer " + Central.usertoken, "X-Extended-Metadata": "true"})
+        response1 = requests.get(url_data, headers={"Authorization": "Bearer " + Central.usertoken})
+        submissionHistory=response.json()
+        # json produces nested dictionary contain all table data
+        data=response1.json()
+        print(data)
+        subTimeList=[]
+        table=[]
+        if submissionHistory['submissions']==0:
+            return response1, table
+        for submission in data['value']:
+            formattedData = self.flattenValues(submission)
+            formattedData[storedGeoField] = formattedData.pop('coordinates')
+            formattedData['ODKUUID'] = formattedData.pop('__id')
+            subTime = formattedData['submissionDate']
+            subTime_datetime=datetime.datetime.strptime(subTime[0: subTime.index('.')],'%Y-%m-%dT%H:%M:%S')
+            subTimeList.append(subTime_datetime)
+            stringversion = ''
+            coordinates = formattedData[storedGeoField]
+            # removes brackets to format coordinates in a string separated by spaces (ex. "38.548165 -98.318627 0")
+            if formattedData['type'] == 'Point':
+                latitude = coordinates[1]
+                coordinates[1] = coordinates[0]
+                coordinates[0] = latitude
+                for val in formattedData[storedGeoField]:
+                    stringversion+= str(val) + ' '
+            else: 
+                count = 1
+                for each_coor in coordinates:
+                    temp = ""
+                    #converting current (longitude, latitude) coordinate to (latitude, longitude) for accurate graphing 
+                    latitude = each_coor[1]
+                    each_coor[1] = each_coor[0]
+                    each_coor[0] = latitude
+                    for val in each_coor:
+                        temp += str(val) + " "
+                    stringversion += str("".join(temp.rstrip()))
+                    if count != len(coordinates):
+                        stringversion += ";"
+                    count+=1
+            formattedData[storedGeoField] = stringversion
+            if formattedData['attachmentsPresent']>0:
+                url_data1 = url + "v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name + "/attachments" 
+                attachmentsResponse = requests.get(url_data1, headers={"Authorization": "Bearer " + Central.usertoken})
+                for attachment in attachmentsResponse.json():
+                    binar_url= url_data1 + str(attachment)
+            #subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
+            #subTimeList.append(subTime_datetime) 
+            for key in list(formattedData):
+                print(key)
+                if key == self.geoField:
+                    print (self.geoField)
+                    continue
+                if key not in self.fields:
+                    formattedData.pop(key)
+                else:
+                    if self.fields[key]=="binary":
+                        submission[key]=binar_url
+            table.append(formattedData)
+        if len(subTimeList)>0:
+            lastSubmission=max(subTimeList)
+            lastSubmission=datetime.datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
+            self.getValue(self.tr('last Submission'),lastSubmission)
+        return response1, table
