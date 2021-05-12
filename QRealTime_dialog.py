@@ -823,6 +823,7 @@ class Kobo (Aggregate):
         for submission in data['results']:
             submission['ODKUUID']=submission['meta/instanceID']
             subTime=submission['_submission_time']
+	    binar_url=""
             for attachment in submission['_attachments']:
                 binar_url=attachment['download_url']
             subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
