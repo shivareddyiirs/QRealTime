@@ -30,7 +30,7 @@ homepage=https://shivareddyiirs.github.io/QRealTime/
 category=Plugins
 icon=icon.png
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
