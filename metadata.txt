@@ -12,6 +12,7 @@ qgisMinimumVersion=3.00
 description=This plugin connects you to Aggregate Servers like ODK Aggregate, KoboToolbox and provide easy tools to convert layer into form, import form data into layer and auto sync layer and form data.
 version=3.15
 author=Shiva Reddy Koti, Prabhakar Alok Verma
+contributors=Chandni Rajasekaran from University of Washington Impact++ (udubimpact@gmail.com)
 email=kotishiva@gmail.com
 
 about=This software is designed and developed in Indian Institute of Remote Sensing, ISRO for mobile data collection. Form designing to data compilation every step is automated in a way that everything can be done inside GIS environment.
