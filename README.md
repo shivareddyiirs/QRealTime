@@ -1,4 +1,4 @@
-<h1> Welcome to QRealTime plugin</h1>
+<h1> Welcome to QRealTime plugin development version focussing on adding ODK Central support right now</h1>
 <img src="https://user-images.githubusercontent.com/5653512/84229819-252cc300-ab08-11ea-8cc3-74f9f1d3f1df.png" alt="flowchart">
 
 
