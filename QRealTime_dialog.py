@@ -28,7 +28,7 @@ from PyQt5.QtCore import Qt, QSettings, QSize,QVariant, QTranslator, qVersion, Q
 import xml.etree.ElementTree as ET
 import requests
 from qgis.gui import QgsMessageBar
-from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit,QgsPointXY,QgsEditorWidgetSetup
+from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit,QgsPointXY,QgsEditorWidgetSetup,QgsTaskManager,QgsTask,QgsApplication
 import six
 from six.moves import range
 from qgis.core import QgsMessageLog, Qgis
@@ -141,6 +141,7 @@ class Aggregate (QTableWidget):
         self.setRowCount(len(self.parameters)-1)
         self.verticalHeader().hide()
         self.horizontalHeader().hide()
+        self.tag='ODK Aggregate'
         
         S = QSettings()
         for row,parameter in enumerate(self.parameters):
@@ -164,7 +165,7 @@ class Aggregate (QTableWidget):
         ["url",''],
         [self.tr("user"), ''],
         [self.tr("password"), ''],
-        [self.tr("lastID"),''],
+        [self.tr("last Submission"),''],
         [self.tr('sync time'),3600]
         ]
     def getServiceName(self):
@@ -267,6 +268,7 @@ class Aggregate (QTableWidget):
             #     importForm.write(response.content)
             self.formKey,self.topElement,self.version,self.geoField = self.updateLayerXML(layer,response.content)
             layer.setName(self.formKey)
+            print("calling collect data")
             self.collectData(layer,self.formKey,importData,self.topElement,self.version,self.geoField)
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Not able to collect data from server"))
@@ -349,9 +351,9 @@ class Aggregate (QTableWidget):
                 fieldType=attrib['type']
             except:
                 continue
-            print('attrib type is',attrib['type'])
+            #print('attrib type is',attrib['type'])
             qgstype,config = qtype(attrib['type'])
-            print ('first attribute'+ fieldName)
+            #print ('first attribute'+ fieldName)
             inputs=root[1].findall('.//*[@ref]')
             if fieldType[:3]!='geo':
                 print('creating new field:'+ fieldName)
@@ -361,7 +363,7 @@ class Aggregate (QTableWidget):
                         isHidden= False
                         break
                 if isHidden:
-                    print('Reached Hidden')
+                    #print('Reached Hidden')
                     config['type']='Hidden'
                 self.updateFields(layer,fieldName,qgstype,config)
             else:
@@ -415,20 +417,56 @@ class Aggregate (QTableWidget):
             self.iface.messageBar().pushCritical(self.tag,self.tr("Form is not sent"))
         file.close()
         return response
+    def test(self,task,a,b):
+        print(a,b)
+        return [a,b]
+    def comp(self,exception,result):
+        if exception:
+            print("exception in task execution")
+        response=result['response']
+        remoteTable=result['table']
+        if response.status_code == 200:
+            print ('after task finished before update layer')
+            if remoteTable:
+                print ('task has returned some data')
+                self.updateLayer(self.layer,remoteTable,self.geoField)
+                self.getValue("last Submission",self.lastID)
+                self.iface.messageBar().pushSuccess(self.tag,self.tr("Data imported Successfully"))     
+        else:
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Not able to collect data"))
         
-    def collectData(self,layer,xFormKey,importData=False,topElement='',version='null',geoField=''):
+    def collectData(self,layer,xFormKey,doImportData=False,topElement='',version=None,geoField=''):
 #        if layer :
 #            print("layer is not present or not valid")
 #            return
+        def testc(exception,result):
+            if exception:
+                print("task raised exception")
+            else:
+                print("Success",result[0])
+                print("task returned")
+        
         self.updateFields(layer)
-        response, remoteTable = self.getTable(xFormKey,importData,topElement,version)
-        if response.status_code == 200:
-            print ('before Update Layer')
-            if remoteTable:
-                print ('table have some data')
-                self.updateLayer(layer,remoteTable,geoField)
-        else:
-            self.iface.messageBar().pushCritical(self.tag,self.tr("Not able to collect data from Aggregate"))
+        self.layer=layer
+        self.turl=self.getValue('url')
+        self.auth=self.getAuth()
+        self.lastID=self.getValue('last Submission')
+        self.proxyConfig= getProxiesConf()
+        self.xFormKey=xFormKey
+        self.isImportData=doImportData
+        self.topElement=topElement
+        self.version=version
+        print("task is being created")
+        self.task1 = QgsTask.fromFunction('downloading data',self.getTable, on_finished=self.comp)
+        print("task is created")
+        print("task status1 is  ",self.task1.status())
+        QgsApplication.taskManager().addTask(self.task1)
+        print("task added to taskmanager")
+        print("task status2 is  ",self.task1.status())
+        #task1.waitForFinished()
+        print("task status3 is  ",self.task1.status())
+        #response, remoteTable = self.getTable(xFormKey,importData,topElement,version)
+        
     
     def updateFields(self,layer,text='ODKUUID',q_type=QVariant.String,config={}):
         flag=True
@@ -534,38 +572,43 @@ class Aggregate (QTableWidget):
             return QgsPoint(xform.transform(QgsPointXY(pPoint)))
 
 
-    def getTable(self,XFormKey,importData,topElement,version= 'null'):
-        turl=self.getValue('url')
+    def getTable(self,task):
+        #turl=self.getValue('url')
+        print("calling getTable in ODK Aggregate")
         table=[]
-        if turl:
-            url=turl+'/view/submissionList?formId='+XFormKey
+        if self.turl:
+            url=self.turl+'/view/submissionList?formId='+XFormKey
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
-            return None,table
+            return {'response':None, 'table':table}
         method='GET'
         lastID=""
-        if not importData:
-            lastID=self.getValue('lastID')
+        response=None
+        if not self.isImportData:
+            lastID=datetime.datetime.strptime(self.lastID,'%Y-%m-%dT%H:%M:%S')
         try:
-            response = requests.request(method,url,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
+            response = requests.request(method,url,proxies=self.proxyConfig,auth=self.auth,verify=False)
         except:
-            self.iface.messageBar().pushCritical(self.tag,self.tr("Not able to connect to server"))
-            return response, table
+            #self.iface.messageBar().pushCritical(self.tag,self.tr("Not able to connect to server"))
+            return {'response':response, 'table':table}
         if not response.status_code == 200:
-                return response, table
+        	return {'response':response, 'table':table}
         try:
             root = ET.fromstring(response.content)
             ns='{http://opendatakit.org/submissions}'
             instance_ids=[child.text for child in root[0].findall(ns+'id')]
             no_sub= len(instance_ids)
 #            print('instance ids before filter',instance_ids)
-            print('number of submissions are',no_sub)
+            #print('number of submissions are',no_sub)
             ns1='{http://www.opendatakit.org/cursor}'
             lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
-            print('server lastID is', lastReturnedURI)
+            lastReturnedURI= datetime.datetime.strptime(lastReturnedURI,'%Y-%m-%dT%H:%M:%S')
+            print("last id  id are",lastID)
+            print( "last returned id is",lastReturnedURI)
+            #print('server lastID is', lastReturnedURI)
             if lastID ==lastReturnedURI:
                 print ('No Download returning')
-                return response,table
+                return {'response':response, 'table':table}
             lastindex=0
             try:
                 lastindex= instance_ids.index(lastID)
@@ -575,16 +618,16 @@ class Aggregate (QTableWidget):
             print('downloading')
             for id in instance_ids :
                 if id:
-                    url=self.getValue('url')+'/view/downloadSubmission'
-                    print (url)
-                    para={'formId':'{}[@version={} and @uiVersion=null]/{}[@key={}]'.format(XFormKey,version,topElement,id)}
-                    response=requests.request(method,url,params=para,proxies=getProxiesConf(),auth=self.getAuth(),verify=False)
+                    url=self.turl+'/view/downloadSubmission'
+                    #print (url)
+                    para={'formId':'{}[@version={} and @uiVersion=null]/{}[@key={}]'.format(self.xFormKey,self,version,self.topElement,id)}
+                    response=requests.request(method,url,params=para,proxies= self.proxyConfig,auth=self.auth,verify=False)
                     if not response.status_code == 200:
                         return response,table
                     #print('xml downloaded is',response.content)
                     root1=ET.fromstring(response.content)
                     #print('downloaded data is',root1)
-                    data=root1[0].findall(ns+topElement)
+                    data=root1[0].findall(ns+self.topElement)
                     #print('data is',data[0])
                     dict={child.tag.split('}')[-1]:child.text for child in data[0]}
                     dict['ODKUUID']=id
@@ -596,34 +639,36 @@ class Aggregate (QTableWidget):
                                     try:
                                         for child in grEle[0]:
                                             dict[child.tag.split('}')[-1]]=child.text
-                                            print('found a group element')
+                                            #print('found a group element')
                                     except:
-                                        print('error')
+                                        #print('error')
+                                        pass
                     mediaFiles=root1.findall(ns+'mediaFile')
                     if len(mediaFiles)>0:
                         for mediaFile in mediaFiles:
                             mediaDict={child.tag.replace(ns,''):child.text for child in mediaFile}
                             for key,value in six.iteritems(dict):
-                                print('value is',value)
+                                #print('value is',value)
                                 if value==mediaDict['filename']:
                                     murl= mediaDict['downloadUrl']
-                                    print('Download url is',murl)
+                                    #print('Download url is',murl)
                                     if murl.endswith('as_attachment=true'):
                                         murl=murl[:-19]
                                         dict[key]= murl
                     table.append(dict)
-            self.getValue('lastID',lastReturnedURI)
+            #self.getValue('lastID',lastReturnedURI)
             #print ('table is:',table)
-            return response, table
+            self.lastID=lastReturnedURI
+            return {'response':response, 'table':table}
         except Exception as e:
             print ('not able to fetch',e)
-            return response,table
+            return {'response':response, 'table':table}
 
 
 class Kobo (Aggregate):
-    tag="KoboToobox"
     def __init__(self,parent,caller):
         super(Kobo, self).__init__(parent,caller)
+        self.tag='Kobo'
     def setParameters(self):
         self.parameters =[
         ["id","Kobo"],
@@ -711,7 +756,7 @@ class Kobo (Aggregate):
         except:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url username or password"))
             return None,None
-    def importData(self,layer,selectedForm,importData=True):
+    def importData(self,layer,selectedForm,doImportData=True):
         #from kobo branchQH
         user=self.getValue(self.tr("user"))
         password=self.getValue(self.tr("password"))
@@ -729,12 +774,15 @@ class Kobo (Aggregate):
             return
         if response.status_code==200:
             xml=response.content
-            self.iface.messageBar().pushCritical(self.tag,self.tr(str(xml)))
+            #self.iface.messageBar().pushCritical(self.tag,self.tr(str(xml)))
             # with open('importForm.xml','w') as importForm:
             #     importForm.write(response.content)
             self.layer_name,self.version, self.geoField,self.fields= self.updateLayerXML(layer,xml)
             layer.setName(self.layer_name)
-            self.collectData(layer,selectedForm,importData,self.layer_name,self.version,self.geoField)
+            self.user=user
+            self.password=password
+            print("calling collect data",self.tag)
+            self.collectData(layer,selectedForm,doImportData,self.layer_name,self.version,self.geoField)
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("not able to connect to server"))
 
@@ -788,61 +836,75 @@ class Kobo (Aggregate):
             self.updateFields(layer,fieldName,qgstype,config)
         return layer_name,version,geoField,fields
 
-    def getTable(self,XFormKey,importData,topElement,layer,version= 'null'):
-        user=self.getValue(self.tr("user"))
-        password=self.getValue(self.tr("password"))
-        requests.packages.urllib3.disable_warnings()
-        # kobo or custom url not working hence hard coded url is being used
-        url=self.getValue('url')
-        print(url)
-        lastSub=""
-        if not importData:
-            try:
-                lastSub=self.getValue(self.tr('last Submission'))
-            except:
-                print("error")
-        urlData=url+'/api/v2/assets/'+XFormKey+'/data/'
-        print('urldata is '+urlData)
-        if lastSub=="":
-            para={'format':'json'}
-            response = requests.get(urlData,proxies=getProxiesConf(),auth=(user,password),params=para,verify=False)
-            print('requesting url is'+response.url)
-        else:
-            query_param={'_submission_time': {'$gt': lastSub}}
-            print('query_param is'+json.dumps(query_param))
-            para={'query=':query_param,'format':'json'}
-            response = requests.get(urlData,proxies=getProxiesConf(),auth=(user,password),params=para,verify=False)
-            print('requesting url is'+response.url)
-        data=response.json()
-        print(data)
-        subTimeList=[]
-        table=[]
-        if data['count']==0:
-            return response, table
-        for submission in data['results']:
-            submission['ODKUUID']=submission['meta/instanceID']
-            subTime=submission['_submission_time']
-            binar_url=""
-            for attachment in submission['_attachments']:
-                binar_url=attachment['download_url']
-            subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
-            subTimeList.append(subTime_datetime)
-            for key in list(submission):
-                print(key)
-                if key == self.geoField:
-                    print (self.geoField)
-                    continue
-                if key not in self.fields:
-                    submission.pop(key)
-                else:
-                    if self.fields[key]=="binary":
-                        submission[key]=binar_url
-            table.append(submission)
-        if len(subTimeList)>0:
-            lastSubmission=max(subTimeList)
-            lastSubmission=datetime.datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
-            self.getValue(self.tr('last Submission'),lastSubmission)
-        return response, table
+    def getTable(self,task):
+        try:
+            print("get table started",self.tag)
+            #task.setProgress(10.0)
+            #requests.packages.urllib3.disable_warnings()
+            url=self.turl
+            #task.setProgress(30.0)
+            lastSub=""
+            if not self.isImportData:
+                lastSub=self.lastID
+            urlData=url+'/api/v2/assets/'+self.xFormKey+'/data/'
+            print('urldata is '+urlData)
+            table=[]
+            response=None
+            if not lastSub:
+                para={'format':'json'}
+                try:
+                	response = requests.get(urlData,proxies=self.proxyConfig,auth=(self.user,self.password),params=para,verify=False)
+                except:
+                	print("not able to connect to server",urlData)
+                	return {'response':response, 'table':table}
+                print('requesting url is'+response.url)
+            else:
+                query_param={"_submission_time": {"$gt":lastSub}}
+                jsonquery=json.dumps(query_param)
+                print('query_param is'+jsonquery)
+                para={'query':jsonquery,'format':'json'}
+                try:
+                	response = requests.get(urlData,proxies=self.proxyConfig,auth=(self.user,self.password),params=para,verify=False)
+                	print('requesting url is'+response.url)
+                except:
+                	print("not able to connect to server",urlData)
+                	return {'response':response, 'table':table}
+            #task.setProgress(50)
+            data=response.json()
+            #print(data,type(data))
+            subTimeList=[]
+            print("no of submissions are",data['count'])
+            if data['count']==0:
+                return {'response':response, 'table':table}
+            for submission in data['results']:
+                submission['ODKUUID']=submission['meta/instanceID']
+                subTime=submission['_submission_time']
+                binar_url=""
+                for attachment in submission['_attachments']:
+                    binar_url=attachment['download_url']
+                subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
+                subTimeList.append(subTime_datetime)
+                for key in list(submission):
+                    print(key)
+                    if key == self.geoField:
+                        print (self.geoField)
+                        continue
+                    if key not in self.fields:
+                        submission.pop(key)
+                    else:
+                        if self.fields[key]=="binary":
+                            submission[key]=binar_url
+                table.append(submission)
+            #task.setProgress(90)
+            if len(subTimeList)>0:
+                lastSubmission=max(subTimeList)
+                lastSubmission=datetime.datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')
+                self.lastID=lastSubmission
+                #self.getValue(self.tr('last Submission'),lastSubmission)
+            return {'response':response, 'table':table}
+        except Exception as e:
+        	print("exception occured in gettable",e)
+        	return {'response':None, 'table':None}
 
     def getFieldsModel(self,currentLayer):
         fieldsModel = []
@@ -970,7 +1032,7 @@ class Central (Kobo):
             self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url, username, project name or password"))
             return None,None
 
-    def importData(self,layer,selectedForm,importData=True):
+    def importData(self,layer,selectedForm,doImportData=True):
         """Imports user selected form from server """
         
         #from central 
@@ -999,7 +1061,7 @@ class Central (Kobo):
             xml=response.content
             self.layer_name,self.version, self.geoField,self.fields= self.updateLayerXML(layer,xml)
             layer.setName(self.layer_name)
-            self.collectData(layer,selectedForm,importData,self.layer_name,self.version,self.geoField)
+            self.collectData(layer,selectedForm,doImportData,self.layer_name,self.version,self.geoField)
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("not able to connect to server"))
 
@@ -1031,7 +1093,7 @@ class Central (Kobo):
 
 
 
-    def getTable(self,XFormKey,importData,topElement,layer,version= 'null'):
+    def getTable(self,task):
         """Retrieves data from form table, and filters out only the necessary fields
 
         Returns
@@ -1051,7 +1113,7 @@ class Central (Kobo):
         print(url)
         storedGeoField = self.geoField
         lastSub=""
-        if not importData:
+        if not self.isImportData:
             try:
                 lastSub=self.getValue(self.tr('last Submission'))
             except:
