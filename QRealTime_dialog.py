@@ -585,7 +585,7 @@ class Aggregate (QTableWidget):
         lastID=""
         response=None
         if not self.isImportData:
-            lastID=datetime.datetime.strptime(self.lastID,'%Y-%m-%dT%H:%M')
+            lastID=self.lastID
         try:
             response = requests.request(method,url,proxies=self.proxyConfig,auth=self.auth,verify=False)
         except:
@@ -602,8 +602,7 @@ class Aggregate (QTableWidget):
             #print('number of submissions are',no_sub)
             ns1='{http://www.opendatakit.org/cursor}'
             lastReturnedURI= ET.fromstring(root[1].text).findall(ns1+'uriLastReturnedValue')[0].text
-            lastReturnedURI= datetime.datetime.strptime(lastReturnedURI,'%Y-%m-%dT%H:%M')
-            print("last id  id are",lastID)
+            print("last id  is",lastID)
             print( "last returned id is",lastReturnedURI)
             #print('server lastID is', lastReturnedURI)
             if lastID ==lastReturnedURI:
