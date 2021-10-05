@@ -568,7 +568,7 @@ class Aggregate (QTableWidget):
     def transformToLayerSRS(self, pPoint):
         # transformation from the current SRS to WGS84
         crsDest = self.processingLayer.crs () # get layer crs
-        crsSrc = QgsCoordinateReferenceSystem(4326)  # WGS 84
+        crsSrc = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS 84
         xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
         try:
             return QgsPoint(xform.transform(pPoint))
