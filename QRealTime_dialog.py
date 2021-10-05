@@ -182,10 +182,13 @@ class Aggregate (QTableWidget):
             S.setValue("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()),self.item(row,1).text())
         
     def getValue(self,key, newValue = None):
+        print("searching in setting parameter",key)
         for row in range (0,self.rowCount()):
+            print(" parameter is",self.item(row,0).text())
             if self.item(row,0).text() == key:
                 if newValue:
-                    self.item(row, 1).setText(newValue)
+                    self.item(row, 1).setText(str(newValue))
+                    print("setting new value",newValue)
                     self.setup() #store to settings
                 value=self.item(row,1).text().strip()
                 if value:
@@ -425,12 +428,14 @@ class Aggregate (QTableWidget):
             print("exception in task execution")
         response=result['response']
         remoteTable=result['table']
+        lastID=result['lastID']
         if response.status_code == 200:
             print ('after task finished before update layer')
             if remoteTable:
                 print ('task has returned some data')
                 self.updateLayer(self.layer,remoteTable,self.geoField)
-                self.getValue("last Submission",self.lastID)
+                print("lastID is",lastID)
+                self.getValue(self.tr("last Submission"),lastID)
                 self.iface.messageBar().pushSuccess(self.tag,self.tr("Data imported Successfully"))     
         else:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Not able to collect data"))
@@ -509,7 +514,7 @@ class Aggregate (QTableWidget):
         fieldError = None
         print('geofield is',geoField)
         for odkFeature in dataDict:
-            print(odkFeature)
+            #print(odkFeature)
             id=None
             try:
                 id= odkFeature['ODKUUID']
@@ -519,7 +524,7 @@ class Aggregate (QTableWidget):
             try:
                 if not id in uuidList:
                     qgisFeature = QgsFeature()
-                    print(odkFeature)
+                    print("odkFeature",odkFeature)
                     wktGeom = self.guessWKTGeomType(odkFeature[geoField])
                     print (wktGeom)
                     if wktGeom[:3] != layerGeo[:3]:
@@ -544,7 +549,6 @@ class Aggregate (QTableWidget):
 	            layer.addFeatures(newQgisFeatures)
         except:
         	self.iface.messageBar().pushCritical(self.tag,"Stop layer editing and import again")
-        	return
         self.processingLayer = None
         
     def getUUIDList(self,lyr):
@@ -607,7 +611,7 @@ class Aggregate (QTableWidget):
             #print('server lastID is', lastReturnedURI)
             if lastID ==lastReturnedURI:
                 print ('No Download returning')
-                return {'response':response, 'table':table}
+                return {'response':response, 'table':table,'lastID':None}
             lastindex=0
             try:
                 lastindex= instance_ids.index(lastID)
@@ -658,10 +662,10 @@ class Aggregate (QTableWidget):
             #self.getValue('lastID',lastReturnedURI)
             #print ('table is:',table)
             self.lastID=lastReturnedURI
-            return {'response':response, 'table':table}
+            return {'response':response, 'table':table,'lastID':lastReturnedURI}
         except Exception as e:
             print ('not able to fetch',e)
-            return {'response':response, 'table':table}
+            return {'response':response, 'table':table,'lastID':None}
 
 
 class Kobo (Aggregate):
@@ -858,7 +862,7 @@ class Kobo (Aggregate):
                 	return {'response':response, 'table':table}
                 print('requesting url is'+response.url)
             else:
-                query_param={"_submission_time": {"$gt":lastSub}}
+                query_param={"_id": {"$gt":int(lastSub)}}
                 jsonquery=json.dumps(query_param)
                 print('query_param is'+jsonquery)
                 para={'query':jsonquery,'format':'json'}
@@ -867,22 +871,22 @@ class Kobo (Aggregate):
                 	print('requesting url is'+response.url)
                 except:
                 	print("not able to connect to server",urlData)
-                	return {'response':response, 'table':table}
+                	return {'response':response, 'table':table,'lastID':None}
             #task.setProgress(50)
             data=response.json()
             #print(data,type(data))
-            subTimeList=[]
+            subList=[]
             print("no of submissions are",data['count'])
             if data['count']==0:
                 return {'response':response, 'table':table}
             for submission in data['results']:
                 submission['ODKUUID']=submission['meta/instanceID']
-                subTime=submission['_submission_time']
+                subID=submission['_id']
                 binar_url=""
                 for attachment in submission['_attachments']:
                     binar_url=attachment['download_url']
-                subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
-                subTimeList.append(subTime_datetime)
+                #subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
+                subList.append(subID)
                 for key in list(submission):
                     print(key)
                     if key == self.geoField:
@@ -895,15 +899,12 @@ class Kobo (Aggregate):
                             submission[key]=binar_url
                 table.append(submission)
             #task.setProgress(90)
-            if len(subTimeList)>0:
-                lastSubmission=max(subTimeList)
-                lastSubmission=datetime.datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')
-                self.lastID=lastSubmission
-                #self.getValue(self.tr('last Submission'),lastSubmission)
-            return {'response':response, 'table':table}
+            if len(subList)>0:
+                lastSubmission=max(subList)
+            return {'response':response, 'table':table,'lastID':lastSubmission}
         except Exception as e:
         	print("exception occured in gettable",e)
-        	return {'response':None, 'table':None}
+        	return {'response':None, 'table':None,'lastID':None}
 
     def getFieldsModel(self,currentLayer):
         fieldsModel = []
