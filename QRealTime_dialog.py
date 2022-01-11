@@ -545,10 +545,10 @@ class Aggregate (QTableWidget):
             except Exception as e:
                     print('unable to create',e)
         try:
-	        with edit(layer):
-	            layer.addFeatures(newQgisFeatures)
+            with edit(layer):
+                layer.addFeatures(newQgisFeatures)
         except:
-        	self.iface.messageBar().pushCritical(self.tag,"Stop layer editing and import again")
+            self.iface.messageBar().pushCritical(self.tag,"Stop layer editing and import again")
         self.processingLayer = None
         
     def getUUIDList(self,lyr):
@@ -596,7 +596,7 @@ class Aggregate (QTableWidget):
             #self.iface.messageBar().pushCritical(self.tag,self.tr("Not able to connect to server"))
             return {'response':response, 'table':table}
         if not response.status_code == 200:
-        	return {'response':response, 'table':table}
+            return {'response':response, 'table':table}
         try:
             root = ET.fromstring(response.content)
             ns='{http://opendatakit.org/submissions}'
@@ -856,10 +856,10 @@ class Kobo (Aggregate):
             if not lastSub:
                 para={'format':'json'}
                 try:
-                	response = requests.get(urlData,proxies=self.proxyConfig,auth=(self.user,self.password),params=para,verify=False)
+                    response = requests.get(urlData,proxies=self.proxyConfig,auth=(self.user,self.password),params=para,verify=False)
                 except:
-                	print("not able to connect to server",urlData)
-                	return {'response':response, 'table':table}
+                    print("not able to connect to server",urlData)
+                    return {'response':response, 'table':table}
                 print('requesting url is'+response.url)
             else:
                 query_param={"_id": {"$gt":int(lastSub)}}
@@ -867,11 +867,11 @@ class Kobo (Aggregate):
                 print('query_param is'+jsonquery)
                 para={'query':jsonquery,'format':'json'}
                 try:
-                	response = requests.get(urlData,proxies=self.proxyConfig,auth=(self.user,self.password),params=para,verify=False)
-                	print('requesting url is'+response.url)
+                    response = requests.get(urlData,proxies=self.proxyConfig,auth=(self.user,self.password),params=para,verify=False)
+                    print('requesting url is'+response.url)
                 except:
-                	print("not able to connect to server",urlData)
-                	return {'response':response, 'table':table,'lastID':None}
+                    print("not able to connect to server",urlData)
+                    return {'response':response, 'table':table,'lastID':None}
             #task.setProgress(50)
             data=response.json()
             #print(data,type(data))
@@ -903,8 +903,8 @@ class Kobo (Aggregate):
                 lastSubmission=max(subList)
             return {'response':response, 'table':table,'lastID':lastSubmission}
         except Exception as e:
-        	print("exception occured in gettable",e)
-        	return {'response':None, 'table':None,'lastID':None}
+            print("exception occured in gettable",e)
+            return {'response':None, 'table':None,'lastID':None}
 
     def getFieldsModel(self,currentLayer):
         fieldsModel = []
@@ -925,8 +925,8 @@ class Kobo (Aggregate):
         j=0
         for field in currentLayer.fields():
             if field.name()=='ODKUUID':
-            	i+=1
-            	continue
+                i+=1
+                continue
             widget =currentLayer.editorWidgetSetup(i)
             fwidget = widget.type()
             if (fwidget=='Hidden'):
@@ -972,7 +972,6 @@ class Kobo (Aggregate):
         return fieldsModel,choicesList
 
 class Central (Kobo):
-    tag="ODK Central"
 
     def __init__(self,parent,caller):
         super(Central, self).__init__(parent,caller)
@@ -982,6 +981,7 @@ class Central (Kobo):
         self.project_id = 0
         # name of selected form 
         self.form_name = ""
+        self.tag = "ODK Central"
         
     def setParameters(self):
         self.parameters =[
@@ -1091,7 +1091,122 @@ class Central (Kobo):
                 new_dict[key] = val
         return new_dict
 
+    def prepareSendForm(self,layer):
+#        get the fields model like name , widget type, options etc.
+        self.updateFields(layer)
+        version= str(datetime.date.today())
+        fieldDict= self.getFieldsModel(layer)
+        surveyDict= {"name" : layer.name(),"title" : layer.name(),"VERSION" : version, "instance_name" : 'uuid()', "submission_url" : '',
+        "default_language" : 'default', 'id_string' : layer.name(), 'type' : 'survey', 'children' : fieldDict}
+        print(str(surveyDict))
+        survey=create_survey_element_from_dict(surveyDict)
+        try:
+            xml=survey.to_xml(validate=None, warnings='warnings')
+            os.chdir(os.path.expanduser('~'))
+            self.sendForm(layer.name(),xml)
+        except Exception as e:
+            print("error in creating xform xml",e)
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Survey form can't be created, check layer name"))
 
+
+    def sendForm(self,xForm_id,xml):
+#        step1 - verify if form exists:
+        formList, response = self.getFormList()
+        if not response:
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Can not connect to server"))
+            return status
+        form_key=xForm_id in formList
+        message =''
+        if form_key:
+            message= 'Form Updated'
+            method = 'POST'
+            #url = self.getValue('url')+'/v1'+'/forms'
+            url = self.getValue('url')+'v1/projects/' + str(Central.project_id) + '/forms?ignoreWarnings=true&publish=true'
+        else:
+            message= 'Created new form'
+            method = 'POST'
+            url = self.getValue('url')+'v1/projects/' + str(Central.project_id) + '/forms?ignoreWarnings=true&publish=true'
+#        method = 'POST'
+#        url = self.getValue('url')+'//formUpload'
+        #step1 - upload form: POST if new PATCH if exixtent
+        with open('xForm.xml','w')as xForm:
+            xForm.write(xml)
+        authentication = {
+            "email": self.getValue(self.tr("user")),
+            "password": self.getValue(self.tr("password"))
+
+        }
+        authURL = self.getValue('url') + 'v1/sessions'
+        authHeaders = {'Content-Type':"application/json"}
+        authRequest = requests.post(authURL,data = json.dumps(authentication), headers = authHeaders)
+        bearerToken = authRequest.json()["token"]
+        headers = {'Content-Type': "application/xml", 'Authorization': "Bearer " + bearerToken}
+        response = requests.post(url,data=xml, proxies = getProxiesConf(),headers=headers,verify=False)
+        if response.status_code== 201 or response.status_code == 200:
+            self.iface.messageBar().pushSuccess(self.tr("QRealTime plugin"),
+                                                self.tr('Layer is online('+message+'), Collect data from App'))
+        elif response.status_code == 409:
+            self.iface.messageBar().pushWarning(self.tr("QRealTime plugin"),self.tr("Form exist and can not be updated"))
+        else:
+            self.iface.messageBar().pushCritical(self.tr("QRealTime plugin"),self.tr("Form is not sent "))
+        return response
+
+
+    def getFieldsModel(self,currentLayer):
+        fieldsModel = []
+        g_type= currentLayer.geometryType()
+        fieldDef={'name':'GEOMETRY','type':'geopoint','bind':{'required':'true()'}}
+        fieldDef['Appearance']= 'maps'
+        if g_type==0:
+            fieldDef['label']='add point location'
+        elif g_type==1:
+            fieldDef['label']='Draw Line'
+            fieldDef['type']='geotrace'
+        else:
+            fieldDef['label']='Draw Area'
+            fieldDef['type']='geoshape'
+        fieldsModel.append(fieldDef)
+        i=0
+        for field in currentLayer.fields():
+            widget =currentLayer.editorWidgetSetup(i)
+            fwidget = widget.type()
+            if (fwidget=='Hidden'):
+                i+=1
+                continue
+                
+            fieldDef = {}
+            fieldDef['name'] = field.name()
+            fieldDef['map'] = field.name()
+            fieldDef['label'] = field.alias() or field.name()
+            fieldDef['hint'] = ''
+            fieldDef['type'] = QVariantToODKtype(field.type())
+            fieldDef['bind'] = {}
+#            fieldDef['fieldWidget'] = currentFormConfig.widgetType(i)
+            fieldDef['fieldWidget']=widget.type()
+            print('getFieldModel',fieldDef['fieldWidget'])
+            if fieldDef['fieldWidget'] in ('ValueMap','CheckBox','Photo','ExternalResource'):
+                if fieldDef['fieldWidget'] == 'ValueMap':
+                    fieldDef['type']='select one'
+                    valueMap=widget.config()['map']
+                    config={}
+                    for value in valueMap:
+                        for k,v in value.items():
+                                config[v]=k
+                    print('configuration is ',config)
+                    choicesList=[{'name':name,'label':label} for name,label in config.items()]
+                    fieldDef["choices"] = choicesList
+                elif fieldDef['fieldWidget'] == 'Photo' or fieldDef['fieldWidget'] == 'ExternalResource' :
+                    fieldDef['type']='image'
+                    print('got an image type field')
+                
+#                fieldDef['choices'] = config
+            else:
+                fieldDef['choices'] = {}
+            if fieldDef['name'] == 'ODKUUID':
+                fieldDef["bind"] = {"readonly": "true()", "calculate": "concat('uuid:', uuid())"}
+            fieldsModel.append(fieldDef)
+            i+=1
+        return fieldsModel
 
     def getTable(self,task):
         """Retrieves data from form table, and filters out only the necessary fields
@@ -1184,4 +1299,4 @@ class Central (Kobo):
             lastSubmission=max(subTimeList)
             lastSubmission=datetime.datetime.strftime(lastSubmission,'%Y-%m-%dT%H:%M:%S')+"+0000"
             self.getValue(self.tr('last Submission'),lastSubmission)
-        return response1, table
+        return {'response':response1, 'table':table,'lastID':lastSubmission}
