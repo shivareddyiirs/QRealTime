@@ -545,10 +545,10 @@ class Aggregate (QTableWidget):
             except Exception as e:
                     print('unable to create',e)
         try:
-	        with edit(layer):
-	            layer.addFeatures(newQgisFeatures)
+            with edit(layer):
+                layer.addFeatures(newQgisFeatures)
         except:
-        	self.iface.messageBar().pushCritical(self.tag,"Stop layer editing and import again")
+            self.iface.messageBar().pushCritical(self.tag,"Stop layer editing and import again")
         self.processingLayer = None
         
     def getUUIDList(self,lyr):
@@ -596,7 +596,7 @@ class Aggregate (QTableWidget):
             #self.iface.messageBar().pushCritical(self.tag,self.tr("Not able to connect to server"))
             return {'response':response, 'table':table}
         if not response.status_code == 200:
-        	return {'response':response, 'table':table}
+            return {'response':response, 'table':table}
         try:
             root = ET.fromstring(response.content)
             ns='{http://opendatakit.org/submissions}'
@@ -856,10 +856,10 @@ class Kobo (Aggregate):
             if not lastSub:
                 para={'format':'json'}
                 try:
-                	response = requests.get(urlData,proxies=self.proxyConfig,auth=(self.user,self.password),params=para,verify=False)
+                    response = requests.get(urlData,proxies=self.proxyConfig,auth=(self.user,self.password),params=para,verify=False)
                 except:
-                	print("not able to connect to server",urlData)
-                	return {'response':response, 'table':table}
+                    print("not able to connect to server",urlData)
+                    return {'response':response, 'table':table}
                 print('requesting url is'+response.url)
             else:
                 query_param={"_id": {"$gt":int(lastSub)}}
@@ -867,11 +867,11 @@ class Kobo (Aggregate):
                 print('query_param is'+jsonquery)
                 para={'query':jsonquery,'format':'json'}
                 try:
-                	response = requests.get(urlData,proxies=self.proxyConfig,auth=(self.user,self.password),params=para,verify=False)
-                	print('requesting url is'+response.url)
+                    response = requests.get(urlData,proxies=self.proxyConfig,auth=(self.user,self.password),params=para,verify=False)
+                    print('requesting url is'+response.url)
                 except:
-                	print("not able to connect to server",urlData)
-                	return {'response':response, 'table':table,'lastID':None}
+                    print("not able to connect to server",urlData)
+                    return {'response':response, 'table':table,'lastID':None}
             #task.setProgress(50)
             data=response.json()
             #print(data,type(data))
@@ -903,8 +903,8 @@ class Kobo (Aggregate):
                 lastSubmission=max(subList)
             return {'response':response, 'table':table,'lastID':lastSubmission}
         except Exception as e:
-        	print("exception occured in gettable",e)
-        	return {'response':None, 'table':None,'lastID':None}
+            print("exception occured in gettable",e)
+            return {'response':None, 'table':None,'lastID':None}
 
     def getFieldsModel(self,currentLayer):
         fieldsModel = []
@@ -925,8 +925,8 @@ class Kobo (Aggregate):
         j=0
         for field in currentLayer.fields():
             if field.name()=='ODKUUID':
-            	i+=1
-            	continue
+                i+=1
+                continue
             widget =currentLayer.editorWidgetSetup(i)
             fwidget = widget.type()
             if (fwidget=='Hidden'):
@@ -981,7 +981,7 @@ class Central (Kobo):
         self.project_id = 0
         # name of selected form 
         self.form_name = ""
-	self.tag = "ODK Central"
+        self.tag = "ODK Central"
         
     def setParameters(self):
         self.parameters =[
