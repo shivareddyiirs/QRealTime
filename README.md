@@ -28,7 +28,6 @@ From the main menu choose **Plugins --> QRealTime --> QRealTime Setting**
 <br/> Here you have three tabs one for Aggregate, KoboToolBox, and Central
 Choose one of the tabs and Enter url (required). Other fields are optional.
 <br/><br/>
-You can install your own aggregate server <a href="http://docs.opendatakit.org/aggregate-guide/"> here </a> <br/>
 You can create a free account in KoboToolbox <a href="https://www.kobotoolbox.org/"> here </a> <br/>
 You can set up ODK Central <a href="https://docs.getodk.org/central-setup/"> here </a> <br/><br/>
 ![QRealTimePic](https://user-images.githubusercontent.com/42852481/149683859-4c0db7ec-0c80-4a1e-b59a-1a69f9129547.png)
