@@ -37,7 +37,6 @@ You can set up ODK Central <a href="https://docs.getodk.org/central-setup/"> her
 <br/>
 Right click over any existing layer --> QRealTime and choose desired option: 
 <br/><br/>Make Online (to create new form), import (to import data of existing form), sync (to automatically update your layer)
-<br/><br/>If you want to import data from already existing form (created without using our plugin) do ensure that the name of the geometry field is 'GEOMETRY', 'location', or 'gps'. Other geometry field names are currently not supported.
 <br/><br/>
 <img src="https://user-images.githubusercontent.com/5653512/45092639-be5cc780-b133-11e8-8ee1-d3fb258cbf16.png" alt="options">
 
