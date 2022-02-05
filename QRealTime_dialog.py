@@ -581,7 +581,7 @@ class Aggregate (QTableWidget):
         print("calling getTable in ODK Aggregate")
         table=[]
         if self.turl:
-            url=self.turl+'/view/submissionList?formId='+XFormKey
+            url=self.turl+'/view/submissionList?formId='+self.xFormKey
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
             return {'response':None, 'table':table}
@@ -623,7 +623,7 @@ class Aggregate (QTableWidget):
                 if id:
                     url=self.turl+'/view/downloadSubmission'
                     #print (url)
-                    para={'formId':'{}[@version={} and @uiVersion=null]/{}[@key={}]'.format(self.xFormKey,self,version,self.topElement,id)}
+                    para={'formId':'{}[@version={} and @uiVersion=null]/{}[@key={}]'.format(self.xFormKey,self.version,self.topElement,id)}
                     response=requests.request(method,url,params=para,proxies= self.proxyConfig,auth=self.auth,verify=False)
                     if not response.status_code == 200:
                         return response,table
