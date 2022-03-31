@@ -1278,10 +1278,12 @@ class Central (Kobo):
                     count+=1
             formattedData[storedGeoField] = stringversion
             if formattedData['attachmentsPresent']>0:
-                url_data1 = url + "v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name + "/attachments" 
+                url_data1 = url + "v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name +"/submissions"+"/"+formattedData['ODKUUID']+ "/attachments"
+                print("making attachment request"+url_data1)
                 attachmentsResponse = requests.get(url_data1, headers={"Authorization": "Bearer " + Central.usertoken})
+                print("url response is"+ str(attachmentsResponse.status_code))
                 for attachment in attachmentsResponse.json():
-                    binar_url= url_data1 + str(attachment)
+                    binar_url= url_data1 +"/"+str(attachment['name'])
             #subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
             #subTimeList.append(subTime_datetime) 
             for key in list(formattedData):
@@ -1293,7 +1295,8 @@ class Central (Kobo):
                     formattedData.pop(key)
                 else:
                     if self.fields[key]=="binary":
-                        submission[key]=binar_url
+                        formattedData[key]=binar_url
+            print("submission parsed"+str(formattedData))
             table.append(formattedData)
         if len(subTimeList)>0:
             lastSubmission=max(subTimeList)
