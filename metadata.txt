@@ -10,7 +10,7 @@
 name=QRealTime
 qgisMinimumVersion=3.00
 description=This plugin connects you to Aggregate Servers like ODK Central, KoboToolbox and ODK Aggregate. It provide easy tools to convert layer into form, import form data into layer and auto sync layer with form data.
-version=4.2
+version=4.2.1
 author=Shiva Reddy Koti, Prabhakar Alok Verma
 email=kotishiva@gmail.com
 
