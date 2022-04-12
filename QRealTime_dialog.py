@@ -1278,7 +1278,7 @@ class Central (Kobo):
                     count+=1
             formattedData[storedGeoField] = stringversion
             if formattedData['attachmentsPresent']>0:
-                url_data1 = url + "v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name +"/submissions"+"/"+formattedData['ODKUUID']+ "/attachments"
+                url_data1 = url + "#/dl/projects/"+str(Central.project_id)+"/forms/" + Central.form_name +"/submissions"+"/"+formattedData['ODKUUID']+ "/attachments"
                 print("making attachment request"+url_data1)
                 attachmentsResponse = requests.get(url_data1, headers={"Authorization": "Bearer " + Central.usertoken})
                 print("url response is"+ str(attachmentsResponse.status_code))
