@@ -1279,11 +1279,12 @@ class Central (Kobo):
             formattedData[storedGeoField] = stringversion
             if formattedData['attachmentsPresent']>0:
                 url_data1 = url + "v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name +"/submissions"+"/"+formattedData['ODKUUID']+ "/attachments"
+                media_links_url = url + "#/dl/projects/"+str(Central.project_id)+"/forms/" + Central.form_name +"/submissions"+"/"+formattedData['ODKUUID']+ "/attachments"
                 print("making attachment request"+url_data1)
                 attachmentsResponse = requests.get(url_data1, headers={"Authorization": "Bearer " + Central.usertoken})
                 print("url response is"+ str(attachmentsResponse.status_code))
                 for attachment in attachmentsResponse.json():
-                    binar_url= url_data1 +"/"+str(attachment['name'])
+                    binar_url= media_links_url +"/"+str(attachment['name'])
             #subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
             #subTimeList.append(subTime_datetime) 
             for key in list(formattedData):
