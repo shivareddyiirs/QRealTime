@@ -260,12 +260,13 @@ class QRealTime:
         if result:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
-            self.dlg.getCurrentService().setup()
+            self.service=self.dlg.getCurrentService()
+            self.service.setup()
             
     def importData(self):
-        service=self.dlg.getCurrentService()
+        self.service=self.dlg.getCurrentService()
         layer=self.getLayer()
-        forms,response= service.getFormList()
+        forms,response= self.service.getFormList()
         if response:
 	        if response.status_code==200:
 	            self.ImportData=ImportData()
@@ -275,7 +276,7 @@ class QRealTime:
 	            result=self.ImportData.exec_()
 	            if result:
 	                selectedForm= self.ImportData.comboBox.currentData()
-	                service.importData(layer,selectedForm,True)            
+	                self.service.importData(layer,selectedForm,True)            
     def getLayer(self):
         return self.iface.activeLayer()
         
