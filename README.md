@@ -1,4 +1,4 @@
-<h1> Welcome to QRealTime Plugin Development Version</h1>
+<h1> Welcome to QRealTime Plugin</h1>
 <img src="https://user-images.githubusercontent.com/5653512/84229819-252cc300-ab08-11ea-8cc3-74f9f1d3f1df.png" alt="flowchart">
 
 
