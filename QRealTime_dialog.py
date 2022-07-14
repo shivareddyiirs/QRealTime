@@ -885,6 +885,8 @@ class Kobo (Aggregate):
                 binar_url=""
                 for attachment in submission['_attachments']:
                     binar_url=attachment['download_url']
+                    if (binar_url.endswith("?format=json")):
+                        binar_url=binar_url[:-len("?format=json")]
                 #subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
                 subList.append(subID)
                 for key in list(submission):
