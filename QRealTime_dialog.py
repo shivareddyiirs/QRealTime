@@ -1055,7 +1055,7 @@ class Central (Kobo):
                 selectedFormName = form["name"]
                 Central.form_name = selectedFormName
         try:
-            response = requests.get(c_url+'v1/projects/'+str(project_id)+'/forms/'+ selectedFormName+'.xml', headers ={"Authorization": "Bearer " + Central.usertoken})
+            response = requests.get(c_url+'v1/projects/'+str(project_id)+'/forms/'+ selectedForm+'.xml', headers ={"Authorization": "Bearer " + Central.usertoken})
         except:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url,username or password"))
             return
