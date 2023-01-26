@@ -27,6 +27,7 @@ Installation steps:
 From the main menu choose **Plugins --> QRealTime --> QRealTime Setting**
 <br/> Here you have three tabs one for Aggregate, KoboToolBox, and Central
 Choose one of the tabs and Enter url (required). 
+<br/>
 e.g. for Kobo humanitarian server url would be https://kobo.humanitarianresponse.info/.
 Other fields are optional.
 <br/><br/>
