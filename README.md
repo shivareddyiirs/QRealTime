@@ -26,7 +26,9 @@ Installation steps:
 
 From the main menu choose **Plugins --> QRealTime --> QRealTime Setting**
 <br/> Here you have three tabs one for Aggregate, KoboToolBox, and Central
-Choose one of the tabs and Enter url (required). Other fields are optional.
+Choose one of the tabs and Enter url (required). 
+e.g. for Kobo humanitarian server url would be https://kobo.humanitarianresponse.info/
+Other fields are optional.
 <br/><br/>
 You can create a free account in KoboToolbox <a href="https://www.kobotoolbox.org/"> here </a> <br/>
 You can set up ODK Central <a href="https://docs.getodk.org/central-setup/"> here </a> <br/><br/>
