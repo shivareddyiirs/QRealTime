@@ -27,6 +27,7 @@ from PyQt5.QtWidgets import QWidget,QTableWidget,QTableWidgetItem
 from PyQt5.QtCore import Qt, QSettings, QSize,QVariant, QTranslator, qVersion, QCoreApplication
 import xml.etree.ElementTree as ET
 import requests
+from requests.compat import urljoin
 from qgis.gui import QgsMessageBar
 from qgis.core import QgsProject,QgsFeature,QgsGeometry,QgsField, QgsCoordinateReferenceSystem, QgsPoint, QgsCoordinateTransform,edit,QgsPointXY,QgsEditorWidgetSetup,QgsTaskManager,QgsTask,QgsApplication
 import six
@@ -743,16 +744,23 @@ class Kobo (Aggregate):
         password=self.getValue(self.tr("password"))
         turl=self.getValue('url')
         if turl:
-            url=turl+'/assets/'
+            tokenurl=urljoin(turl,'token')
+            url=urljoin(turl,"assets")
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
             return None,None
 #        print (url)
         para={'format':'json'}
+        response=requests.get(tokenurl,proxies=getProxiesConf(),auth=(user,password),params=para)
+        token=response.json()["token"]
+        if token is None:
+            self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url username or password"))
+            return None,None
+        self.header={"Authorization": "Token " + token}
         keyDict={}
         questions=[]
         try:
-            response= requests.get(url,proxies=getProxiesConf(),auth=(user,password),params=para)
+            response= requests.get(url,proxies=getProxiesConf(),headers=self.header,params=para)
             forms= response.json()
             for form in forms['results']:        
                 if form['asset_type']=='survey' and form['deployment__active']==True:
@@ -768,13 +776,13 @@ class Kobo (Aggregate):
         password=self.getValue(self.tr("password"))
         turl=self.getValue('url')
         if turl:
-            url=turl+'/assets/'+selectedForm
+            url=urljoin(turl,'/assets/'+selectedForm)
+            print("url under import data is "+url)
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
         para={'format':'xml'}
-        requests.packages.urllib3.disable_warnings()
         try:
-            response= requests.request('GET',url,proxies=getProxiesConf(),auth=(user,password),verify=False,params=para)
+            response= requests.request('GET',url,proxies=getProxiesConf(),headers=self.header,verify=False,params=para)
         except:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url,username or password"))
             return
@@ -852,7 +860,7 @@ class Kobo (Aggregate):
             lastSub=""
             if not self.isImportData:
                 lastSub=self.lastID
-            urlData=url+'/api/v2/assets/'+self.xFormKey+'/data/'
+            urlData=urljoin(url,'/api/v2/assets/'+self.xFormKey+"/data")
             print('urldata is '+urlData)
             table=[]
             response=None
