@@ -706,28 +706,35 @@ class Kobo (Aggregate):
         if form:
             message= 'Form Updated'
             method = 'PATCH'
-            url = self.getValue('url')+'/assets/'+xForm_id
+            url = urljoin(self.getValue('url'),'api/v2/assets/'+xForm_id)
         else:
             message= 'Created new form'
             method = 'POST'
-            url = self.getValue('url')+'/assets/'
+            url = urljoin(self.getValue('url'),'api/v2/assets/')
         user=self.getValue(self.tr("user"))
         password=self.getValue(self.tr("password"))
         para = {"format":"json"}
-        headers = {'Content-Type': "application/json",'Accept': "application/json"}
+        headers = {'Content-Type': "application/json",'Accept': "application/json"} | self.header
+        print("header is"+str(headers))
         #creates form:
-        response = requests.request(method,url,json=payload,auth=(user,password),headers=headers,params=para)
-        responseJson=json.loads(response.text)
+        response = requests.request(method,url,json=payload,headers=headers,params=para)
+        if response.status_code==200 or response.status_code==201:
+            print("got the asset list successfully")
+            responseJson=response.json()
+        else:
+            print(str(response.content))
+            self.iface.messageBar().pushCritical(self.tag,self.tr(str(response.status_code)))
+            return response
         urlDeploy = self.getValue('url')+"assets/"+responseJson['uid']+"/deployment/"
         payload2 = json.dumps({"active": True})
         #deploys form:
-        response2 = requests.post(urlDeploy,data=payload2, auth=(user,password), headers=headers, params=para)
+        response2 = requests.post(urlDeploy,data=payload2, headers=headers, params=para)
 ##        urlShare = self.getValue('url')+"permissions/"
 ##        permissions={"content_object":self.getValue('url')+"/assets/"+responseJson['uid']+"/","permission": "view_submissions","deny": False,"inherited": False,"user": "https://kobo.humanitarianresponse.info/users/AnonymousUser/"}
         urlShare = self.getValue('url')+"api/v2/assets/"+responseJson['uid']+"/permission-assignments/"
         permissions={"user":self.getValue('url')+"api/v2/users/AnonymousUser/","permission":self.getValue('url')+"api/v2/permissions/view_submissions/"}
         #shares submissions publicly:
-        response3 = requests.post(urlShare, json=permissions, auth=(user,password),headers=headers)
+        response3 = requests.post(urlShare, json=permissions,headers=headers)
         print(self.tag,response3.text)
         if response.status_code== 201 or response.status_code == 200:
             self.iface.messageBar().pushSuccess(self.tag,
@@ -745,7 +752,7 @@ class Kobo (Aggregate):
         turl=self.getValue('url')
         if turl:
             tokenurl=urljoin(turl,'token')
-            url=urljoin(turl,"assets")
+            url=urljoin(turl,"/api/v2/assets")
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
             return None,None
@@ -776,7 +783,7 @@ class Kobo (Aggregate):
         password=self.getValue(self.tr("password"))
         turl=self.getValue('url')
         if turl:
-            url=urljoin(turl,'/assets/'+selectedForm)
+            url=urljoin(turl,'/api/v2/assets/'+selectedForm)
             print("url under import data is "+url)
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
@@ -916,7 +923,7 @@ class Kobo (Aggregate):
                 lastSubmission=max(subList)
             return {'response':response, 'table':table,'lastID':lastSubmission}
         except Exception as e:
-            print("exception occured in gettable",e)
+            print("exception occured in gettable",str(e))
             return {'response':None, 'table':None,'lastID':None}
 
     def getFieldsModel(self,currentLayer):
