@@ -23,7 +23,7 @@ import os
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
 from PyQt5 import QtGui, uic
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget,QTableWidget,QTableWidgetItem
+from PyQt5.QtWidgets import QWidget,QTableWidget,QTableWidgetItem,QLineEdit
 from PyQt5.QtCore import Qt, QSettings, QSize,QVariant, QTranslator, qVersion, QCoreApplication
 import xml.etree.ElementTree as ET
 import requests
@@ -160,6 +160,9 @@ class Aggregate (QTableWidget):
                 S.setValue("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()),parameter[1])
             else:
                 self.setItem(row,1,QTableWidgetItem (valueFromSettings))
+        self.setCellWidget(2, 1, QLineEdit())
+        self.cellWidget(2,1).setEchoMode(2)
+
     def setParameters(self):
         self.parameters =[
         ["id","Aggregate"],
