@@ -1304,7 +1304,7 @@ class Central (Kobo):
                 attachmentsResponse = requests.get(url_data1, headers={"Authorization": "Bearer " + Central.usertoken})
                 print("url response is"+ str(attachmentsResponse.status_code))
                 for attachment in attachmentsResponse.json():
-                    binar_url= urljoin(media_links_url,str(attachment['name'])
+                    binar_url= urljoin(media_links_url,str(attachment['name']))
             #subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
             #subTimeList.append(subTime_datetime) 
             for key in list(formattedData):
