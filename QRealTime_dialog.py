@@ -237,7 +237,7 @@ class Aggregate (QTableWidget):
         method='GET'
         url=self.getValue('url')
         if url:
-            furl=url+'//formList'
+            furl=urljoin(url,'formList')
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
             return None,None
@@ -258,7 +258,7 @@ class Aggregate (QTableWidget):
     def importData(self,layer,selectedForm,importData):
         url=self.getValue('url')
         if url:
-            furl=url+'//formXml?formId='+selectedForm
+            furl=urljoin(url,'formXml?formId='+selectedForm)
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
             return
@@ -399,11 +399,11 @@ class Aggregate (QTableWidget):
         if form_key:
             message= 'Form Updated'
             method = 'POST'
-            url = self.getValue('url')+'//formUpload'
+            url = urljoin(self.getValue('url'),'formUpload')
         else:
             message= 'Created new form'
             method = 'POST'
-            url = self.getValue('url')+'//formUpload'
+            url = urljoin(self.getValue('url'),'formUpload')
 #        method = 'POST'
 #        url = self.getValue('url')+'//formUpload'
         #step2 - upload form
@@ -585,7 +585,7 @@ class Aggregate (QTableWidget):
         print("calling getTable in ODK Aggregate")
         table=[]
         if self.turl:
-            url=self.turl+'/view/submissionList?formId='+self.xFormKey
+            url=urljoin(self.turl,'/view/submissionList?formId='+self.xFormKey)
         else:
             self.iface.messageBar().pushWarning(self.tag,self.tr("Enter url in settings"))
             return {'response':None, 'table':table}
@@ -625,7 +625,7 @@ class Aggregate (QTableWidget):
             print('downloading')
             for id in instance_ids :
                 if id:
-                    url=self.turl+'/view/downloadSubmission'
+                    url=urljoin(self.turl,'/view/downloadSubmission')
                     #print (url)
                     para={'formId':'{}[@version={} and @uiVersion=null]/{}[@key={}]'.format(self.xFormKey,self.version,self.topElement,id)}
                     response=requests.request(method,url,params=para,proxies= self.proxyConfig,auth=self.auth,verify=False)
@@ -725,14 +725,14 @@ class Kobo (Aggregate):
             print(str(response.content))
             self.iface.messageBar().pushCritical(self.tag,self.tr(str(response.status_code)))
             return response
-        urlDeploy = self.getValue('url')+"assets/"+responseJson['uid']+"/deployment/"
+        urlDeploy = urljoin(self.getValue('url'),"assets/"+responseJson['uid']+"/deployment/")
         payload2 = json.dumps({"active": True})
         #deploys form:
         response2 = requests.post(urlDeploy,data=payload2, headers=headers, params=para)
 ##        urlShare = self.getValue('url')+"permissions/"
 ##        permissions={"content_object":self.getValue('url')+"/assets/"+responseJson['uid']+"/","permission": "view_submissions","deny": False,"inherited": False,"user": "https://kobo.humanitarianresponse.info/users/AnonymousUser/"}
-        urlShare = self.getValue('url')+"api/v2/assets/"+responseJson['uid']+"/permission-assignments/"
-        permissions={"user":self.getValue('url')+"api/v2/users/AnonymousUser/","permission":self.getValue('url')+"api/v2/permissions/view_submissions/"}
+        urlShare = urljoin(self.getValue('url'),"api/v2/assets/"+responseJson['uid']+"/permission-assignments/")
+        permissions={"user":urljoin(self.getValue('url'),"api/v2/users/AnonymousUser/"),"permission":urljoin(self.getValue('url'),"api/v2/permissions/view_submissions/")}
         #shares submissions publicly:
         response3 = requests.post(urlShare, json=permissions,headers=headers)
         print(self.tag,response3.text)
@@ -1037,14 +1037,14 @@ class Central (Kobo):
         forms = {}
         project_name =self.getValue(self.tr("project name"))
         try:
-            x  = requests.post(c_url + "v1/sessions", json = data, headers = headers)
+            x  = requests.post(urljoin(c_url,"v1/sessions"), json = data, headers = headers)
             token = x.json()["token"]
             Central.usertoken = token
-            projects_response = requests.get(c_url + "v1/projects/", headers={"Authorization": "Bearer " + token})
+            projects_response = requests.get(urljoin(c_url ,"v1/projects/"), headers={"Authorization": "Bearer " + token})
             for p in projects_response.json():
                 if p["name"] == project_name:
                     Central.project_id = p["id"]
-            form_response = requests.get(c_url + "v1/projects/"+ str(Central.project_id)+"/forms/", headers={"Authorization": "Bearer " + token})
+            form_response = requests.get(urljoin(c_url,"v1/projects/"+ str(Central.project_id)+"/forms/"), headers={"Authorization": "Bearer " + token})
             for form in form_response.json():
                 forms[form["name"]] = form["enketoOnceId"]
             return forms, x
@@ -1067,13 +1067,13 @@ class Central (Kobo):
         headers = {"Content-Type": "application/json"}
         requests.packages.urllib3.disable_warnings()
         selectedFormName = ""
-        form_response = requests.get(c_url + "v1/projects/"+ str(project_id)+"/forms/", headers={"Authorization": "Bearer " + Central.usertoken})
+        form_response = requests.get(urljoin(c_url,"v1/projects/"+ str(project_id)+"/forms/"), headers={"Authorization": "Bearer " + Central.usertoken})
         for form in form_response.json():
             if form ["enketoOnceId"] == selectedForm:
                 selectedFormName = form["name"]
                 Central.form_name = selectedFormName
         try:
-            response = requests.get(c_url+'v1/projects/'+str(project_id)+'/forms/'+ selectedForm+'.xml', headers ={"Authorization": "Bearer " + Central.usertoken})
+            response = requests.get(urljon(c_url,'v1/projects/'+str(project_id)+'/forms/'+ selectedForm+'.xml'), headers ={"Authorization": "Bearer " + Central.usertoken})
         except:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url,username or password"))
             return
@@ -1141,11 +1141,11 @@ class Central (Kobo):
             message= 'Form Updated'
             method = 'POST'
             #url = self.getValue('url')+'/v1'+'/forms'
-            url = self.getValue('url')+'v1/projects/' + str(Central.project_id) + '/forms?ignoreWarnings=true&publish=true'
+            url = urljoin(self.getValue('url'),'v1/projects/' + str(Central.project_id) + '/forms?ignoreWarnings=true&publish=true')
         else:
             message= 'Created new form'
             method = 'POST'
-            url = self.getValue('url')+'v1/projects/' + str(Central.project_id) + '/forms?ignoreWarnings=true&publish=true'
+            url = urljoin(self.getValue('url'),'v1/projects/' + str(Central.project_id) + '/forms?ignoreWarnings=true&publish=true')
 #        method = 'POST'
 #        url = self.getValue('url')+'//formUpload'
         #step1 - upload form: POST if new PATCH if exixtent
@@ -1156,7 +1156,7 @@ class Central (Kobo):
             "password": self.getValue(self.tr("password"))
 
         }
-        authURL = self.getValue('url') + 'v1/sessions'
+        authURL = urljoin(self.getValue('url') , 'v1/sessions')
         authHeaders = {'Content-Type':"application/json"}
         authRequest = requests.post(authURL,data = json.dumps(authentication), headers = authHeaders)
         bearerToken = authRequest.json()["token"]
@@ -1253,8 +1253,8 @@ class Central (Kobo):
                 lastSub=self.getValue(self.tr('last Submission'))
             except:
                 print("error")
-        url_submissions=url + "v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name
-        url_data=url + "v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name + ".svc/Submissions"
+        url_submissions=urljoin(url,"v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name)
+        url_data=urljoin(url,"v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name + ".svc/Submissions")
         #print('urldata is '+url_data)
         response = requests.get(url_submissions, headers={"Authorization": "Bearer " + Central.usertoken, "X-Extended-Metadata": "true"})
         response1 = requests.get(url_data, headers={"Authorization": "Bearer " + Central.usertoken})
@@ -1298,13 +1298,13 @@ class Central (Kobo):
                     count+=1
             formattedData[storedGeoField] = stringversion
             if formattedData['attachmentsPresent']>0:
-                url_data1 = url + "v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name +"/submissions"+"/"+formattedData['ODKUUID']+ "/attachments"
-                media_links_url = url + "#/dl/projects/"+str(Central.project_id)+"/forms/" + Central.form_name +"/submissions"+"/"+formattedData['ODKUUID']+ "/attachments"
+                url_data1 = urljoin(url,"v1/projects/"+str(Central.project_id)+"/forms/" + Central.form_name +"/submissions"+"/"+formattedData['ODKUUID']+ "/attachments")
+                media_links_url = urljoin(url , "#/dl/projects/"+str(Central.project_id)+"/forms/" + Central.form_name +"/submissions"+"/"+formattedData['ODKUUID']+ "/attachments")
                 print("making attachment request"+url_data1)
                 attachmentsResponse = requests.get(url_data1, headers={"Authorization": "Bearer " + Central.usertoken})
                 print("url response is"+ str(attachmentsResponse.status_code))
                 for attachment in attachmentsResponse.json():
-                    binar_url= media_links_url +"/"+str(attachment['name'])
+                    binar_url= urljoin(media_links_url,str(attachment['name'])
             #subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
             #subTimeList.append(subTime_datetime) 
             for key in list(formattedData):
