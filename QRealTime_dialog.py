@@ -152,16 +152,17 @@ class Aggregate (QTableWidget):
             row = row -1
             pKey = QTableWidgetItem (parameter[0])
             pKey.setFlags(pKey.flags() ^ Qt.ItemIsEditable)
-            pValue = QTableWidgetItem (parameter[1])
             self.setItem(row,0,pKey)
+            self.setCellWidget(row,1,QLineEdit())
             valueFromSettings = S.value("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()), defaultValue =  "undef")
             if not valueFromSettings or valueFromSettings == "undef":
-                self.setItem(row,1,pValue)
+                self.cellWidget(row,1).setText(parameter[1])
                 S.setValue("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()),parameter[1])
             else:
-                self.setItem(row,1,QTableWidgetItem (valueFromSettings))
+                self.cellWidget(row,1).setText(valueFromSettings)
         self.setCellWidget(2, 1, QLineEdit())
         self.cellWidget(2,1).setEchoMode(2)
+
 
     def setParameters(self):
         self.parameters =[
@@ -183,7 +184,8 @@ class Aggregate (QTableWidget):
         S = QSettings()
         S.setValue("QRealTime/", self.parent.parent().currentIndex())
         for row in range (0,self.rowCount()):
-            S.setValue("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()),self.item(row,1).text())
+            if (row>0):
+                S.setValue("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()),self.cellWidget(row,1).text())
         
     def getValue(self,key, newValue = None):
         print("searching in setting parameter",key)
@@ -191,10 +193,10 @@ class Aggregate (QTableWidget):
             print(" parameter is",self.item(row,0).text())
             if self.item(row,0).text() == key:
                 if newValue:
-                    self.item(row, 1).setText(str(newValue))
+                    self.cellWidget(row, 1).setText(str(newValue))
                     print("setting new value",newValue)
                     self.setup() #store to settings
-                value=self.item(row,1).text().strip()
+                value=self.cellWidget(row,1).text().strip()
                 if value:
                     if key=='url':
                         if not value.endswith('/'):
@@ -762,8 +764,9 @@ class Kobo (Aggregate):
 #        print (url)
         para={'format':'json'}
         response=requests.get(tokenurl,proxies=getProxiesConf(),auth=(user,password),params=para)
-        token=response.json()["token"]
-        if token is None:
+        try:
+            token=response.json()["token"]
+        except:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url username or password"))
             return None,None
         self.header={"Authorization": "Token " + token}
