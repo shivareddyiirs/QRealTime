@@ -184,8 +184,7 @@ class Aggregate (QTableWidget):
         S = QSettings()
         S.setValue("QRealTime/", self.parent.parent().currentIndex())
         for row in range (0,self.rowCount()):
-            if (row>0):
-                S.setValue("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()),self.cellWidget(row,1).text())
+            S.setValue("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()),self.cellWidget(row,1).text())
         
     def getValue(self,key, newValue = None):
         print("searching in setting parameter",key)
