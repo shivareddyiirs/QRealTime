@@ -156,10 +156,10 @@ class Aggregate (QTableWidget):
             self.setCellWidget(row,1,QLineEdit())
             valueFromSettings = S.value("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()), defaultValue =  "undef")
             if not valueFromSettings or valueFromSettings == "undef":
-                self.cellWidget(row,1).setText(parameter[1])
+                self.cellWidget(row,1).setText(str(parameter[1]))
                 S.setValue("QRealTime/%s/%s/" % (self.service_id,self.item(row,0).text()),parameter[1])
             else:
-                self.cellWidget(row,1).setText(valueFromSettings)
+                self.cellWidget(row,1).setText(str(valueFromSettings))
         self.setCellWidget(2, 1, QLineEdit())
         self.cellWidget(2,1).setEchoMode(2)
 
@@ -687,7 +687,7 @@ class Kobo (Aggregate):
         [self.tr("user"), ''],
         [self.tr("password"), ''],
         [self.tr("last Submission"),''],
-        [self.tr('sync time'),'']
+        [self.tr('sync time'),3600]
         ]
     def prepareSendForm(self,layer):
         self.updateFields(layer)
@@ -1015,7 +1015,7 @@ class Central (Kobo):
         [self.tr("user"), ''],
         [self.tr("password"), ''],
         [self.tr("last Submission"),''],
-        [self.tr('sync time'),''],
+        [self.tr('sync time'),3600],
         [self.tr('project name'),'']
         ]
         
