@@ -50,7 +50,7 @@ QRealTime plugin is capable of converting QGIS layer into data collection form. 
 <img src="https://user-images.githubusercontent.com/9129316/33984020-2d6d7170-e0dc-11e7-8458-c9c2feb275b6.png" alt="tables">
 
 <h3>Resources:</h3>
-
+Sample Changes
 <br/>
 If you are not sure how to create  value map in QGIS, visit this <a href= "http://www.northrivergeographic.com/archives/qgis-and-value-maps"> link </a>
 <br/><br/>
