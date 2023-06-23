@@ -56,3 +56,10 @@ If you are not sure how to create  value map in QGIS, visit this <a href= "http:
 <br/><br/>
 For a tutorial on how to use the QRealTime Plugin, check out this <a href= "https://www.youtube.com/watch?v=62oqJE0pgIY">video </a>:
 
+<br/><br/>
+
+<h3> Future prospects </h3>
+<br/>
+Use google maps API for live tracking
+
+
