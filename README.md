@@ -95,11 +95,6 @@ For a tutorial on how to use the QRealTime Plugin, check out this <a href= "http
     const dataSources = ['source1', 'source2', 'source3'];
     handleMultipleDataSources(dataSources);
 
-    // 2. Set up custom alerts
-    const realTimeData = { /* real-time data object */ };
-    const conditions = { /* conditions for alerts */ };
-    setupCustomAlerts(realTimeData, conditions);
-
     // 3. Customize data visualization
     const visualizationOptions = { /* options for customization */ };
     customizeDataVisualization(visualizationOptions);
