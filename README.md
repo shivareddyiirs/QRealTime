@@ -5,6 +5,7 @@
 QRealTime Plugin allows you to:
 <ul>
 <li> Create new survey form directly from GIS layers in QGIS </li>
+<li> <b> Check the new survey form directly from GIS layers in QGIS </b> </li>
 <li> Synchronise data from ODK Aggregate, KoboToobox, and ODK Central servers</li>
 <li> Import data from  server </li>
 </ul>
@@ -18,7 +19,7 @@ Prerequisites:
 
 Installation steps:
 <ol>
-<li>Open Plugin Manager and search for QRealTime plugin and install it.</li>
+<li> <b>Open Plugin Manager and search for QRealTime plugin and install it.</b> </li>
 <li>And restart QGIS so that changes in environment take effect.</li>
 </ol>
 
