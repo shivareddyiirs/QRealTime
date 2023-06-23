@@ -2,7 +2,7 @@
 <img src="https://user-images.githubusercontent.com/5653512/84229819-252cc300-ab08-11ea-8cc3-74f9f1d3f1df.png" alt="flowchart">
 
 
-QRealTime Plugin allows you to:
+<h3>QRealTime Plugin allows you to:</h3>
 <ul>
 <li> Create new survey form directly from GIS layers in QGIS </li>
 <li> Synchronise data from ODK Aggregate, KoboToobox, and ODK Central servers</li>
@@ -37,22 +37,19 @@ You can set up ODK Central <a href="https://docs.getodk.org/central-setup/"> her
 ![QRealTimePic](https://user-images.githubusercontent.com/42852481/149683859-4c0db7ec-0c80-4a1e-b59a-1a69f9129547.png)
 
 <h3>Using the Plugin:</h3>
-
-<br/>
-Right click over any existing layer --> QRealTime and choose desired option: 
-<br/><br/>Make Online (to create new form), import (to import data of existing form), sync (to automatically update your layer)
-<br/><br/>
+<p>Right click over any existing layer --> QRealTime and choose desired option:
+</br>
+Make Online (to create new form), import (to import data of existing form), sync (to automatically update your layer)
+</p>
 <img src="https://user-images.githubusercontent.com/5653512/45092639-be5cc780-b133-11e8-8ee1-d3fb258cbf16.png" alt="options">
 
 <br/>
-QRealTime plugin is capable of converting QGIS layer into data collection form. To design a data collection form for humanitarian crisis, we have to create appropriate vector layer. For the demonstration purpose, you can create the shapefile with following fields:
+<b>NOTE:</b> QRealTime plugin is capable of converting QGIS layer into data collection form. To design a data collection form for humanitarian crisis, we have to create appropriate vector layer. For the demonstration purpose, you can create the shapefile with following fields:
 <br/><br/>
 <img src="https://user-images.githubusercontent.com/9129316/33984020-2d6d7170-e0dc-11e7-8458-c9c2feb275b6.png" alt="tables">
 
 <h3>Resources:</h3>
-
+<p>If you are not sure how to create  value map in QGIS, visit this <a href= "http://www.northrivergeographic.com/archives/qgis-and-value-maps"> link </a>
 <br/>
-If you are not sure how to create  value map in QGIS, visit this <a href= "http://www.northrivergeographic.com/archives/qgis-and-value-maps"> link </a>
-<br/><br/>
-For a tutorial on how to use the QRealTime Plugin, check out this <a href= "https://www.youtube.com/watch?v=62oqJE0pgIY">video </a>:
+For a tutorial on how to use the QRealTime Plugin, check out this <a href= "https://www.youtube.com/watch?v=62oqJE0pgIY">video </a>:</p>
 
