@@ -50,9 +50,68 @@ QRealTime plugin is capable of converting QGIS layer into data collection form. 
 <img src="https://user-images.githubusercontent.com/9129316/33984020-2d6d7170-e0dc-11e7-8458-c9c2feb275b6.png" alt="tables">
 
 <h3>Resources:</h3>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Real-Time Data Visualization</title>
+  <script>
+    // 1. Enable the plugin to handle multiple data sources simultaneously.
+    function handleMultipleDataSources(dataSources) {
+      // Code to handle multiple data sources
+      // Combine and overlay different real-time data streams onto a single map
+    }
+
+    // 2. Implement a feature for setting up custom alerts or notifications based on real-time data conditions.
+    function setupCustomAlerts(data, conditions) {
+      // Code to set up custom alerts or notifications based on real-time data conditions
+    }
+
+    // 3. Introduce additional customization options for the appearance and behavior of real-time data visualization.
+    function customizeDataVisualization(options) {
+      // Code to customize the appearance and behavior of real-time data visualization
+    }
+
+    // 4. Improve the visualization capabilities by adding support for more types of real-time data.
+    function visualizeRealTimeData(data, visualizationType) {
+      if (visualizationType === 'time-series') {
+        // Code to visualize time-series data
+      } else if (visualizationType === 'dynamic-heatmap') {
+        // Code to visualize dynamic heatmaps
+      } else {
+        // Code for other types of visualization
+      }
+    }
+
+    // Example usage:
+
+    // 1. Handle multiple data sources
+    const dataSources = ['source1', 'source2', 'source3'];
+    handleMultipleDataSources(dataSources);
+
+    // 2. Set up custom alerts
+    const realTimeData = { /* real-time data object */ };
+    const conditions = { /* conditions for alerts */ };
+    setupCustomAlerts(realTimeData, conditions);
+
+    // 3. Customize data visualization
+    const visualizationOptions = { /* options for customization */ };
+    customizeDataVisualization(visualizationOptions);
+
+    // 4. Visualize real-time data
+    const data = { /* real-time data object */ };
+    const type = 'time-series'; // or 'dynamic-heatmap', etc.
+    visualizeRealTimeData(data, type);
+  </script>
+</head>
+<body>
+  <!-- Your HTML content here -->
+</body>
+</html>
 
 <br/>
 If you are not sure how to create  value map in QGIS, visit this <a href= "http://www.northrivergeographic.com/archives/qgis-and-value-maps"> link </a>
 <br/><br/>
 For a tutorial on how to use the QRealTime Plugin, check out this <a href= "https://www.youtube.com/watch?v=62oqJE0pgIY">video </a>:
+
+
 
