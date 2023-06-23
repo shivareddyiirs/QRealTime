@@ -56,3 +56,18 @@ If you are not sure how to create  value map in QGIS, visit this <a href= "http:
 <br/><br/>
 For a tutorial on how to use the QRealTime Plugin, check out this <a href= "https://www.youtube.com/watch?v=62oqJE0pgIY">video </a>:
 
+
+<h3>Suggestion For Improvement:</h3>
+
+<br/>
+1. Enable the plugin to handle multiple data sources simultaneously. This would allow users to combine and overlay different real-time data streams onto a single map. </a>
+<br/><br/>
+2. Implement a feature that allows users to set up custom alerts or notifications based on real-time data conditions. </a>
+<br/><br/>
+3. Introduce additional customization options for the appearance and behavior of real-time data visualization. </a>
+<br/><br/>
+4. Improve the visualization capabilities of the plugin by adding support for more types of real-time data, such as time-series data or dynamic heatmaps. </a>
+<br/><br/>
+:
+
+
