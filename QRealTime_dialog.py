@@ -897,6 +897,7 @@ class Kobo (Aggregate):
                     return {'response':response, 'table':table,'lastID':None}
             #task.setProgress(50)
             data=response.json()
+            print(data,"submissions")
             #print(data,type(data))
             subList=[]
             print("no of submissions are",data['count'])
@@ -906,10 +907,6 @@ class Kobo (Aggregate):
                 submission['ODKUUID']=submission['meta/instanceID']
                 subID=submission['_id']
                 binar_url=""
-                for attachment in submission['_attachments']:
-                    binar_url=attachment['download_url']
-                    if (binar_url.endswith("?format=json")):
-                        binar_url=binar_url[:-len("?format=json")]
                 #subTime_datetime=datetime.datetime.strptime(subTime,'%Y-%m-%dT%H:%M:%S')
                 subList.append(subID)
                 for key in list(submission):
@@ -921,6 +918,10 @@ class Kobo (Aggregate):
                         submission.pop(key)
                     else:
                         if self.fields[key]=="binary":
+                            attachment=submission['_attachments'].pop()
+                            binar_url=attachment['download_url']
+                            if (binar_url.endswith("?format=json")):
+                                binar_url=binar_url[:-len("?format=json")]
                             submission[key]=binar_url
                 table.append(submission)
             #task.setProgress(90)
