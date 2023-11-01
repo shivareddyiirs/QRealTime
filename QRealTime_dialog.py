@@ -718,7 +718,8 @@ class Kobo (Aggregate):
         user=self.getValue(self.tr("user"))
         password=self.getValue(self.tr("password"))
         para = {"format":"json"}
-        headers = {'Content-Type': "application/json",'Accept': "application/json"} | self.header
+        headers = {'Content-Type': "application/json",'Accept': "application/json"}
+        headers.update(self.header)
         print("header is"+str(headers))
         #creates form:
         response = requests.request(method,url,json=payload,headers=headers,params=para)
