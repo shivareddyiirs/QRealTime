@@ -1077,10 +1077,10 @@ class Central (Kobo):
         form_response = requests.get(urljoin(c_url,"v1/projects/"+ str(project_id)+"/forms/"), headers={"Authorization": "Bearer " + Central.usertoken})
         for form in form_response.json():
             if form ["enketoOnceId"] == selectedForm:
-                selectedFormName = form["name"]
+                selectedFormName = form["xmlFormId"]
                 Central.form_name = selectedFormName
         try:
-            response = requests.get(urljon(c_url,'v1/projects/'+str(project_id)+'/forms/'+ selectedForm+'.xml'), headers ={"Authorization": "Bearer " + Central.usertoken})
+            response = requests.get(urljoin(c_url,'v1/projects/'+str(project_id)+'/forms/'+ selectedFormName +'.xml'), headers ={"Authorization": "Bearer " + Central.usertoken})
         except:
             self.iface.messageBar().pushCritical(self.tag,self.tr("Invalid url,username or password"))
             return
